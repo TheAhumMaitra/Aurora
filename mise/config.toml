@@ -1,0 +1,5 @@
+[tools]
+go = "latest"
+pnpm = "latest"
+python = "latest"
+rust = "latest"

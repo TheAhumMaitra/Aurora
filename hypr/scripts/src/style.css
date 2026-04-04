@@ -1,0 +1,27 @@
+* {
+  background-color: rgb(33, 33, 33);
+}
+.welcome-label {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.header {
+  font-size: 18px;
+  font-weight: 800;
+  color: grey;
+  border: 3px darkgray solid;
+  border-radius: 1.5rem;
+  padding: 9px;
+  margin-bottom: 5px;
+}
+
+.keybinds {
+  font-weight: 500;
+  font-style: italic;
+}
+
+.actions {
+  color: lightblue;
+  font-weight: bold;
+}

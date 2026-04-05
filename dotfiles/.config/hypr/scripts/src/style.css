@@ -1,5 +1,6 @@
 * {
-  background-color: rgb(33, 33, 33);
+   background-color: rgb(33, 33, 33);
+  /*  background-color: rgba(30, 30, 30, 0.5); */ 
 }
 .welcome-label {
   font-size: 25px;
@@ -20,7 +21,6 @@
   font-weight: 500;
   font-style: italic;
 }
-
 .actions {
   color: lightblue;
   font-weight: bold;

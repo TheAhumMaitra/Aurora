@@ -43,18 +43,21 @@ fn main() {
             .default_height(480)
             .title("Keybinds Help")
             .decorated(false)
-            .resizable(false)
+            .resizable(true)
             .build();
+
+        window.add_css_class("keybinds-window");
+        window.set_opacity(0.8);
 
         let grid = Grid::new();
         grid.set_hexpand(true);
         grid.set_vexpand(true);
         grid.set_column_spacing(16);
         grid.set_row_spacing(8);
-        grid.set_margin_start(20);
-        grid.set_margin_end(20);
-        grid.set_margin_top(20);
-        grid.set_margin_bottom(20);
+        grid.set_margin_start(5);
+        grid.set_margin_end(5);
+        grid.set_margin_top(5);
+        grid.set_margin_bottom(5);
         grid.set_column_homogeneous(true);
         grid.add_css_class("keybinds-grid");
 

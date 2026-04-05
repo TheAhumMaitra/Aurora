@@ -9,7 +9,6 @@
 window#waybar {
   background: rgb(6, 6, 6);
   border-bottom: 3px solid rgba(100, 114, 125, 0.5);
-  color: white;
 }
 #workspaces {
   margin: 5px;

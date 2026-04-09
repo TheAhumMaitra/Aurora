@@ -1,7 +1,8 @@
 use gtk4 as gtk;
 use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, Label, CssProvider, Align};
+use gtk::{Application, ApplicationWindow, Label, CssProvider, Align, EventControllerKey};
 use gtk::gdk::Display;
+use gtk::gdk;
 
 fn main() {
     let app = Application::builder()
@@ -46,7 +47,21 @@ fn main() {
         vbox.append(&welcome_label);
         vbox.append(&keybind_label);
 
+        let win = window.clone();
+
         window.set_child(Some(&vbox));
+
+        let controller = EventControllerKey::new();
+
+        controller.connect_key_pressed(move |_, key, _, _| {
+            if key == gdk::Key::Escape {
+                // Close the window
+                win.close();
+                return true.into(); // event handled
+            }
+            false.into()
+        });
+        window.add_controller(controller);
         window.present();
     });
 

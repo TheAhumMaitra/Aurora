@@ -1,6 +1,5 @@
 * {
    background-color: rgb(33, 33, 33);
-  /*  background-color: rgba(30, 30, 30, 0.5); */ 
 }
 .welcome-label {
   font-size: 25px;
@@ -24,4 +23,9 @@
 .actions {
   color: lightblue;
   font-weight: bold;
+}
+.note-warning{
+  font-weight: bold;
+  color: rgb(27, 243, 203);
+  margin: 4%;
 }

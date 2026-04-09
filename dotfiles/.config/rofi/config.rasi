@@ -1,18 +1,2 @@
-configuration {
-	modes: "drun";
-	font: "JetBrainsMono Nerd Font Bold 12";
-	location: 0;
-	yoffset: 0;
-	xoffset: 0;
-	fixed-num-lines: true;
-	show-icons: true;
-	drun-display-format: "{name}";
-	case-sensitive: false;
-	case-smart: false;
-}
 
-@theme "/dev/null"
-
-*{
-    background-color: #000000;
-}
+@theme "/usr/share/rofi/themes/paper-float.rasi"

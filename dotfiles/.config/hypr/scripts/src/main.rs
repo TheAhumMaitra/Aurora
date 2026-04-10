@@ -8,6 +8,6 @@ fn main() {
         \/                               \/ 
                                 by Ahum
     "#;
-    println!("{}",logo);
+    println!("{}", logo);
     println!("Aurora is still under development!");
 }

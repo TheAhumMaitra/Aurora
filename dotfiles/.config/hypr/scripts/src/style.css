@@ -29,3 +29,12 @@
   color: rgb(27, 243, 203);
   margin: 4%;
 }
+
+.hello {
+  font-weight: bolder;
+  font-style: italic;
+  font-size: medium;
+  border: 2px solid rgb(144, 0, 255);
+  border-radius: 40px;
+  padding: 8px;
+}

@@ -1,5 +1,5 @@
-use sysinfo::{System, Signal};
 use std::{process::Command, thread, time::Duration};
+use sysinfo::{Signal, System};
 
 fn main() {
     let mut sys = System::new_all();

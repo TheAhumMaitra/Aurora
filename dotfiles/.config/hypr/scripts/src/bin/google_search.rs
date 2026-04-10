@@ -1,7 +1,7 @@
-use gtk4 as gtk;
-use gtk::prelude::*;
 use gtk::gdk;
+use gtk::prelude::*;
 use gtk::{Application, ApplicationWindow, Entry};
+use gtk4 as gtk;
 use std::process::Command;
 
 const SEARCH_ENGINE_NAME: &str = "Google";
@@ -9,7 +9,7 @@ const SEARCH_ENGINE_URL: &str = "https://www.google.com/search?q=";
 
 fn main() {
     let app = Application::builder()
-        .application_id("com.ahum.scripts")
+        .application_id("com.aurora.search")
         .build();
 
     app.connect_activate(build_ui);
@@ -25,30 +25,27 @@ fn build_ui(app: &Application) {
 
     window.set_opacity(0.85);
 
+    let controller = gtk::EventControllerKey::new();
 
-let controller = gtk::EventControllerKey::new();
+    let app_clone2 = app.clone();
 
-let app_clone2 = app.clone();
+    controller.connect_key_pressed(move |_, key, _, _| {
+        if key == gdk::Key::Escape {
+            app_clone2.quit();
+            return gtk::glib::Propagation::Stop;
+        }
+        gtk::glib::Propagation::Proceed
+    });
 
-controller.connect_key_pressed(move |_, key, _, _| {
-    if key == gdk::Key::Escape {
-        app_clone2.quit();
-        return gtk::glib::Propagation::Stop;
-    }
-    gtk::glib::Propagation::Proceed
-});
-
-window.add_controller(controller);
+    window.add_controller(controller);
 
     let entry = Entry::builder()
         .placeholder_text(&format!("Search {}...", SEARCH_ENGINE_NAME))
         .build();
 
-
     entry.set_size_request(400, 50);
     let app_clone = app.clone();
     entry.connect_activate(move |entry| {
-
         let text = entry.text().to_string();
         if text.trim().is_empty() {
             return;
@@ -62,7 +59,7 @@ window.add_controller(controller);
             .spawn()
             .expect("Failed to open browser");
 
-    app_clone.quit();
+        app_clone.quit();
 
         std::process::exit(0);
     });

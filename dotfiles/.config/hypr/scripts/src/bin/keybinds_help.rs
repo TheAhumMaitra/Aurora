@@ -1,9 +1,9 @@
-use gtk4 as gtk;
-use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, Grid, Label, CssProvider, Align, EventControllerKey};
-use gtk::gdk::Display;
-use gtk::gdk;
 use gtk::ScrolledWindow;
+use gtk::gdk;
+use gtk::gdk::Display;
+use gtk::prelude::*;
+use gtk::{Align, Application, ApplicationWindow, CssProvider, EventControllerKey, Grid, Label};
+use gtk4 as gtk;
 
 const KEYBINDS: &[(&str, &str)] = &[
     ("Open default terminal", "SUPER + Q"),
@@ -32,12 +32,12 @@ const KEYBINDS: &[(&str, &str)] = &[
     ("Open wlogout / power screen", "SUPER + ALT + P"),
     ("Lock your screen (Hyprlock)", "SUPER + L"),
     ("Resize window by right", "SUPER + SHIFT + RIGHT"),
-    ("Resize window by left", "SUPER + SHIFT + LEFT")
+    ("Resize window by left", "SUPER + SHIFT + LEFT"),
 ];
 
 fn main() {
     let app = Application::builder()
-        .application_id("com.ahum.keybinds_help")
+        .application_id("com.aurora.keybinds_help")
         .build();
 
     app.connect_activate(|app| {
@@ -112,9 +112,9 @@ fn main() {
         }
 
         let scroll = ScrolledWindow::builder()
-    .hscrollbar_policy(gtk::PolicyType::Never) // optional
-    .vscrollbar_policy(gtk::PolicyType::Automatic)
-    .build();
+            .hscrollbar_policy(gtk::PolicyType::Never) // optional
+            .vscrollbar_policy(gtk::PolicyType::Automatic)
+            .build();
 
         scroll.set_child(Some(&grid));
         window.set_child(Some(&scroll));

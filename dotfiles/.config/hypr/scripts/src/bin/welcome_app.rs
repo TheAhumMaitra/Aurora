@@ -1,15 +1,17 @@
-use gtk4 as gtk;
-use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, Label, CssProvider, Align, EventControllerKey};
-use gtk::gdk::Display;
 use gtk::gdk;
+use gtk::gdk::Display;
+use gtk::prelude::*;
+use gtk::{Align, Application, ApplicationWindow, CssProvider, EventControllerKey, Label};
+use gtk4 as gtk;
+use whoami;
 
 fn main() {
+    let username = whoami::username().unwrap().to_string().to_uppercase();
     let app = Application::builder()
         .application_id("com.ahum.welcome")
         .build();
 
-    app.connect_activate(|app| {
+    app.connect_activate(move |app| {
         load_css();
 
         let window = ApplicationWindow::builder()
@@ -27,7 +29,19 @@ fn main() {
         vbox.set_halign(Align::Center);
         vbox.set_valign(Align::Center);
 
-        // Labels without markup
+        let wish = format!(
+            "Hello <span weight='bold' foreground='violet'>{}</span>",
+            username
+        );
+        let hello: Label = Label::builder()
+            .label(&wish)
+            .halign(Align::Center)
+            .use_markup(true)
+            .valign(Align::Center)
+            .build();
+
+        hello.add_css_class("hello");
+
         let welcome_label = Label::builder()
             .label("Welcome to <span weight='bold' foreground='purple'>Aurora</span>")
             .halign(Align::Center)
@@ -37,7 +51,9 @@ fn main() {
         welcome_label.add_css_class("welcome-label"); // CSS class
 
         let keybind_label = Label::builder()
-            .label("Press <span foreground='grey'  weight='bold'>SUPER + H</span> to see all keybinds")
+            .label(
+                "Press <span foreground='grey'  weight='bold'>SUPER + H</span> to see all keybinds",
+            )
             .halign(Align::Center)
             .valign(Align::Center)
             .use_markup(true)
@@ -46,6 +62,7 @@ fn main() {
 
         vbox.append(&welcome_label);
         vbox.append(&keybind_label);
+        vbox.append(&hello);
 
         let win = window.clone();
 

@@ -1,19 +1,21 @@
+@import './colors.css';
+
 * {
 	background-image: none;
 	box-shadow: none;
 }
 
 window {
-	  background-color: rgba(0, 0, 0, 0.2);
+	  background-color: @background;
     /* backdrop-filter: blur(3px); optional (some setups ignore this); */
 }
 
 button {
     border-radius: 30px;
-    border-color: black;
-	text-decoration-color: #FFFFFF;
-    color: #FFFFFF;
-	background-color: rgba(30, 30, 30, 0.5); /* transparency added */
+    border-color: @border-color;
+	text-decoration-color: @foreground;
+    color: @foreground;
+	background-color: @button-background; /* transparency added */
 	border-style: solid;
 	font-weight: bolder;
 	border-width: 1px;
@@ -24,7 +26,7 @@ button {
 }
 
 button:focus, button:active, button:hover {
-	background-color: rgb(60, 60, 60);
+	background-color: @active-background;
 	outline-style: none;
 }
 

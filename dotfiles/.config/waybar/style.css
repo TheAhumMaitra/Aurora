@@ -1,3 +1,5 @@
+@import "./colors.css";
+
 * {
   font-family:
     "JetBrainsMono Nerd Font", "Lucida Sans Regular", "Lucida Grande",
@@ -7,8 +9,8 @@
 }
 
 window#waybar {
-  background: rgb(6, 6, 6);
-  border-bottom: 3px solid rgba(100, 114, 125, 0.5);
+  background: @background;
+  border-bottom: 3px solid @accent;
 }
 #workspaces {
   margin: 5px;
@@ -18,14 +20,14 @@ window#waybar {
   margin-right: 3px;
 }
 #workspaces button.active {
-  background: #484a4b;
-  border-bottom: 2px solid rgb(165, 165, 165);
+  background: @active-background;
+  border-bottom: 2px solid @active-accent;
 }
 #workspaces button.urgent {
-  background-color: #df0000;
+  background-color: @urgent-background;
 }
 #window {
-  border: 2px solid rgb(78, 78, 78);
+  border: 2px solid @border;
   border-radius: 50px;
   padding: 15px;
   margin-bottom: 5px;

@@ -1,4 +1,4 @@
-* {
+window {
    background-color: rgb(33, 33, 33);
 }
 .welcome-label {
@@ -43,4 +43,25 @@
   font-weight: bolder;
   font-size: x-large;
   margin: 3px;
+}
+row {
+    border: 1px solid #2a2a2a;
+    margin: 4px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #111;
+    color: white;
+    font-weight: bolder;
+}
+
+row:hover {
+    border: 1px solid #555;
+    background: #1a1a1a;
+}
+
+/* 👇 THIS is what you want */
+row:selected {
+    background: black;
+    color: white;
+    border: 2px solid darkgrey;
 }

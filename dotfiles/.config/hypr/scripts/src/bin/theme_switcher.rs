@@ -1,7 +1,7 @@
 use gtk4::prelude::*;
 use gtk4::{
     Application, ApplicationWindow, Label,
-    ListBox, ListBoxRow, ScrolledWindow, CssProvider
+    ListBox, ListBoxRow, ScrolledWindow, CssProvider, EventControllerKey
 };
 use gtk4::gdk::Display;
 use std::fs;
@@ -113,7 +113,19 @@ Command::new(exe)
         // reload GTK CSS after applying theme
         load_css();
     });
+    let controller = EventControllerKey::new();
 
+        let win = window.clone();
+
+        controller.connect_key_pressed(move |_, key, _, _| {
+            if key == gtk4::gdk::Key::Escape {
+                // Close the window
+                win.close();
+                return true.into(); // event handled
+            }
+            false.into()
+        });
+        window.add_controller(controller);
     window.set_child(Some(&scroll));
     window.show();
 }

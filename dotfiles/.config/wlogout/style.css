@@ -4,24 +4,27 @@
 }
 
 window {
-	background-color: transparent;
+	  background-color: rgba(0, 0, 0, 0.2);
+    /* backdrop-filter: blur(3px); optional (some setups ignore this); */
 }
 
 button {
-    border-radius: 0;
+    border-radius: 30px;
     border-color: black;
 	text-decoration-color: #FFFFFF;
     color: #FFFFFF;
-	background-color: #1E1E1E;
+	background-color: rgba(30, 30, 30, 0.5); /* transparency added */
 	border-style: solid;
+	font-weight: bolder;
 	border-width: 1px;
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: 25%;
+	margin: 14px;
 }
 
 button:focus, button:active, button:hover {
-	background-color: #000000;
+	background-color: rgb(60, 60, 60);
 	outline-style: none;
 }
 

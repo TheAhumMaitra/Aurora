@@ -38,3 +38,9 @@
   border-radius: 40px;
   padding: 8px;
 }
+
+.settings-title {
+  font-weight: bolder;
+  font-size: x-large;
+  margin: 3px;
+}

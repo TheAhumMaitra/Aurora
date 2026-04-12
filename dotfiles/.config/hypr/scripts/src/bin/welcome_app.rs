@@ -8,7 +8,7 @@ use whoami;
 fn main() {
     let username = whoami::username().unwrap().to_string().to_uppercase();
     let app = Application::builder()
-        .application_id("com.ahum.welcome")
+        .application_id("com.aurora.welcome")
         .build();
 
     app.connect_activate(move |app| {

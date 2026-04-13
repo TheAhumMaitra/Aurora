@@ -9,10 +9,6 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-// =========================
-// 🔥 CORE LOGIC (REUSABLE)
-// =========================
-
 fn get_paths() -> (PathBuf, PathBuf) {
     let home = std::env::var("HOME").expect("Could not get HOME");
     let themes_dir = PathBuf::from(format!("{}/.config/themes", home));
@@ -33,8 +29,6 @@ fn list_themes() {
                 println!("• {}", name);
             }
         }
-    } else {
-        println!("❌ Could not read themes directory");
     }
 }
 
@@ -58,8 +52,6 @@ fn apply_theme(theme_name: &str) {
             let mut target = config_base.clone();
             target.push(folder);
             target.push(file);
-
-            println!("🔍 Looking for: {:?}", source);
 
             if source.exists() {
                 if let Some(parent) = target.parent() {
@@ -87,11 +79,29 @@ fn apply_theme(theme_name: &str) {
     Command::new(exe)
         .spawn()
         .expect("failed to run refresh_system");
-}
 
-// =========================
-// 🖥️ GUI
-// =========================
+    let mut wallpaper = themes_dir.clone();
+    wallpaper.push(theme_name);
+    wallpaper.push("default.png");
+
+    if wallpaper.exists() {
+        println!("🖼️ Setting wallpaper: {:?}", wallpaper);
+
+        Command::new("awww")
+            .args([
+                "img",
+                wallpaper.to_str().unwrap(),
+                "--transition-type",
+                "grow",
+                "--transition-duration",
+                "1"
+            ])
+            .spawn()
+            .ok();
+    } else {
+        println!("⚠️ No default.jpg found for this theme");
+    }
+}
 
 fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
@@ -116,7 +126,6 @@ fn build_ui(app: &Application) {
 
     let (themes_dir, _) = get_paths();
 
-    // Load themes into GUI
     if let Ok(entries) = fs::read_dir(&themes_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
@@ -133,7 +142,6 @@ fn build_ui(app: &Application) {
         }
     }
 
-    // Apply on click
     list_box.connect_row_activated(move |_, row| {
         let label = row.child().unwrap().downcast::<Label>().unwrap();
         let theme_name = label.text();
@@ -142,7 +150,6 @@ fn build_ui(app: &Application) {
         load_css();
     });
 
-    // ESC to close
     let controller = EventControllerKey::new();
     let win = window.clone();
 
@@ -159,10 +166,6 @@ fn build_ui(app: &Application) {
     window.show();
 }
 
-// =========================
-// 🎨 CSS Loader
-// =========================
-
 fn load_css() {
     let provider = CssProvider::new();
     provider.load_from_data(include_str!("../style.css"));
@@ -176,18 +179,12 @@ fn load_css() {
     }
 }
 
-// =========================
-// 🚀 MAIN (CLI + GUI)
-// =========================
-
+// main
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    // CLI MODE
     if args.len() > 1 {
         match args[1].as_str() {
-
-            // aurora list themes
             "list" => {
                 if args.len() > 2 && args[2] == "themes" {
                     list_themes();
@@ -196,28 +193,21 @@ fn main() {
                 }
             }
 
-            // aurora apply "Theme Name"
             "apply" => {
                 if args.len() > 2 {
-                    let theme_name = &args[2];
-                    apply_theme(theme_name);
+                    apply_theme(&args[2]);
                 } else {
                     println!("Usage: aurora apply \"Theme Name\"");
                 }
             }
 
             _ => {
-                println!("This command is not found");
-                println!("Commands:");
-                println!("  aurora list themes");
-                println!("  aurora apply \"Theme Name\"");
+                println!("❌ Unknown command");
             }
         }
-
         return;
     }
 
-    // GUI MODE
     let app = Application::builder()
         .application_id("com.aurora.theme_switcher")
         .build();

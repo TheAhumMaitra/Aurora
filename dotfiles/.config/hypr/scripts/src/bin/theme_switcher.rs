@@ -1,9 +1,9 @@
+use gtk4::gdk::Display;
 use gtk4::prelude::*;
 use gtk4::{
-    Application, ApplicationWindow, Label,
-    ListBox, ListBoxRow, ScrolledWindow, CssProvider, EventControllerKey
+    Application, ApplicationWindow, CssProvider, EventControllerKey, Label, ListBox, ListBoxRow,
+    ScrolledWindow,
 };
-use gtk4::gdk::Display;
 
 use std::fs;
 use std::path::PathBuf;
@@ -94,7 +94,7 @@ fn apply_theme(theme_name: &str) {
                 "--transition-type",
                 "grow",
                 "--transition-duration",
-                "1"
+                "1",
             ])
             .spawn()
             .ok();

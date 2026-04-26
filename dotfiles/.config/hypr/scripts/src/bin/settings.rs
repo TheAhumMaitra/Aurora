@@ -8,7 +8,7 @@ use std::process::Command;
 
 fn main() {
     let app = Application::builder()
-        .application_id("com.ahum.settings")
+        .application_id("com.aurora.settings")
         .build();
 
     app.connect_startup(|app| {
@@ -24,8 +24,8 @@ fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Settings")
-        .default_width(400)
-        .default_height(500)
+        .default_width(800)
+        .default_height(400)
         .build();
 
     window.set_opacity(0.8);

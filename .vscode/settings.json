@@ -1,4 +1,10 @@
 {
+  "Lua.workspace.library": [
+    "/usr/share/hypr/stubs"
+  ],
+  "Lua.diagnostics.globals": [
+    "hl"
+  ],
     "rust-analyzer.linkedProjects": [
         "dotfiles/.config/hypr/scripts/Cargo.toml"
     ]

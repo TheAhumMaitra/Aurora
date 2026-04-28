@@ -86,16 +86,17 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 -- layout switch
 
 -- dwindle switch
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("hyprctl keyword general:layout dwindle"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"dwindle\" } })'"))
 
 -- master switch
-hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("hyprctl keyword general:layout master"))
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"master\" } })'"))
 
 -- scrolling switch
-hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("hyprctl keyword general:layout scrolling"))
+hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"scrolling\" } })'"))
 
 -- monocle switch
-hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("hyprctl keyword general:layout monocle"))
+hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"monocle\" } })'"))
+
 
 -- Laptop multimedia keys for volume and LCD brightness
 

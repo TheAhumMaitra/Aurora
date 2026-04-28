@@ -1,6 +1,6 @@
-@define-color background #1e1e2e;           
-@define-color accent #cba6f7;               
-@define-color active-background #45475a;   
-@define-color active-accent #fab387;        
-@define-color urgent-background #f38ba8; 
-@define-color border #7f849c;              
+@define-color background rgb(6, 6, 6);
+@define-color accent rgba(100, 114, 125, 0.5);
+@define-color active-background #484a4b;
+@define-color active-accent rgb(165, 165, 165);
+@define-color urgent-background #df0000;
+@define-color border rgb(78, 78, 78);

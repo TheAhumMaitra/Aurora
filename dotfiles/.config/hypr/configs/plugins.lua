@@ -1,5 +1,5 @@
 
-plugin {
+hl.plugin {
   hyprbars {
     bar_height = 30
     bar_text_font = "JetBrainsMono Nerd Font Bold"
@@ -16,7 +16,7 @@ plugin {
     on_double_click = hyprctl dispatch fullscreen 1
   } 
 } 
-plugin:dynamic-cursors {
+hl.plugin:"dynamic-cursors" {
 
   # enables the plugin
   enabled = true

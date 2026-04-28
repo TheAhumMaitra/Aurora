@@ -18,4 +18,8 @@ fn main() {
     for script in &scripts {
         run(script);
     }
+    Command::new("hyprctl")
+        .args(["reload"])
+        .output()
+        .expect("failed to execute process");
 }

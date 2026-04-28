@@ -19,7 +19,7 @@ fn get_paths() -> (PathBuf, PathBuf) {
 fn list_themes() {
     let (themes_dir, _) = get_paths();
 
-    println!("🎨 Available Themes:\n");
+    println!("Showing Available Themes:\n");
 
     if let Ok(entries) = fs::read_dir(&themes_dir) {
         for entry in entries.flatten() {
@@ -36,9 +36,14 @@ fn apply_theme(theme_name: &str) {
     let (themes_dir, config_base) = get_paths();
 
     let folders = ["waybar", "wlogout", "hypr"];
-    let filenames = ["colors.css", "colors.conf"];
-
-    println!("🎨 Applying theme: {}", theme_name);
+    let filenames = ["colors.css", "colors.lua"];
+    
+    let message = format!("{theme_name} is applied!");
+    println!("Applying theme : {}", theme_name);
+    Command::new("notify-send")
+        .args([message])
+        .output()
+        .expect("failed to execute process");
 
     for folder in folders {
         let mut found = false;
@@ -59,8 +64,8 @@ fn apply_theme(theme_name: &str) {
                 }
 
                 match fs::copy(&source, &target) {
-                    Ok(_) => println!("✅ Applied {}/{}", folder, file),
-                    Err(e) => eprintln!("❌ Copy error in {}: {}", folder, e),
+                    Ok(_) => println!("Applied {}/{}", folder, file),
+                    Err(e) => eprintln!("Copy error in {}: {}", folder, e),
                 }
 
                 found = true;
@@ -68,11 +73,11 @@ fn apply_theme(theme_name: &str) {
         }
 
         if !found {
-            println!("⚠️ No colors file found in {}", folder);
+            println!("No colors file found in {}", folder);
         }
     }
 
-    // 🔄 Run refresh script
+    // Run refresh script for refreshing the system 
     let exe = PathBuf::from(std::env::var("HOME").unwrap())
         .join(".config/hypr/scripts/target/release/refresh_system");
 
@@ -85,7 +90,7 @@ fn apply_theme(theme_name: &str) {
     wallpaper.push("default.png");
 
     if wallpaper.exists() {
-        println!("🖼️ Setting wallpaper: {:?}", wallpaper);
+        println!("Setting wallpaper: {:?}", wallpaper);
 
         Command::new("awww")
             .args([
@@ -99,7 +104,7 @@ fn apply_theme(theme_name: &str) {
             .spawn()
             .ok();
     } else {
-        println!("⚠️ No default.jpg found for this theme");
+        println!("No default.jpg found for this theme");
     }
 }
 
@@ -202,7 +207,7 @@ fn main() {
             }
 
             _ => {
-                println!("❌ Unknown command");
+                println!("Unknown command");
             }
         }
         return;

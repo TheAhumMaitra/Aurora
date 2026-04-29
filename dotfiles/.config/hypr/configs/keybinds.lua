@@ -48,11 +48,16 @@ hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- make current window float
-hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" })) 
+hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
+
+-- toggle pseudo mode
+hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 
 -- resize the window
-hl.bind(mainMod.." + SHIFT + RIGHT", hl.dsp.window.resize({x = 20, y = 0,  relative = true}))
-hl.bind(mainMod.." + SHIFT + LEFT", hl.dsp.window.resize({x = -20, y = 0,  relative = true}))
+hl.bind(mainMod .. " + SHIFT + RIGHT", hl.dsp.window.resize({ x = 20, y = 0, relative = true }))
+hl.bind(mainMod .. " + SHIFT + LEFT", hl.dsp.window.resize({ x = -20, y = 0, relative = true }))
+hl.bind(mainMod .. " + SHIFT + UP", hl.dsp.window.resize({ x = 0, y = -20, relative = true }))
+hl.bind(mainMod .. " + SHIFT + DOWN", hl.dsp.window.resize({ x = 0, y = 20, relative = true }))
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
@@ -66,7 +71,6 @@ hl.bind(mainMod .. " + down", hl.dsp.focus({ direction = "down" }))
 
 -- close current window
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
-
 closeWindowBind:set_enabled(true)
 
 -- exit Hyprland
@@ -127,3 +131,6 @@ hl.bind(mainMod .. " + ALT + period", hl.dsp.layout("colresize +0.4"))
 -- monocole layout
 hl.bind(mainMod .. " + comma", hl.dsp.layout("cyclenext"))
 hl.bind(mainMod .. " + period", hl.dsp.layout("cycleprev"))
+
+-- dwindle layout
+hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))

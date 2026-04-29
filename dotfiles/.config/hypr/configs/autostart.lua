@@ -1,4 +1,3 @@
-
 -- #################
 -- ### AUTOSTART ###
 -- #################
@@ -22,10 +21,10 @@
 -- exec-once = wl-paste --type image --watch cliphist store #Stores only image data
 
 local home = os.getenv("HOME")
-hl.on("hyprland.start", function () 
-  hl.exec_cmd("hyprpm reload")
-  hl.exec_cmd("wl-paste --type text --watch cliphist store ")
-  hl.exec_cmd("hypridle")
-  hl.exec_cmd("waybar & awww-daemon & swaync")
-  hl.exec_cmd(home.."/.config/hypr/scripts/target/release/welcome_app")
+hl.on("hyprland.start", function()
+	hl.exec_cmd("awww-daemon")
+	hl.exec_cmd("waybar & swaync")
+	hl.exec_cmd("wl-paste --type text --watch cliphist store ")
+	hl.exec_cmd("hypridle")
+	hl.exec_cmd(home .. "/.config/hypr/scripts/target/release/welcome_app")
 end)

@@ -1,56 +1,56 @@
 local suppressMaximizeRule = hl.window_rule({
-    -- Ignore maximize requests from all apps. You'll probably like this.
-    name  = "suppress-maximize-events",
-    match = { class = ".*" },
+	-- Ignore maximize requests from all apps. You'll probably like this.
+	name = "suppress-maximize-events",
+	match = { class = ".*" },
 
-    suppress_event = "maximize",
+	suppress_event = "maximize",
 })
 suppressMaximizeRule:set_enabled(false)
 
 hl.window_rule({
-    -- Fix some dragging issues with XWayland
-    name  = "fix-xwayland-drags",
-    match = {
-        class      = "^$",
-        title      = "^$",
-        xwayland   = true,
-        float      = true,
-        fullscreen = false,
-        pin        = false,
-    },
+	-- Fix some dragging issues with XWayland
+	name = "fix-xwayland-drags",
+	match = {
+		class = "^$",
+		title = "^$",
+		xwayland = true,
+		float = true,
+		fullscreen = false,
+		pin = false,
+	},
 
-    no_focus = true,
+	no_focus = true,
 })
 -- Hyprland-run windowrule
 hl.window_rule({
-    name  = "move-hyprland-run",
-    match = { class = "hyprland-run" },
+	name = "move-hyprland-run",
+	match = { class = "hyprland-run" },
 
-    move  = "20 monitor_h-120",
-    float = true,
+	move = "20 monitor_h-120",
+	float = true,
 })
 hl.window_rule({
-  name = "settings-app",
-  match = { class = "com.aurora.settings" },
-  float = true,
+	name = "settings-app",
+	match = { class = "com.aurora.settings" },
+	float = true,
 })
 hl.window_rule({
-  name = "welcome-app",
-  match = { class = "com.aurora.welcome" },
-  float = true,
+	name = "welcome-app",
+	match = { class = "com.aurora.welcome" },
+	float = true,
 })
 hl.window_rule({
-  name = "theme-suppressMaximizeRuleswitcher",
-  match = { class = "com.aurora.theme_switcher" },
-  float = true,
+	name = "theme-suppressMaximizeRuleswitcher",
+	match = { class = "com.aurora.theme_switcher" },
+	float = true,
 })
 hl.window_rule({
-  name = "search",
-  match = { class = "com.aurora.search" },
-  float = true,
+	name = "search",
+	match = { class = "com.aurora.search" },
+	float = true,
 })
 hl.window_rule({
-  name = "keybinds-help",
-  match = { class = "com.aurora.keybinds_help" },
-  float = true,
+	name = "keybinds-help",
+	match = { class = "com.aurora.keybinds_help" },
+	float = true,
 })

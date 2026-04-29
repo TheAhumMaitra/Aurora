@@ -47,9 +47,16 @@ end
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
--- resize the window 
--- hl.bind(mainMod.." + SHIFT + right", hl.dsp.window("resizeactive, 20 0"))
--- hl.bind(mainMod.." + SHIFT + left", hl.dsp.window("resizeactive, -20 0"))
+-- make current window float
+hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" })) 
+
+-- resize the window
+hl.bind(mainMod.." + SHIFT + RIGHT", hl.dsp.window.resize({x = 20, y = 0,  relative = true}))
+hl.bind(mainMod.." + SHIFT + LEFT", hl.dsp.window.resize({x = -20, y = 0,  relative = true}))
+
+-- Move/resize windows with mainMod + LMB/RMB and dragging
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
@@ -97,7 +104,6 @@ hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = 
 -- monocle switch
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"monocle\" } })'"))
 
-
 -- Laptop multimedia keys for volume and LCD brightness
 
 -- volume keys
@@ -118,7 +124,6 @@ hl.bind(mainMod .. " + SHIFT + period", hl.dsp.layout("swapcol r"))
 hl.bind(mainMod .. " + ALT + comma", hl.dsp.layout("colresize +0.4"))
 hl.bind(mainMod .. " + ALT + period", hl.dsp.layout("colresize +0.4"))
 
-
--- monocole layout 
+-- monocole layout
 hl.bind(mainMod .. " + comma", hl.dsp.layout("cyclenext"))
 hl.bind(mainMod .. " + period", hl.dsp.layout("cycleprev"))

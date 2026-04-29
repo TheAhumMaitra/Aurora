@@ -1,9 +1,26 @@
+-- SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
+-- SPDX-License-Identifier: GPL-3.0-or-later
+
+--   Copyright (C) 2026 Ahum Maitra
+
+--     This program is free software: you can redistribute it and/or modify
+--     it under the terms of the GNU General Public License as published by
+--     the Free Software Foundation, either version 3 of the License, or
+--     (at your option) any later version.
+
+--     This program is distributed in the hope that it will be useful,
+--     but WITHOUT ANY WARRANTY; without even the implied warranty of
+--     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--     GNU General Public License for more details.
+
+--     You should have received a copy of the GNU General Public License
+--     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 -- ###################
 -- ### KEYBINDINGS ###
 -- ###################
 
 -- See https://wiki.hypr.land/Configuring/Keywords/
-local home = os.getenv("HOME")
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local terminal = "kitty"
 local fileManager = "nautilus"
@@ -16,22 +33,22 @@ hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + ALT + B", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + ALT + V", hl.dsp.exec_cmd(editor))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu .. "-show drun"))
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu .. " -show drun"))
 hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("wlogout"))
 
 -- Aurora's custom gui programs
 
 -- open keybinds help menu
-hl.bind(mainMod .. " + H", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/target/release/keybinds_help"))
+hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("keybinds_help"))
 
 -- launch theme switcher
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/target/release/theme_switcher"))
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 
 -- launch custom settings
-hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/target/release/settings"))
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 
 -- launch search pop up
-hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/target/release/search"))
+hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("search"))
 
 -- crucial keybinds
 
@@ -78,6 +95,9 @@ hl.bind(
 	mainMod .. " + M",
 	hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'")
 )
+
+-- lock the screen using hyprlock
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 
 -- rofi menus
 

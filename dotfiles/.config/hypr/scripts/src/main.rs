@@ -1,13 +1,52 @@
-fn main() {
-    let logo = r#"
+use clap::{Parser, Subcommand};
+use aurora::apply_theme;
+use aurora::list_themes;
+
+const LOGO: &str = r#"
    _____                                    
   /  _  \  __ _________  ________________   
  /  /_\  \|  |  \_  __ \/  _ \_  __ \__  \  
 /    |    \  |  /|  | \(  <_> )  | \// __ \_
 \____|__  /____/ |__|   \____/|__|  (____  /
         \/                               \/ 
-                                by Ahum
+                                by Ahum Maitra :)
     "#;
-    println!("{}", logo);
-    println!("Aurora is still under development!");
+/// Aurora's CLI
+#[derive(Parser)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Shows current Aurora's version and Aurora's cli version
+    Version,
+    /// Applies given theme globally
+    ApplyTheme {name: String},
+    /// Lists all available themes
+    ListThemes,
+    /// Shows information about Aurora
+    Information
+}
+
+
+fn main() {
+    let cli = Cli::parse();
+    match &cli.command {
+        Commands::Version   => {
+            println!("{LOGO}");
+            println!("Using Aurora's 0.1.0");
+            println!("Using Aurora's CLI - 0.1.0");
+        }
+        Commands::ApplyTheme { name } => {
+            apply_theme(name);
+        }
+        Commands::ListThemes => {
+            list_themes();
+        }
+        Commands::Information => {
+            println!("{LOGO} \n Fast, minimal, beautiful Hyprland rice. This project is licensed under the terms of GPL-3.0-or-later .\n Official Repository URL :- https://github.com/TheAhumMaitra/Aurora")
+        }
+    }
 }

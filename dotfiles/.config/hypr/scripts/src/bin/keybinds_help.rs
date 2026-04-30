@@ -19,9 +19,9 @@
 
 use gtk::ScrolledWindow;
 use gtk::gdk;
-use gtk::gdk::Display;
+use aurora::load_css;
 use gtk::prelude::*;
-use gtk::{Align, Application, ApplicationWindow, CssProvider, EventControllerKey, Grid, Label};
+use gtk::{Align, Application, ApplicationWindow, EventControllerKey, Grid, Label};
 use gtk4 as gtk;
 
 const KEYBINDS: &[(&str, &str)] = &[
@@ -156,19 +156,3 @@ fn main() {
     app.run();
 }
 
-fn load_css() {
-    let provider = CssProvider::new();
-
-    // include as &str, not bytes
-    provider.load_from_data(include_str!("../style.css"));
-
-    if let Some(display) = Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    } else {
-        eprintln!("Warning: Could not connect to a display.");
-    }
-}

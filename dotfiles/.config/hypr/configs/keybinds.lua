@@ -50,6 +50,15 @@ hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 -- launch search pop up
 hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("search"))
 
+-- Aurora's special scripts 
+
+-- on/off (toggle) waybar 
+hl.bind(mainMod.." + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))
+
+-- refresh waybar
+hl.bind(mainMod.." + W", hl.dsp.exec_cmd("waybar_refresh"))
+
+
 -- crucial keybinds
 
 -- Switch workspaces with mainMod + [0-9]

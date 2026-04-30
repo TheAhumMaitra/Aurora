@@ -18,10 +18,10 @@
 
 
 
-use gtk4::gdk::Display;
+use aurora::load_css;
 use gtk4::prelude::*;
 use gtk4::{
-    Align, Application, ApplicationWindow, Box, Button, CssProvider, Label, Orientation,
+    Align, Application, ApplicationWindow, Box, Button, Label, Orientation,
     ScrolledWindow,
 };
 use std::process::Command;
@@ -188,21 +188,4 @@ fn add_setting<F: Fn() + 'static>(parent: &Box, text: &str, action: F) {
     row.append(&button);
 
     parent.append(&row);
-}
-
-fn load_css() {
-    let provider = CssProvider::new();
-
-    // include as &str, not bytes
-    provider.load_from_data(include_str!("../style.css"));
-
-    if let Some(display) = Display::default() {
-        gtk4::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    } else {
-        eprintln!("Warning: Could not connect to a display.");
-    }
 }

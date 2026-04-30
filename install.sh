@@ -34,9 +34,54 @@ INSTALL_LOG="$SCRIPT_DIR/.aurora_install.log"
 BACKUP_DIR="$HOME/.config/aurora_backup_$(date +%s)"
 INTERACTIVE=true
 DRY_RUN=false
-TOTAL_STEPS=7
+TOTAL_STEPS=9
 CURRENT_STEP=0
-INSTALL_MODE="stable" 
+INSTALL_MODE="stable"
+INSTALL_STATE_FILE="$HOME/.aurora_install_state"
+LOG_LEVEL="${LOG_LEVEL:-INFO}"
+PRESERVE_FOLDERS=()
+PRESERVE_FILES=()
+DETECTED_INSTALL_TYPE="fresh"  # fresh, update, reinstall 
+
+# Structured Logging System
+log_message() {
+    local level="$1"
+    shift
+    local message="$*"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # Log to file with level
+    echo "[$timestamp] [$level] $message" >> "$INSTALL_LOG"
+    
+    # Display to console based on log level
+    case "$level" in
+        ERROR)
+            echo -e "${RED}✗ ERROR: $message${NC}" >&2
+            ;;
+        WARN)
+            echo -e "${YELLOW}⚠ WARNING: $message${NC}"
+            ;;
+        INFO)
+            if [ "$LOG_LEVEL" = "INFO" ] || [ "$LOG_LEVEL" = "DEBUG" ]; then
+                echo -e "${BLUE}ℹ INFO: $message${NC}"
+            fi
+            ;;
+        DEBUG)
+            if [ "$LOG_LEVEL" = "DEBUG" ]; then
+                echo -e "${BLUE}🔍 DEBUG: $message${NC}"
+            fi
+            ;;
+        SUCCESS)
+            echo -e "${GREEN}✓ $message${NC}"
+            ;;
+    esac
+}
+
+log_error() { log_message "ERROR" "$@"; }
+log_warn() { log_message "WARN" "$@"; }
+log_info() { log_message "INFO" "$@"; }
+log_debug() { log_message "DEBUG" "$@"; }
+log_success() { log_message "SUCCESS" "$@"; }
 
 # Helper functions
 print_header() {
@@ -44,26 +89,112 @@ print_header() {
 }
 
 print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
+    log_success "$1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
+    log_warn "$1"
 }
 
 print_error() {
-    echo -e "${RED}✗ $1${NC}"
+    log_error "$1"
 }
 
 next_step() {
     ((CURRENT_STEP++))
     echo ""
     echo -e "${BLUE}[Step $CURRENT_STEP/$TOTAL_STEPS]${NC} $1"
-    echo "$1" >> "$INSTALL_LOG"
+    log_info "Step $CURRENT_STEP: $1"
 }
 
 log_command() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$INSTALL_LOG"
+    log_debug "$*"
+}
+
+# Package Detection Functions
+is_package_installed() {
+    local package="$1"
+    
+    # Check in pacman
+    if pacman -Q "$package" &>/dev/null; then
+        return 0
+    fi
+    
+    # Check in yay (AUR packages)
+    if command -v yay &>/dev/null; then
+        if yay -Q "$package" &>/dev/null; then
+            return 0
+        fi
+    fi
+    
+    return 1
+}
+
+get_install_source() {
+    local package="$1"
+    
+    if pacman -Q "$package" &>/dev/null; then
+        echo "pacman"
+        return 0
+    elif command -v yay &>/dev/null && yay -Q "$package" &>/dev/null; then
+        echo "aur"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Hyprland Runtime Detection (Issue #10 - improved)
+detect_hyprland_runtime() {
+    # Check if running
+    if pgrep -x "Hyprland" > /dev/null 2>&1; then
+        if command -v hyprctl &>/dev/null; then
+            local version=$(hyprctl version 2>/dev/null | head -1 | grep -oE 'v[0-9.]+' || echo 'unknown')
+            log_info "Hyprland is currently running (version: $version)"
+        else
+            log_info "Hyprland is currently running"
+        fi
+        return 0
+    fi
+    
+    # Check if installed via pacman/yay (Issue #10 & #12)
+    if pacman -Q hyprland &>/dev/null || pacman -Q hyprland-git &>/dev/null; then
+        local installed_version
+        if pacman -Q hyprland &>/dev/null; then
+            installed_version=$(pacman -Q hyprland | awk '{print $2}')
+            log_debug "Hyprland installed (repo version: $installed_version) but not running"
+        else
+            installed_version=$(pacman -Q hyprland-git | awk '{print $2}')
+            log_debug "Hyprland installed (git version: $installed_version) but not running"
+        fi
+        return 0
+    fi
+    
+    return 1
+}
+
+# Installation State Detection
+detect_installation_type() {
+    local aurora_installed=false
+    local aurora_version_file="$HOME/.aurora_install_state"
+    
+    # Check if Aurora binaries exist
+    if [ -f "$HOME/.cargo/bin/keybinds_help" ]; then
+        aurora_installed=true
+    fi
+    
+    if [ "$aurora_installed" = true ]; then
+        if [ -f "$aurora_version_file" ]; then
+            DETECTED_INSTALL_TYPE="update"
+            log_info "Detected existing Aurora installation - running in UPDATE mode"
+        else
+            DETECTED_INSTALL_TYPE="reinstall"
+            log_warn "Detected Aurora binaries but no state file - running in REINSTALL mode"
+        fi
+    else
+        DETECTED_INSTALL_TYPE="fresh"
+        log_info "No existing Aurora installation detected - running in FRESH INSTALL mode"
+    fi
 }
 
 # Check if running on Arch Linux
@@ -85,6 +216,111 @@ check_root() {
         exit 1
     fi
     print_success "Running as non-root user"
+}
+
+# Installation Mode Selector (Issue #7)
+select_installation_mode() {
+    if [ "$DRY_RUN" = true ] || [ "$INTERACTIVE" = false ]; then
+        log_info "Using default mode: $INSTALL_MODE"
+        return
+    fi
+    
+    next_step "Selecting installation mode"
+    
+    echo ""
+    echo -e "${YELLOW}Choose installation mode:${NC}"
+    echo ""
+    echo "  1) ${BLUE}Stable (recommended)${NC}"
+    echo "     - Uses official Arch repositories"
+    echo "     - Maximum stability"
+    echo ""
+    echo "  2) ${YELLOW}Git (bleeding edge)${NC}"
+    echo "     - Uses -git versions (hyprland-git, wayland-git, etc.)"
+    echo "     - Requires yay for AUR packages"
+    echo "     - Latest features but may be unstable"
+    echo ""
+    
+    read -p "Enter choice [1-2] (default: 1): " -n 1 choice
+    echo
+    
+    case "$choice" in
+        2)
+            INSTALL_MODE="git"
+            log_info "Installation mode set to: GIT (bleeding edge)"
+            ;;
+        *)
+            INSTALL_MODE="stable"
+            log_info "Installation mode set to: STABLE (default)"
+            ;;
+    esac
+}
+
+# Config Preservation Selector (Issue #18 & #3 - with path validation)
+select_config_preservation() {
+    if [ "$DRY_RUN" = true ] || [ "$INTERACTIVE" = false ]; then
+        log_info "No config preservation selected"
+        return
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}Select configurations to preserve (optional):${NC}"
+    echo ""
+    echo "  This will prevent overwriting your custom configs."
+    echo "  Leave empty to backup and replace all configs."
+    echo ""
+    
+    read -p "Folders to preserve (comma-separated, e.g., hypr,waybar): " folders_input
+    read -p "Files to preserve (full paths, e.g., ~/.config/file1,~/.config/file2): " files_input
+    
+    # Validate and parse folder input (Issue #3)
+    if [ -n "$folders_input" ]; then
+        IFS=',' read -ra folder_array <<< "$folders_input"
+        local valid_folders=()
+        
+        for folder in "${folder_array[@]}"; do
+            folder="${folder##*( )}"
+            folder="${folder%%*( )}"
+            
+            local folder_path="$HOME/.config/$folder"
+            
+            if [ -d "$folder_path" ]; then
+                valid_folders+=("$folder")
+                log_debug "Folder to preserve: $folder (exists at $folder_path)"
+            else
+                log_warn "Folder '$folder' not found at $folder_path - skipping"
+            fi
+        done
+        
+        PRESERVE_FOLDERS=("${valid_folders[@]}")
+        if [ ${#PRESERVE_FOLDERS[@]} -gt 0 ]; then
+            log_info "Folders to preserve: ${PRESERVE_FOLDERS[*]}"
+        fi
+    fi
+    
+    # Validate and parse file input (Issue #3)
+    if [ -n "$files_input" ]; then
+        IFS=',' read -ra file_array <<< "$files_input"
+        local valid_files=()
+        
+        for file in "${file_array[@]}"; do
+            file="${file##*( )}"
+            file="${file%%*( )}"
+            file="${file/#~\//$HOME/}"
+            file=$(eval echo "$file")
+            
+            if [ -f "$file" ]; then
+                valid_files+=("$file")
+                log_debug "File to preserve: $file (exists)"
+            else
+                log_warn "File '$file' not found - skipping"
+            fi
+        done
+        
+        PRESERVE_FILES=("${valid_files[@]}")
+        if [ ${#PRESERVE_FILES[@]} -gt 0 ]; then
+            log_info "Files to preserve: ${PRESERVE_FILES[*]}"
+        fi
+    fi
 }
 
 # Install AUR helper if needed
@@ -153,6 +389,34 @@ rotate_logs() {
     fi
 }
 
+# Rollback on critical failure (Issue #8)
+rollback_on_failure() {
+    local failure_reason="$1"
+    log_error "Critical failure: $failure_reason"
+    print_error "CRITICAL FAILURE: $failure_reason"
+    print_warning "Attempting to restore from backup..."
+    
+    if [ -d "$BACKUP_DIR" ]; then
+        echo ""
+        echo "Backup found at $BACKUP_DIR"
+        read -p "Restore backed up configs? (y/n) " -n 1 -r
+        echo
+        
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            [ -d "$BACKUP_DIR/hypr" ] && rm -rf "$HOME/.config/hypr" 2>/dev/null; cp -r "$BACKUP_DIR/hypr" "$HOME/.config/" 2>/dev/null
+            [ -d "$BACKUP_DIR/waybar" ] && rm -rf "$HOME/.config/waybar" 2>/dev/null; cp -r "$BACKUP_DIR/waybar" "$HOME/.config/" 2>/dev/null
+            [ -d "$BACKUP_DIR/kitty" ] && rm -rf "$HOME/.config/kitty" 2>/dev/null; cp -r "$BACKUP_DIR/kitty" "$HOME/.config/" 2>/dev/null
+            [ -d "$BACKUP_DIR/fish" ] && rm -rf "$HOME/.config/fish" 2>/dev/null; cp -r "$BACKUP_DIR/fish" "$HOME/.config/" 2>/dev/null
+            [ -d "$BACKUP_DIR/rofi" ] && rm -rf "$HOME/.config/rofi" 2>/dev/null; cp -r "$BACKUP_DIR/rofi" "$HOME/.config/" 2>/dev/null
+            print_success "Configs restored from backup"
+            log_info "Configs restored from backup after failure"
+        fi
+    fi
+    
+    print_error "Installation failed. Please check the log: $INSTALL_LOG"
+    exit 1
+}
+
 # Check dependencies
 check_dependencies() {
     next_step "Checking system dependencies"
@@ -200,22 +464,28 @@ validate_hyprland() {
         return
     fi
     
-    next_step "Validating Hyprland setup"
+    next_step "Validating Hyprland setup (Issue #2)"
     
-    echo ""
-    echo -e "${YELLOW}This script configures Aurora for Hyprland (Wayland compositor).${NC}"
-    echo ""
-    read -p "Are you using or planning to use Hyprland? (y/n) " -n 1 -r
-    echo
-    
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_warning "Aurora is designed for Hyprland. Proceeding may result in non-functional configs."
-        read -p "Continue anyway? (y/n) " -n 1 -r
+    # Check runtime Hyprland status
+    if detect_hyprland_runtime; then
+        print_success "Hyprland detected on system"
+        log_success "Hyprland is installed and functional"
+    else
+        echo ""
+        echo -e "${YELLOW}This script configures Aurora for Hyprland (Wayland compositor).${NC}"
+        echo ""
+        read -p "Are you using or planning to use Hyprland? (y/n) " -n 1 -r
         echo
         
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_error "Installation cancelled"
-            exit 0
+            print_warning "Aurora is designed for Hyprland. Proceeding may result in non-functional configs."
+            read -p "Continue anyway? (y/n) " -n 1 -r
+            echo
+            
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_error "Installation cancelled"
+                exit 0
+            fi
         fi
     fi
     
@@ -238,7 +508,7 @@ install_packages() {
     fi
     
     # Organized package groups with comments
-local -A package_groups=(
+declare local -A package_groups=(
 
     # Core system (Wayland + Hyprland essentials)
     [core]="
@@ -382,28 +652,54 @@ build_rust_scripts() {
     local script_dir="$SCRIPT_DIR/dotfiles/.config/hypr/scripts"
     
     if [ ! -d "$script_dir" ]; then
+        log_error "Scripts directory not found at $script_dir"
         print_error "Scripts directory not found at $script_dir"
-        exit 1
+        rollback_on_failure "Scripts directory missing"
+        return 1
     fi
     
-    cd "$script_dir"
+    # Verify Cargo.toml exists (Issue #4 - project validation)
+    if [ ! -f "$script_dir/Cargo.toml" ]; then
+        log_error "Cargo.toml not found in $script_dir - invalid Rust project"
+        print_error "Invalid Rust project structure at $script_dir"
+        rollback_on_failure "Invalid Rust project"
+        return 1
+    fi
+    
+    cd "$script_dir" || {
+        log_error "Failed to change directory to $script_dir"
+        rollback_on_failure "Cannot access scripts directory"
+        return 1
+    }
     
     if [ "$INTERACTIVE" = false ]; then
+        log_info "Running cargo install in non-interactive mode..."
         print_warning "Running cargo install in non-interactive mode..."
     else
         print_warning "Installing aurora scripts (this may take a few minutes)..."
+        log_info "Starting cargo install for Aurora scripts"
     fi
     
-    cargo install --path . || {
-        print_error "Failed to install Rust scripts"
-        log_command "ERROR: cargo install failed"
-        exit 1
-    }
+    # Run cargo install with error capture (Issue #4 & #7)
+    local cargo_log="$INSTALL_LOG.cargo_err"
+    if ! cargo install --path . 2>"$cargo_log"; then
+        local cargo_error=$(cat "$cargo_log" 2>/dev/null | tail -20 || echo "Unknown error")
+        log_error "Cargo install failed: $cargo_error"
+        print_error "Failed to build Rust scripts"
+        print_warning "Last 20 lines of error log:"
+        echo "$cargo_error" | sed 's/^/  /'
+        rm -f "$cargo_log"
+        rollback_on_failure "Cargo build failed"
+        cd - > /dev/null
+        return 1
+    fi
     
-    log_command "Successfully installed Rust scripts"
+    rm -f "$cargo_log"
+    log_info "Successfully installed Rust scripts to ~/.cargo/bin"
     print_success "Rust scripts installed successfully to ~/.cargo/bin"
     
     cd - > /dev/null
+    return 0
 }
 
 # Copy dotfiles
@@ -476,7 +772,7 @@ copy_dotfiles() {
     fi
     
     print_warning "Copying .config files..."
-    cp -rv "$config_src"/* "$config_dest/" 2>&1 | grep -v '^' || true
+    cp -rv "$config_src"/* "$config_dest/"
     
     log_command "Configuration files installed"
     print_success "Configuration files installed"
@@ -651,6 +947,22 @@ final_setup() {
     echo "  ✓ Configuration files installed"
     echo "  ✓ Shell environment configured"
     echo ""
+    echo -e "${BLUE}Installation Mode: ${INSTALL_MODE^^}${NC}"
+    echo -e "${BLUE}Installation Type: ${DETECTED_INSTALL_TYPE^^}${NC}"
+    echo ""
+    
+    # Save installation state (Issue #13)
+    cat > "$INSTALL_STATE_FILE" << STATE_EOF
+{
+  "version": "1.0",
+  "install_type": "$DETECTED_INSTALL_TYPE",
+  "install_mode": "$INSTALL_MODE",
+  "install_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "script_version": "$(git -C "$SCRIPT_DIR" describe --tags --always 2>/dev/null || echo 'unknown')",
+  "hyprland_runtime_detected": "$(detect_hyprland_runtime && echo 'true' || echo 'false')"
+}
+STATE_EOF
+    log_info "Saved installation state to $INSTALL_STATE_FILE"
     
     echo -e "${YELLOW}Installation log saved to: $INSTALL_LOG${NC}"
     echo ""
@@ -690,12 +1002,24 @@ Options:
   --dry-run           Preview changes without applying them
   --uninstall         Uninstall Aurora and restore backups
   --non-interactive   Run without user prompts (skip packages & Hyprland check)
+  --debug             Show detailed debug information and logs
 
 Examples:
-  ./install.sh                    # Interactive installation
+  ./install.sh                    # Interactive installation with mode selection
   ./install.sh --dry-run          # Preview what will be installed
-  ./install.sh --non-interactive  # Automated installation
+  ./install.sh --non-interactive  # Automated installation (default: stable mode)
+  ./install.sh --debug            # Installation with verbose logging
   ./install.sh --uninstall        # Remove Aurora and restore backups
+
+Features:
+  - Detects existing Aurora installations (fresh/update/reinstall modes)
+  - Supports stable (repo) and git (bleeding edge) package installations
+  - Hyprland runtime detection and validation
+  - Selective config preservation and backup
+  - Structured logging with INFO/WARN/ERROR/DEBUG levels
+  - Dry-run mode to preview changes
+  - AUR package detection via yay
+  - Installation state tracking for version upgrades
 
 EOF
 }
@@ -710,6 +1034,10 @@ main() {
             ;;
         --dry-run)
             DRY_RUN=true
+            ;;
+        --debug)
+            LOG_LEVEL="DEBUG"
+            DRY_RUN=false
             ;;
         --uninstall)
             uninstall_aurora
@@ -734,10 +1062,10 @@ main() {
     fi
     : > "$INSTALL_LOG"
     
-    log_command "Aurora Installation Started"
-    log_command "Script location: $SCRIPT_DIR"
-    log_command "Interactive mode: $INTERACTIVE"
-    log_command "Dry-run mode: $DRY_RUN"
+    log_info "Aurora Installation Started"
+    log_debug "Script location: $SCRIPT_DIR"
+    log_debug "Interactive mode: $INTERACTIVE"
+    log_debug "Dry-run mode: $DRY_RUN"
     
     clear
     echo -e "${BLUE}"
@@ -758,9 +1086,12 @@ EOF
     # Run installation steps
     check_arch
     check_root
+    detect_installation_type  # Issue #5
     check_existing_install
     create_directories
     check_dependencies
+    select_installation_mode  # Issue #7 - Feature request
+    select_config_preservation  # Issue #18 - Feature request
     validate_hyprland
     install_packages
     

@@ -1,0 +1,9 @@
+[2026-04-30 13:31:47] [INFO] Aurora Installation Started
+[2026-04-30 13:31:47] [DEBUG] Script location: /home/ahummaitra/Aurora
+[2026-04-30 13:31:47] [DEBUG] Interactive mode: true
+[2026-04-30 13:31:47] [DEBUG] Dry-run mode: true
+[2026-04-30 13:31:47] [SUCCESS] Arch Linux detected
+[2026-04-30 13:31:47] [SUCCESS] Running as non-root user
+[2026-04-30 13:31:47] [WARN] Detected Aurora binaries but no state file - running in REINSTALL mode
+[2026-04-30 13:31:47] [WARN] Existing Aurora installation detected:
+[2026-04-30 13:31:47] [WARN] This script will upgrade/overwrite your Aurora setup.

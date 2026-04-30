@@ -19,15 +19,21 @@
 
 {
   "spacing": 3, // Gaps between modules
-  "modules-left": ["hyprland/workspaces"],
+  "modules-left": ["custom/logo", "hyprland/workspaces"],
   "modules-center": ["hyprland/window"],
   "modules-right": [
     "clock",
     "pulseaudio",
     "battery",
+    "tray",
     "custom/notification",
     "custom/wlogout",
   ],
+  "custom/logo": {
+        "format":"    ",
+        "tooltip": false,
+        "on-click": "exec settings",
+  },
   "hyprland/workspaces": {
     "persistent-workspaces": {
       "*": 10,
@@ -115,4 +121,7 @@
     "tooltip": false,
     "interval": 0,
   },
+  "tray": {
+    "spacing": 10
+},
 }

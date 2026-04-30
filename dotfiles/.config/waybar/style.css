@@ -63,3 +63,15 @@ window#waybar.empty #window {
 #custom-wlogout {
   margin-right: 20px;
 }
+
+#custom-logo{
+        font-size: 12px;
+        background-image: url('./assests/logo-png.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+}
+
+#tray {
+  margin-right: 15px;
+}

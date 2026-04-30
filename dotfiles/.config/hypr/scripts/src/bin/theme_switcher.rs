@@ -17,10 +17,10 @@
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-use gtk4::gdk::Display;
+use aurora::load_css;
 use gtk4::prelude::*;
 use gtk4::{
-    Application, ApplicationWindow, CssProvider, EventControllerKey, Label, ListBox, ListBoxRow,
+    Application, ApplicationWindow, EventControllerKey, Label, ListBox, ListBoxRow,
     ScrolledWindow,
 };
 
@@ -96,19 +96,6 @@ fn build_ui(app: &Application) {
     window.add_controller(controller);
     window.set_child(Some(&scroll));
     window.show();
-}
-
-fn load_css() {
-    let provider = CssProvider::new();
-    provider.load_from_data(include_str!("../style.css"));
-
-    if let Some(display) = Display::default() {
-        gtk4::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 // main

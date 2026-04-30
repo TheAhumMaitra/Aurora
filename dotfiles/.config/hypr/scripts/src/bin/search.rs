@@ -22,6 +22,7 @@ use gtk::prelude::*;
 use gtk::{Application, ApplicationWindow, Entry};
 use gtk4 as gtk;
 use std::process::Command;
+use aurora::load_css;
 
 const SEARCH_ENGINE_NAME: &str = "Google";
 const SEARCH_ENGINE_URL: &str = "https://www.google.com/search?q=";
@@ -34,16 +35,17 @@ fn main() {
     app.connect_activate(build_ui);
     app.run();
 }
+
 fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Search")
         .decorated(false)
-        // .resizable(false) // important
         .build();
 
-    window.set_opacity(0.85);
-
+    window.set_opacity(0.8);
+    
+    load_css();
     let controller = gtk::EventControllerKey::new();
 
     let app_clone2 = app.clone();
@@ -69,6 +71,7 @@ fn build_ui(app: &Application) {
         if text.trim().is_empty() {
             return;
         }
+    entry.set_opacity(0.8);
 
         let encoded = urlencoding::encode(&text);
         let url = format!("{}{}", SEARCH_ENGINE_URL, encoded);

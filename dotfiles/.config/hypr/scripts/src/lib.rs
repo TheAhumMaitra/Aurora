@@ -21,6 +21,10 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
+use gtk4::gdk::Display;
+use gtk4::CssProvider;
+use gtk4 as gtk;
+
 fn get_paths() -> (PathBuf, PathBuf) {
     let home = std::env::var("HOME").expect("Could not get HOME");
     let themes_dir = PathBuf::from(format!("{}/.config/themes", home));
@@ -45,13 +49,24 @@ pub fn list_themes() {
 }
 
 pub fn apply_theme(theme_name: &str) {
+    let home = std::env::var("HOME").expect("Could not get HOME");
     let (themes_dir, config_base) = get_paths();
 
     let folders = ["waybar", "wlogout", "hypr"];
     let filenames = ["colors.css", "colors.lua"];
     
     let message = format!("{theme_name} is applied!");
+    let logs_directory = format!("{}/.local/share/Aurora", home);
+    let theme_log_path = format!("{}/theme_name.log", logs_directory);
+    
     println!("Applying theme : {}", theme_name);
+    
+    fs::create_dir_all(&logs_directory)
+        .expect("Failed to create directory for string theme logs");
+
+    fs::write(&theme_log_path, &theme_name)
+            .expect("Failed to create theme logs");
+
     Command::new("notify-send")
         .args([message])
         .output()
@@ -117,5 +132,21 @@ pub fn apply_theme(theme_name: &str) {
             .ok();
     } else {
         println!("No default.jpg found for this theme");
+    }
+}
+pub fn load_css() {
+    let provider = CssProvider::new();
+
+    // include as &str, not bytes
+    provider.load_from_data(include_str!("./style.css"));
+
+    if let Some(display) = Display::default() {
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
+    } else {
+        eprintln!("Warning: Could not connect to a display.");
     }
 }

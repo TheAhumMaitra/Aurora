@@ -144,15 +144,13 @@ fn build_ui(app: &Application) {
     });
 
     add_setting(&vbox, "Change global theme", {
-        let home = home.clone();
         move || {
             println!("Opening Theme Switcher");
 
             Command::new("sh")
                 .arg("-c")
                 .arg(format!(
-                    "{}/.config/hypr/scripts/target/release/theme_switcher",
-                    home
+                    "theme_switcher"
                 ))
                 .spawn()
                 .unwrap();

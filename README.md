@@ -20,8 +20,12 @@
 # Aurora ™ 
 A minimal, elegant, rust based - blazingly fast rice
 
-# Installation script
-Unfortunately, installation script is not available yet
+# Installation
+
+## Using script
+You can use our installation script but it is in beta, might not work properly.
+
+__**To install Aurora using installation script follow these steps**__
 
 # License
 GNU Public License V3 or later

@@ -75,3 +75,8 @@ hl.window_rule({
 	match = { class = "com.aurora.keybinds_help" },
 	float = true,
 })
+hl.window_rule({
+	name = "Blueman Manager",
+	match = { class = "blueman-manager" },
+	float = true,
+})

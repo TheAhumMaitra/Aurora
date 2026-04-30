@@ -881,7 +881,7 @@ uninstall_aurora() {
     echo -e "${BLUE}"
     cat << "EOF"
     ╔═══════════════════════════════════════╗
-    ║      Aurora Uninstall Script          ║
+    ║      Aurora ™  Uninstall Script          ║
     ║    Remove Aurora and restore backup   ║
     ╚═══════════════════════════════════════╝
 EOF

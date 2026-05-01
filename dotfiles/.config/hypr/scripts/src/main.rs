@@ -16,10 +16,9 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-use clap::{Parser, Subcommand};
 use aurora::apply_theme;
 use aurora::list_themes;
+use clap::{Parser, Subcommand};
 
 const LOGO: &str = r#"
    _____                                    
@@ -42,18 +41,17 @@ enum Commands {
     /// Shows current Aurora's version and Aurora's cli version
     Version,
     /// Applies given theme globally
-    ApplyTheme {name: String},
+    ApplyTheme { name: String },
     /// Lists all available themes
     ListThemes,
     /// Shows information about Aurora
-    Information
+    Information,
 }
-
 
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Version   => {
+        Commands::Version => {
             println!("{LOGO}");
             println!("Using Aurora's 0.1.0");
             println!("Using Aurora's CLI - 0.1.0");
@@ -65,7 +63,9 @@ fn main() {
             list_themes();
         }
         Commands::Information => {
-            println!("{LOGO} \n Fast, minimal, beautiful Hyprland rice. This project is licensed under the terms of GPL-3.0-or-later .\n Official Repository URL :- https://github.com/TheAhumMaitra/Aurora")
+            println!(
+                "{LOGO} \n Fast, minimal, beautiful Hyprland rice. This project is licensed under the terms of GPL-3.0-or-later .\n Official Repository URL :- https://github.com/TheAhumMaitra/Aurora"
+            )
         }
     }
 }

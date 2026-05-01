@@ -1,19 +1,59 @@
-// SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> */
-// SPDX-License-Identifier: GPL-3.0-or-later */
+configuration {
+    modes: [ window, run, drun, emoji ];
+    display-drun: "";
+    show-icons: true;
+    font: "JetBrainsMono Nerd Font 11";
+    sort: true;
+    drun-display-format: "{name}";
+}
 
-/*    Copyright (C) 2026 Ahum Maitra
+@theme "~/.config/rofi/colors.rasi"
 
-      This program is free software: you can redistribute it and/or modify
-      it under the terms of the GNU General Public License as published by
-      the Free Software Foundation, either version 3 of the License, or
-      (at your option) any later version.
+* {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    color: @foreground;
+}
 
-      This program is distributed in the hope that it will be useful,
-      but WITHOUT ANY WARRANTY; without even the implied warranty of
-      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-      GNU General Public License for more details.
+window {
+    background-color: @background;
+    border-radius: 12px;
+    width: 500px;
+    height: 700px;
+    padding: 10px;
+}
 
-      You should have received a copy of the GNU General Public License
-      along with this program.  If not, see <https://www.gnu.org/licenses/>. */
+entry {
+    background-color: @entry-background;
+    border-radius: 8px;
+    padding: 8px;
+    placeholder: "Search...";
+}
 
-@theme "/usr/share/rofi/themes/paper-float.rasi"
+listview {
+    spacing: 6px;
+    margin: 10px 0 0;
+}
+
+element {
+    background-color: @background;
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px;
+    border-color: @bordercolor;
+    spacing: 7px;
+}
+
+element-text {
+    background-color: transparent;
+}
+
+element-icon {
+    size: 1.7em;
+    background-color: transparent;
+}
+element selected {
+    background-color: @urgent-background;
+}

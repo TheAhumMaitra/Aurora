@@ -16,9 +16,8 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-use gtk::gdk;
 use aurora::load_css;
+use gtk::gdk;
 use gtk::prelude::*;
 use gtk::{Align, Application, ApplicationWindow, EventControllerKey, Label};
 use gtk4 as gtk;
@@ -103,4 +102,3 @@ fn main() {
 
     app.run();
 }
-

@@ -16,14 +16,14 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+use serde::Deserialize;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use gtk4::gdk::Display;
-use gtk4::CssProvider;
 use gtk4 as gtk;
+use gtk4::CssProvider;
+use gtk4::gdk::Display;
 
 fn get_paths() -> (PathBuf, PathBuf) {
     let home = std::env::var("HOME").expect("Could not get HOME");
@@ -48,24 +48,53 @@ pub fn list_themes() {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct Config {
+    settings: Settings,
+}
+
+#[derive(Deserialize, Debug)]
+struct Settings {
+    script: Option<String>,
+    interpreter: Option<String>,
+}
 pub fn apply_theme(theme_name: &str) {
     let home = std::env::var("HOME").expect("Could not get HOME");
     let (themes_dir, config_base) = get_paths();
+    let mut config_path = themes_dir.clone();
+    config_path.push(theme_name);
+    config_path.push("config.toml");
 
-    let folders = ["waybar", "wlogout", "hypr"];
-    let filenames = ["colors.css", "colors.lua"];
-    
+    let config: Option<Config> = fs::read_to_string(&config_path)
+        .ok()
+        .and_then(|content| toml::from_str(&content).ok());
+    let folders = ["waybar", "wlogout", "hypr", "rofi"];
+    let filenames = ["colors.css", "colors.lua", "colors.rasi", "config.toml"];
+
     let message = format!("{theme_name} is applied!");
     let logs_directory = format!("{}/.local/share/Aurora", home);
     let theme_log_path = format!("{}/theme_name.log", logs_directory);
-    
-    println!("Applying theme : {}", theme_name);
-    
-    fs::create_dir_all(&logs_directory)
-        .expect("Failed to create directory for string theme logs");
 
-    fs::write(&theme_log_path, &theme_name)
-            .expect("Failed to create theme logs");
+    println!("Applying theme : {}", theme_name);
+
+    if let Some(config) = config {
+        if let Some(script) = &config.settings.script {
+            let interpreter = config.settings.interpreter.as_deref().unwrap_or("bash");
+
+            let mut path = themes_dir.clone();
+            path.push(theme_name);
+            path.push(script);
+
+            Command::new(interpreter)
+                .arg(path)
+                .spawn()
+                .expect("Failed to run script");
+        } else {
+            println!("No script in config, skipping...");
+        }
+    } else {
+        println!("No config.toml found, skipping script...");
+    }
 
     Command::new("notify-send")
         .args([message])
@@ -104,7 +133,7 @@ pub fn apply_theme(theme_name: &str) {
         }
     }
 
-    // Run refresh script for refreshing the system 
+    // Run refresh script for refreshing the system
     let exe = PathBuf::from(std::env::var("HOME").unwrap())
         .join(".config/hypr/scripts/target/release/refresh_system");
 

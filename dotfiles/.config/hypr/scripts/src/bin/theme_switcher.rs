@@ -16,17 +16,15 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 use aurora::load_css;
 use gtk4::prelude::*;
 use gtk4::{
-    Application, ApplicationWindow, EventControllerKey, Label, ListBox, ListBoxRow,
-    ScrolledWindow,
+    Application, ApplicationWindow, EventControllerKey, Label, ListBox, ListBoxRow, ScrolledWindow,
 };
 
+use aurora::apply_theme;
 use std::fs;
 use std::path::PathBuf;
-use aurora::{apply_theme};
 
 fn get_paths() -> (PathBuf, PathBuf) {
     let home = std::env::var("HOME").expect("Could not get HOME");

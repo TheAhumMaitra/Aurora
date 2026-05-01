@@ -16,13 +16,12 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+use aurora::load_css;
 use gtk::gdk;
 use gtk::prelude::*;
 use gtk::{Application, ApplicationWindow, Entry};
 use gtk4 as gtk;
 use std::process::Command;
-use aurora::load_css;
 
 const SEARCH_ENGINE_NAME: &str = "Google";
 const SEARCH_ENGINE_URL: &str = "https://www.google.com/search?q=";
@@ -44,7 +43,7 @@ fn build_ui(app: &Application) {
         .build();
 
     window.set_opacity(0.8);
-    
+
     load_css();
     let controller = gtk::EventControllerKey::new();
 
@@ -71,7 +70,7 @@ fn build_ui(app: &Application) {
         if text.trim().is_empty() {
             return;
         }
-    entry.set_opacity(0.8);
+        entry.set_opacity(0.8);
 
         let encoded = urlencoding::encode(&text);
         let url = format!("{}{}", SEARCH_ENGINE_URL, encoded);

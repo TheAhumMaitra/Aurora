@@ -16,13 +16,10 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-
 use aurora::load_css;
 use gtk4::prelude::*;
 use gtk4::{
-    Align, Application, ApplicationWindow, Box, Button, Label, Orientation,
-    ScrolledWindow,
+    Align, Application, ApplicationWindow, Box, Button, Label, Orientation, ScrolledWindow,
 };
 use std::process::Command;
 
@@ -149,9 +146,7 @@ fn build_ui(app: &Application) {
 
             Command::new("sh")
                 .arg("-c")
-                .arg(format!(
-                    "theme_switcher"
-                ))
+                .arg(format!("theme_switcher"))
                 .spawn()
                 .unwrap();
         }

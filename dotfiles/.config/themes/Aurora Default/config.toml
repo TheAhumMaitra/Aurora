@@ -1,0 +1,3 @@
+[settings]
+script = "default.sh"
+interpreter = "bash"

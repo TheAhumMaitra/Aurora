@@ -57,3 +57,14 @@ dofile(configs .. "/animations.lua")
 
 -- load env variables
 dofile(configs .. "/env_vars.lua")
+
+-- Load all user configurations
+-- Users can write their Hyprland configurations here. It is going to be ignored when updating in future
+local user_configs_path = home .. "/.config/hypr/User/configs"
+
+local handle = io.popen('find "' .. user_configs_path .. '" -type f -name "*.lua"')
+for file in handle:lines() do
+    dofile(file)
+end
+
+handle:close()

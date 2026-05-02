@@ -23,7 +23,7 @@ use aurora::list_themes;
 
 use clap::{Parser, Subcommand};
 
-use std::{fs, io::Read};
+use std::fs;
 const LOGO: &str = r#"
    _____                                    
   /  _  \  __ _________  ________________   

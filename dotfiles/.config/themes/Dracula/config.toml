@@ -1,0 +1,3 @@
+[settings]
+script = "activate.sh"
+interpreter = "bash"

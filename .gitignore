@@ -1,2 +1,4 @@
-dotfiles/.config/hypr/User/configs/
-dotfiles/.config/hypr/User/scripts/
+dotfiles/.config/hypr/User/configs/*
+!dotfiles/.config/hypr/User/configs/.gitkeep
+dotfiles/.config/hypr/User/scripts/*
+!dotfiles/.config/hypr/User/scripts/.gitkeep

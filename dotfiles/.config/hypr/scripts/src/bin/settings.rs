@@ -163,15 +163,15 @@ fn build_ui(app: &Application) {
 
 fn add_setting<F: Fn() + 'static>(parent: &Box, text: &str, action: F) {
     let row = Box::new(Orientation::Horizontal, 10);
-    row.add_css_class("setting-row"); // 👈 row class
+    row.add_css_class("setting-row");
 
     let label = Label::new(Some(text));
     label.set_xalign(0.0);
     label.set_hexpand(true);
-    label.add_css_class("setting-label"); // 👈 label class
+    label.add_css_class("setting-label");
 
     let button = Button::with_label("Run");
-    button.add_css_class("setting-button"); // 👈 button class
+    button.add_css_class("setting-button");
 
     button.connect_clicked(move |_| {
         action();

@@ -16,6 +16,8 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+//main CLI for Aurora
+
 use aurora::apply_theme;
 use aurora::list_themes;
 use clap::{Parser, Subcommand};

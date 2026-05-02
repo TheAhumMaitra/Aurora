@@ -18,6 +18,7 @@
 
 use serde::Deserialize;
 use std::fs;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -63,12 +64,12 @@ struct Settings {
     interpreter: Option<String>,
 }
 
-// apply the selected theme 
+// apply the selected theme
 pub fn apply_theme(theme_name: &str) {
     let home = std::env::var("HOME").expect("Could not get HOME");
     let (themes_dir, config_base) = get_paths();
 
-    // get the `config.toml` from the selected theme 
+    // get the `config.toml` from the selected theme
     let mut config_path = themes_dir.clone();
     config_path.push(theme_name);
     config_path.push("config.toml");
@@ -79,23 +80,32 @@ pub fn apply_theme(theme_name: &str) {
     let folders = ["waybar", "wlogout", "hypr", "rofi"]; //directories want to be copied
     let filenames = ["colors.css", "colors.lua", "colors.rasi", "config.toml"]; //files need to be copied form that directories
 
-    let message = format!("{theme_name} is applied!"); 
+    let message = format!("{theme_name} is applied!");
 
     //get the logs directory of Aurora
     let logs_directory = format!("{}/.local/share/Aurora", home);
-    let theme_log_path = format!("{}/theme_name.log", logs_directory); //get the theme log 
-    
+
+    // write selected theme name into the theme logs file
+    // Ensure the directory exists
+    fs::create_dir_all(&logs_directory).expect("Failed to create logs directory");
+
+    // Now write the file
+    let theme_log_path = format!("{}/theme_name.log", logs_directory);
+
+    fs::write(&theme_log_path, theme_name)
+        .expect("Failed to write theme name into the theme logs file.");
+
     println!("Applying theme : {}", theme_name);
-    
+
     // Get the options from valid categories and do the job
     if let Some(config) = config {
         if let Some(script) = &config.settings.script {
             let interpreter = config.settings.interpreter.as_deref().unwrap_or("bash"); //get the parsed interpreter or simply set it to bash
-            
+
             let mut path = themes_dir.clone();
             path.push(theme_name);
             path.push(script);
-            
+
             Command::new(interpreter)
                 .arg(path)
                 .spawn()
@@ -108,37 +118,37 @@ pub fn apply_theme(theme_name: &str) {
         //skip if no configuration file is available
         println!("No config.toml found, skipping script...");
     }
-    
+
     //Send the message for selected theme is applied
     Command::new("notify-send")
         .args([message])
         .output()
         .expect("failed to execute process");
-    
-    // copy the files 
+
+    // copy the files
     for folder in folders {
         let mut found = false;
 
         for file in filenames {
-            // source path is directory of the theme folder 
+            // source path is directory of the theme folder
             let mut source = themes_dir.clone();
             source.push(theme_name);
             source.push(folder);
             source.push(file);
-            
-            // our target is `.config` 
+
+            // our target is `.config`
             let mut target = config_base.clone();
             target.push(folder);
             target.push(file);
-            
-            // if theme file exists 
+
+            // if theme file exists
             if source.exists() {
-                // if the parent directory exists (.config) 
+                // if the parent directory exists (.config)
                 if let Some(parent) = target.parent() {
                     fs::create_dir_all(parent).ok();
-                } 
+                }
 
-                // copy the files from source to target 
+                // copy the files from source to target
                 match fs::copy(&source, &target) {
                     Ok(_) => println!("Applied {}/{}", folder, file),
                     Err(e) => eprintln!("Copy error in {}: {}", folder, e),
@@ -154,21 +164,18 @@ pub fn apply_theme(theme_name: &str) {
     }
 
     // Run refresh script for refreshing the system
-    let exe = PathBuf::from(std::env::var("HOME").unwrap())
-        .join(".config/hypr/scripts/target/release/refresh_system");
-
-    Command::new(exe)
+    Command::new("refresh_system")
         .spawn()
-        .expect("failed to run refresh_system");
-    
+        .expect("Failed to refresh the system.");
+
     //get the default wallpaper
     let mut wallpaper = themes_dir.clone();
     wallpaper.push(theme_name);
     wallpaper.push("default.png");
-    
+
     if wallpaper.exists() {
         println!("Setting wallpaper: {:?}", wallpaper);
-        
+
         //use awww to apply the wallpaper
         Command::new("awww")
             .args([
@@ -184,9 +191,8 @@ pub fn apply_theme(theme_name: &str) {
     } else {
         println!("No default.jpg found for this theme");
     }
-
 }
-// load the `style.css` file for gtk apps 
+// load the `style.css` file for gtk apps
 pub fn load_css() {
     let provider = CssProvider::new();
 

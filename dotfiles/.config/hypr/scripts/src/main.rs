@@ -20,8 +20,10 @@
 
 use aurora::apply_theme;
 use aurora::list_themes;
+
 use clap::{Parser, Subcommand};
 
+use std::{fs, io::Read};
 const LOGO: &str = r#"
    _____                                    
   /  _  \  __ _________  ________________   
@@ -48,6 +50,8 @@ enum Commands {
     ListThemes,
     /// Shows information about Aurora
     Information,
+    /// Returns theme details
+    ThemeInfo,
 }
 
 fn main() {
@@ -68,6 +72,21 @@ fn main() {
             println!(
                 "{LOGO} \n Fast, minimal, beautiful Hyprland rice. This project is licensed under the terms of GPL-3.0-or-later .\n Official Repository URL :- https://github.com/TheAhumMaitra/Aurora"
             )
+        }
+        Commands::ThemeInfo => {
+            let home = std::env::var("HOME").expect("Could not get HOME");
+            let logs_directory = format!("{}/.local/share/Aurora", home);
+
+            // write selected theme name into the theme logs file
+            // Ensure the directory exists
+            fs::create_dir_all(&logs_directory).expect("Failed to create logs directory");
+
+            let theme_log_path = format!("{}/theme_name.log", logs_directory);
+
+            let contents =
+                fs::read_to_string(theme_log_path).expect("Failed to read the theme logs.");
+
+            println!("Information about current theme : \n {contents}")
         }
     }
 }

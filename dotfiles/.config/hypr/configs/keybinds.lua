@@ -50,14 +50,13 @@ hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 -- launch search pop up
 hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("search"))
 
--- Aurora's special scripts 
+-- Aurora's special scripts
 
--- on/off (toggle) waybar 
-hl.bind(mainMod.." + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))
+-- on/off (toggle) waybar
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))
 
 -- refresh waybar
-hl.bind(mainMod.." + W", hl.dsp.exec_cmd("waybar_refresh"))
-
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("waybar_refresh"))
 
 -- crucial keybinds
 
@@ -140,8 +139,34 @@ hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = 
 -- Laptop multimedia keys for volume and LCD brightness
 
 -- volume keys
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+")) --raise volume
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%-")) --decrease volume
+hl.bind(
+	"XF86AudioRaiseVolume",
+	hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),
+	{ locked = true, repeating = true }
+)
+hl.bind(
+	"XF86AudioLowerVolume",
+	hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
+	{ locked = true, repeating = true }
+)
+hl.bind(
+	"XF86AudioMute",
+	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
+	{ locked = true, repeating = true }
+)
+hl.bind(
+	"XF86AudioMicMute",
+	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
+	{ locked = true, repeating = true }
+)
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"), { locked = true, repeating = true })
+
+-- Requires playerctl
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
 
 -- brightness keys
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+")) -- increase brightness

@@ -1,0 +1,47 @@
+{{/* 
+
+*/}}
+
+{{ $src := .Get "src" }}
+{{ $caption := .Get "caption" }}
+{{ $width := .Get "width" | default "100%" }}
+{{ $class := .Get "class" }}
+
+{{ $video := false }}
+{{ $type := "" }}
+
+{{/* 1. Try Page Resources */}}
+{{ with .Page.Resources.Get $src }}
+  {{ $video = . }}
+  {{ $type = .MediaType }}
+{{ end }}
+
+{{/* 2. Try Assets */}}
+{{ if not $video }}
+  {{ with resources.Get $src }}
+    {{ $video = . }}
+    {{ $type = .MediaType }}
+  {{ end }}
+{{ end }}
+
+{{/* 3. Static fallback */}}
+{{ if not $video }}
+  {{ if fileExists (printf "static/%s" $src) }}
+    {{ $video = dict "RelPermalink" (relURL $src) }}
+  {{ end }}
+{{ end }}
+
+<figure class="video {{ $class }}">
+  {{ if $video }}
+    <video controls width="{{ $width }}" preload="metadata">
+      <source src="{{ $video.RelPermalink }}" type="{{ $type }}">
+      Your browser does not support the video tag.
+    </video>
+  {{ else }}
+    <p><strong>Video not found:</strong> {{ $src }}</p>
+  {{ end }}
+
+  {{ with $caption }}
+    <figcaption>{{ . }}</figcaption>
+  {{ end }}
+</figure>

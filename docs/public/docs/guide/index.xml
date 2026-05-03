@@ -1,0 +1,32 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aurora – Guide</title>
+    <link>http://localhost:1313/docs/guide/</link>
+    <description>Recent content in Guide on Aurora</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 03 May 2026 12:24:49 +0530</lastBuildDate>
+    
+	  <atom:link href="http://localhost:1313/docs/guide/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Getting_strated</title>
+      <link>http://localhost:1313/docs/guide/getting_strated/</link>
+      <pubDate>Sun, 03 May 2026 12:25:10 +0530</pubDate>
+      
+      <guid>http://localhost:1313/docs/guide/getting_strated/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+  </channel>
+</rss>

@@ -28,6 +28,9 @@
 ![Ahum's Project](https://img.shields.io/badge/An_Ahum's_Project-cba6f7?style=for-the-badge&labelColor=cba6f7&color=50fa7b) ![GitHub last commit](https://img.shields.io/github/last-commit/TheAhumMaitra/Aurora?style=for-the-badge&color=b4befe) ![GitHub repo size](https://img.shields.io/github/repo-size/TheAhumMaitra/Aurora?style=for-the-badge&color=cba6f7)
 </div>
 
+# Preview
+https://github.com/user-attachments/assets/b9e6f020-b497-4b1e-be0a-fd5f6abb959f
+
 # Installation
 
 ## Prerequisites
@@ -84,6 +87,8 @@ noto-fonts
 noto-fonts-emoji
 awww
 git
+papirus-icon-theme
+sudo-rs
 ```
 
 

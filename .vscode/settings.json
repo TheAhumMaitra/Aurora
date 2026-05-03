@@ -9,5 +9,8 @@
   ],
     "rust-analyzer.linkedProjects": [
         "dotfiles/.config/hypr/scripts/Cargo.toml"
+    ],
+    "cSpell.words": [
+      "Prequirements"
     ]
 }

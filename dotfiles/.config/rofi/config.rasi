@@ -2,6 +2,7 @@ configuration {
     modes: [ window, run, drun, emoji ];
     display-drun: "";
     show-icons: true;
+    icon-theme: "Papirus";
     font: "JetBrainsMono Nerd Font 11";
     sort: true;
     drun-display-format: "{name}";

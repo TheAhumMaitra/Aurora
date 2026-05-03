@@ -16,13 +16,11 @@
 --     You should have received a copy of the GNU General Public License
 --     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-local color1 = "rgba(000000ff)"
-local color2 = "rgba(383838ff)"
 return {
-	main = {
-		colors = { color1, color2 },
+	main = "rgba(cba6f7ff)",
+	accent = {
+		colors = { "rgba(1e1e2eff)", "rgba(313244ff)" },
 		angle = 45,
 	},
-	accent = "rgba(020000ff)",
 	shadow = "rgba(1a1a1aee)",
 }

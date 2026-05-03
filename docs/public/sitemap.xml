@@ -6,6 +6,10 @@
   </url><url>
     <loc>http://localhost:1313/docs/getting-started/installation/</loc>
   </url><url>
+    <loc>http://localhost:1313/docs/themeing/using-themes/</loc>
+  </url><url>
+    <loc>http://localhost:1313/docs/themeing/creating-themes/</loc>
+  </url><url>
     <loc>http://localhost:1313/docs/getting-started/getting-familar/</loc>
   </url><url>
     <loc>http://localhost:1313/</loc>
@@ -17,8 +21,6 @@
     <loc>http://localhost:1313/docs/auroras-cli/</loc>
   </url><url>
     <loc>http://localhost:1313/docs/themeing/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/themeing/using-themes/</loc>
   </url><url>
     <loc>http://localhost:1313/categories/</loc>
   </url><url>

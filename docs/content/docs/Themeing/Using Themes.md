@@ -1,4 +1,7 @@
-# Using Themes
+---
+title:  "Using themes"
+weight: 1
+---
 In Aurora, you can use the theme switcher to switch between themes
 
 > [!IMPORTANT]

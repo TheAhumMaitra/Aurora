@@ -39,6 +39,12 @@
       "*": 10,
     },
   },
+  "hyprland/window": {
+    "format": "{title:.69}",
+    "tooltip": true,
+    "tooltip-format": "{title}",
+
+  },
   "clock": {
     "format": "{:%H:%M}  ",
     "format-alt": "{:%A, %B %d, %Y (%R)}  ",

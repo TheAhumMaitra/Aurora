@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-# Aurora Installation Script for Arch Linux
-
 #  SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> */
 #  SPDX-License-Identifier: GPL-3.0-or-later */
 

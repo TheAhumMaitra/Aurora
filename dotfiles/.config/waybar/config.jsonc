@@ -46,8 +46,9 @@
 
   },
   "clock": {
+    "tooltip": true,
     "format": "{:%H:%M}  ",
-    "format-alt": "{:%A, %B %d, %Y (%R)}  ",
+    "format-alt": "{:%B %d, %Y - %R}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     "calendar": {
       "mode": "year",
@@ -102,7 +103,6 @@
     "max-length": 25,
   },
   "custom/notification": {
-    "tooltip": true,
     "format": "<span size='16pt'>{icon}</span>",
     "format-icons": {
       "notification": "󱅫",
@@ -124,7 +124,8 @@
   "custom/wlogout": {
     "on-click": "wlogout",
     "format": "⏻",
-    "tooltip": false,
+    "tooltip": true,
+    "tooltip-format": "Power Menu",
     "interval": 0,
   },
   "tray": {

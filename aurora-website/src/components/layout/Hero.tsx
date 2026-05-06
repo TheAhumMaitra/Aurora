@@ -26,7 +26,7 @@ export default function Hero() {
           <Link
             href="https://github.com/TheAhumMaitra/Aurora.git"
           >
-            Wiki
+            Github
           </Link>
         </Button>
       </div>

@@ -46,7 +46,12 @@ hl.layer_rule({
 	ignore_alpha = 0,
 })
 hl.layer_rule({
-	match = { namespace = "rofi -show drun && h ~:" },
+	match = { namespace = "waybar" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "rofi" },
 	blur = true,
 	ignore_alpha = 0,
 })

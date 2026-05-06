@@ -14,7 +14,7 @@ export default function Hero() {
 
       <h1 className="text-4xl font-bold">Meet Aurora!</h1>
       <p className="text-2sm">
-        A elegent, minimal, assesthatic Rust based rice!
+        A elegant, minimal, aesthetic, Rust based rice!
       </p>
       <div className="flex justify-between items-center gap-3">
         <Button className="p-5 font-bold text-sm cursor-pointer">

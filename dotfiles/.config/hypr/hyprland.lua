@@ -68,3 +68,6 @@ for file in handle:lines() do
 end
 
 handle:close()
+
+-- load theme based configurations 
+dofile(home.."/.config/hypr/Theme/theme.lua")

@@ -6,7 +6,7 @@ export default function Hero() {
   return (
     <div className="flex flex-col justify-center h-90 items-center gap-3">
       <Aurora
-        colorStops={["#7cff67", "#B497CF", "#5227FF"]}
+        colorStops={["--background", "#B497CF", "#5227FF"]}
         blend={0.5}
         amplitude={1.0}
         speed={1}

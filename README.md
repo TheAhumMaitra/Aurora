@@ -96,6 +96,7 @@ noto-fonts-emoji
 awww
 git
 papirus-icon-theme
+uv
 sudo-rs
 ```
 

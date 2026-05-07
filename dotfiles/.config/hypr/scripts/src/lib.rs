@@ -18,7 +18,6 @@
 
 use serde::Deserialize;
 use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -81,6 +80,12 @@ pub fn apply_theme(theme_name: &str) {
     let filenames = ["colors.css", "colors.lua", "colors.rasi", "config.toml"]; //files need to be copied form that directories
 
     let message = format!("{theme_name} is applied!");
+    
+    // Empty the current theme configuration for Hyprland 
+    // get theme configuration directory 
+    let theme_config = format!("{}/.config/hypr/Theme/theme.lua", home);
+     fs::write(&theme_config, "")
+        .expect("Failed to empty theme configuration");
 
     //get the logs directory of Aurora
     let logs_directory = format!("{}/.local/share/Aurora", home);
@@ -191,6 +196,7 @@ pub fn apply_theme(theme_name: &str) {
     } else {
         println!("No default.jpg found for this theme");
     }
+    
 }
 // load the `style.css` file for gtk apps
 pub fn load_css() {

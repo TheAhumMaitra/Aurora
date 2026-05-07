@@ -22,7 +22,7 @@ function MobileNavbar() {
         </Button>
       </SheetTrigger>
       <SheetContent>
-        <ul className="flex flex-col justify-center items-center gap-3">
+        <ul className="flex flex-col justify-center items-center gap-3 text-lg m-3">
           {navItems.map((link) => {
             const isActive = pathname === link.href;
             return (

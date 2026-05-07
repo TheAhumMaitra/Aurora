@@ -87,6 +87,12 @@ pub fn apply_theme(theme_name: &str) {
      fs::write(&theme_config, "")
         .expect("Failed to empty theme configuration");
 
+    // reset any gtk configuration 
+    Command::new("dconf")
+        .args(["reset", "-f", "/org/gnome/"])
+        .output()
+        .expect("failed to reset gtk settings");
+
     //get the logs directory of Aurora
     let logs_directory = format!("{}/.local/share/Aurora", home);
 

@@ -14,5 +14,9 @@ uv tool install gnomelooks --force
 # Download the theme
 echo 0 | gnomelooks get https://www.gnome-look.org/p/1687249/
 
+# config gtk 
+gsettings set org.gnome.desktop.interface gtk-theme "Dracula" 
+gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
+
 # reload the hyprland environment 
 hyprctl reload

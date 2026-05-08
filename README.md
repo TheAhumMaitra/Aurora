@@ -66,9 +66,8 @@ Clone this repo into your home directory
 
 **For arch**
 ```
-hyprland
-wayland
-xdg-desktop-portal-hyprland
+hyprland (You can use Hyprland git version also)
+xdg-desktop-portal-hyprland (you can use git version also)
 pipewire
 pipewire-pulse
 wireplumber
@@ -98,8 +97,9 @@ git
 papirus-icon-theme
 uv
 sudo-rs
+nordzy-hyprcursors (yay only)
+rofi-emoji
 ```
-
 
 ### Step 2. Clone this repository
 

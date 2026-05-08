@@ -97,7 +97,8 @@ git
 papirus-icon-theme
 uv
 sudo-rs
-nordzy-hyprcursors (yay only)
+nordzy-hyprcursors (AUR)
+waytrogen (AUR)
 rofi-emoji
 ```
 

@@ -45,9 +45,8 @@ You need to install rust
 ##### Recommended Packages
 Make sure your package manger has these packages. This packages will give you the best experience of Aurora
 ```
-hyprland
-wayland
-xdg-desktop-portal-hyprland
+hyprland (You can use Hyprland git version also)
+xdg-desktop-portal-hyprland (you can use git version also)
 pipewire
 pipewire-pulse
 wireplumber
@@ -75,7 +74,10 @@ noto-fonts-emoji
 awww
 git
 papirus-icon-theme
+uv
 sudo-rs
+nordzy-hyprcursors (yay only)
+rofi-emoji
 ```
 
 > [!WARNING]

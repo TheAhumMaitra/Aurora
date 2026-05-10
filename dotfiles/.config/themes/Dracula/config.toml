@@ -1,3 +1,12 @@
+name = "Dracula"
+version = "0.1.0"
+
+authors = [
+    "Ahum Maitra (@TheAhumMaitra) theahummaitra@gmail.com",
+]
+
+wallpapers_source = "https://github.com/dracula/wallpaper"
+
 [settings]
 script = "activate.sh"
 interpreter = "bash"

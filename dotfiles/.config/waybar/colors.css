@@ -17,9 +17,9 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
       
-@define-color background #282a36;
-@define-color accent #bd93f9;
-@define-color active-background #44475a;
-@define-color active-accent #8be9fd;
-@define-color urgent-background #ff5555;
-@define-color border #6272a4;
+@define-color background rgb(6, 6, 6);
+@define-color accent rgba(100, 114, 125, 0.5);
+@define-color active-background #484a4b;
+@define-color active-accent rgb(165, 165, 165);
+@define-color urgent-background #df0000;
+@define-color border rgb(78, 78, 78);

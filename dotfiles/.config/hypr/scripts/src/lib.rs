@@ -53,10 +53,22 @@ pub fn list_themes() {
 // Root structure for parsing config.toml
 #[derive(Deserialize, Debug)]
 struct Config {
+    name: String,
+    version: String,
+    authors: Vec<String>,
+    repo_url: Option<String>,
+    wallpapers_source: Option<String>,
     settings: Settings,
 }
 
-// options inside of the toml file (we only need required options)
+// get all the authors name and github
+#[derive(Debug, Deserialize)]
+struct Author {
+    name: String,
+    github: String,
+}
+
+// get options inside of the toml file (we only need required options)
 #[derive(Deserialize, Debug)]
 struct Settings {
     script: Option<String>,
@@ -76,18 +88,18 @@ pub fn apply_theme(theme_name: &str) {
     let config: Option<Config> = fs::read_to_string(&config_path)
         .ok()
         .and_then(|content| toml::from_str(&content).ok());
+
     let folders = ["waybar", "wlogout", "hypr", "rofi"]; //directories want to be copied
     let filenames = ["colors.css", "colors.lua", "colors.rasi", "config.toml"]; //files need to be copied form that directories
 
     let message = format!("{theme_name} is applied!");
-    
-    // Empty the current theme configuration for Hyprland 
-    // get theme configuration directory 
-    let theme_config = format!("{}/.config/hypr/Theme/theme.lua", home);
-     fs::write(&theme_config, "")
-        .expect("Failed to empty theme configuration");
 
-    // reset any gtk configuration 
+    // Empty the current theme configuration for Hyprland
+    // get theme configuration directory
+    let theme_config = format!("{}/.config/hypr/Theme/theme.lua", home);
+    fs::write(&theme_config, "").expect("Failed to empty theme configuration");
+
+    // reset any gtk configuration
     Command::new("dconf")
         .args(["reset", "-f", "/org/gnome/"])
         .output()
@@ -96,20 +108,37 @@ pub fn apply_theme(theme_name: &str) {
     //get the logs directory of Aurora
     let logs_directory = format!("{}/.local/share/Aurora", home);
 
-    // write selected theme name into the theme logs file
+    // write selected theme name into the theme name log file
     // Ensure the directory exists
     fs::create_dir_all(&logs_directory).expect("Failed to create logs directory");
 
     // Now write the file
-    let theme_log_path = format!("{}/theme_name.log", logs_directory);
+    let theme_name_log_file = format!("{}/theme_name.log", logs_directory);
 
-    fs::write(&theme_log_path, theme_name)
+    fs::write(&theme_name_log_file, theme_name)
         .expect("Failed to write theme name into the theme logs file.");
+    // write theme logs 
+    let theme_log_file = format!("{}/theme.log", logs_directory);
+
+    if let Some(config) = &config {
+       let authors = config.authors.join(", ");
+
+        let information_about_theme = format!(
+            "Theme Name = {}\nTheme Version = {}\nAuthors = {}\nRepo url = {}\nWallpaper source = {}",
+            config.name,
+            config.version,
+            authors,
+            config.repo_url.as_deref().unwrap_or("None"),
+            config.wallpapers_source.as_deref().unwrap_or("None")
+        );
+
+        fs::write(&theme_log_file, information_about_theme).expect("Failed to write theme info");
+    }
 
     println!("Applying theme : {}", theme_name);
 
     // Get the options from valid categories and do the job
-    if let Some(config) = config {
+    if let Some(config) = &config {
         if let Some(script) = &config.settings.script {
             let interpreter = config.settings.interpreter.as_deref().unwrap_or("bash"); //get the parsed interpreter or simply set it to bash
 
@@ -202,7 +231,6 @@ pub fn apply_theme(theme_name: &str) {
     } else {
         println!("No default.jpg found for this theme");
     }
-    
 }
 // load the `style.css` file for gtk apps
 pub fn load_css() {
@@ -219,4 +247,12 @@ pub fn load_css() {
     } else {
         eprintln!("Warning: Could not connect to a display.");
     }
+}
+
+pub fn download_theme(repo_url: String) {
+    Command::new("git")
+        .current_dir(format!("{}/.config/themes", std::env::var("HOME").unwrap()))
+        .args(["clone", repo_url.as_str()])
+        .status()
+        .expect("Failed to clone theme");
 }

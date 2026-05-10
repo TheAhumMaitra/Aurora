@@ -1,10 +1,8 @@
-name = "Aurora Default"
+name = "Tokyo Night"
 version = "0.1.0"
 
 authors = [
     "Ahum Maitra (@TheAhumMaitra) theahummaitra@gmail.com",
 ]
 
-[settings]
-script = "default.lua"
-interpreter = "lua" 
+wallpapers_source = "https://github.com/atraxsrc/tokyonight-wallpapers"

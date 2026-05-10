@@ -20,6 +20,7 @@
 
 use aurora::apply_theme;
 use aurora::list_themes;
+use aurora::download_theme;
 
 use clap::{Parser, Subcommand};
 
@@ -52,6 +53,8 @@ enum Commands {
     Information,
     /// Returns theme details
     ThemeInfo,
+    ///Downloads a theme
+    DownloadTheme { git_repo_url: String }
 }
 
 fn main() {
@@ -81,12 +84,15 @@ fn main() {
             // Ensure the directory exists
             fs::create_dir_all(&logs_directory).expect("Failed to create logs directory");
 
-            let theme_log_path = format!("{}/theme_name.log", logs_directory);
+            let theme_log_path = format!("{}/theme.log", logs_directory);
 
             let contents =
                 fs::read_to_string(theme_log_path).expect("Failed to read the theme logs.");
 
             println!("Information about current theme : \n {contents}")
         }
+        Commands::DownloadTheme { git_repo_url} => {
+            download_theme(git_repo_url.to_string());
     }
+}
 }

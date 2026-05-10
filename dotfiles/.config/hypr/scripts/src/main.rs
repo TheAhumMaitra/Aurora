@@ -19,10 +19,11 @@
 //main CLI for Aurora
 
 use aurora::apply_theme;
-use aurora::list_themes;
 use aurora::download_theme;
+use aurora::list_themes;
 
 use clap::{Parser, Subcommand};
+use std::process::{Command, Stdio};
 
 use std::fs;
 const LOGO: &str = r#"
@@ -54,7 +55,9 @@ enum Commands {
     /// Returns theme details
     ThemeInfo,
     ///Downloads a theme
-    DownloadTheme { git_repo_url: String }
+    DownloadTheme { git_repo_url: String },
+    ///Refresh the system
+    Refresh,
 }
 
 fn main() {
@@ -91,8 +94,15 @@ fn main() {
 
             println!("Information about current theme : \n {contents}")
         }
-        Commands::DownloadTheme { git_repo_url} => {
+        Commands::DownloadTheme { git_repo_url } => {
             download_theme(git_repo_url.to_string());
+        }
+        Commands::Refresh => {
+            Command::new("refresh_system")
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .expect("failed to execute system refresh program");
+        }
     }
-}
 }

@@ -19,7 +19,7 @@
 #       You should have received a copy of the GNU General Public License
 #       along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
-set -e
+set -Eeuo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -43,12 +43,28 @@ PRESERVE_FOLDERS=()
 PRESERVE_FILES=()
 DETECTED_INSTALL_TYPE="fresh"  # fresh, update, reinstall 
 
+error_handler() {
+    local exit_code=$?
+    local line_number="$1"
+
+    echo ""
+    echo "[ERROR] Exit code: $exit_code"
+    echo "[ERROR] Line: $line_number"
+    echo "[ERROR] Command: $BASH_COMMAND"
+}
+
+trap 'error_handler $LINENO' ERR
+
 # Structured Logging System
 log_message() {
     local level="$1"
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local log_dir
+
+    log_dir="$(dirname "$INSTALL_LOG")"
+    mkdir -p "$log_dir"
     
     # Log to file with level
     echo "[$timestamp] [$level] $message" >> "$INSTALL_LOG"
@@ -112,11 +128,6 @@ log_command() {
 }
 
 initialize_logging() {
-    local log_dir
-    log_dir="$(dirname "$INSTALL_LOG")"
-    mkdir -p "$log_dir"
-    touch "$INSTALL_LOG"
-
     # Stream all output to both console and log file.
     exec > >(tee -a "$INSTALL_LOG")
     exec 2>&1
@@ -406,6 +417,19 @@ rotate_logs() {
             mv "$INSTALL_LOG.tmp" "$INSTALL_LOG"
         fi
     fi
+}
+
+prepare_install_log() {
+    local log_dir
+
+    log_dir="$(dirname "$INSTALL_LOG")"
+    mkdir -p "$log_dir"
+
+    if [ -f "$INSTALL_LOG" ]; then
+        rotate_logs
+    fi
+
+    : > "$INSTALL_LOG"
 }
 
 # Rollback on critical failure (Issue #8)
@@ -926,7 +950,7 @@ check_existing_install() {
     
     # Check for Aurora configs
     if [ -d "$HOME/.config/hypr" ]; then
-        if grep -q "Aurora" "$HOME/.config/hypr/"* 2>/dev/null; then
+        if find "$HOME/.config/hypr" -type f -exec grep -q "Aurora" {} + 2>/dev/null; then
             has_aurora=true
             aurora_items+=("Aurora config: ~/.config/hypr")
         fi
@@ -985,7 +1009,8 @@ EOF
     cargo uninstall aurora 2>/dev/null || print_warning "Aurora binaries not found or already removed"
     
     # Find most recent backup
-    local latest_backup=$(ls -td "$HOME/.config/aurora_backup_"* 2>/dev/null | head -1)
+    local latest_backup=""
+    latest_backup="$(find "$HOME/.config" -maxdepth 1 -type d -name 'aurora_backup_*' -printf '%T@ %p\n' 2>/dev/null | sort -nr | awk 'NR == 1 { sub(/^[^ ]+ /, ""); print }')" || true
     
     if [ -d "$latest_backup" ]; then
         print_warning "Found backup at $latest_backup"
@@ -1122,22 +1147,17 @@ main() {
             INTERACTIVE=false
             ;;
         *)
-            if [ -n "$1" ]; then
-                print_error "Unknown option: $1"
+            if [ -n "${1:-}" ]; then
+                print_error "Unknown option: ${1:-}"
                 echo ""
                 print_usage
                 exit 1
             fi
             ;;
     esac
-    
-    initialize_logging
 
-    # Initialize log (rotate before clearing)
-    if [ -f "$INSTALL_LOG" ]; then
-        rotate_logs
-    fi
-    : > "$INSTALL_LOG"
+    prepare_install_log
+    initialize_logging
     
     log_info "Aurora Installation Started"
     log_debug "Script location: $SCRIPT_DIR"

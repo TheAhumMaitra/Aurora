@@ -5,7 +5,8 @@ authors = [
     "Ahum Maitra (@TheAhumMaitra) theahummaitra@gmail.com",
 ]
 
-wallpapers_source = "https://github.com/dracula/wallpaper"
+license = "GPL-3.0-or-later"
+wallpapers_sources = ["https://github.com/dracula/wallpaper"]
 
 [settings]
 script = "activate.sh"

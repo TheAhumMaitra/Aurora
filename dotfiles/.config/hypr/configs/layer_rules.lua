@@ -55,3 +55,8 @@ hl.layer_rule({
 	blur = true,
 	ignore_alpha = 0,
 })
+hl.layer_rule({
+	match = { namespace = "org.Waytrogen.Waytrogen" },
+	blur = true,
+	ignore_alpha = 0,
+})

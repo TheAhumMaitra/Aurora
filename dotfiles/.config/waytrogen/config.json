@@ -2,15 +2,70 @@
   "executable_script_doc": "The path to executable script used after a wallpaper is set. The script is sent the monitor identifier, wallpaper path and the serialized saved_wallpapers state.",
   "executable_script": "",
   "wallpaper_folder_doc": "The path to the currently selected wallpaper folder. Note: The path cannot have a trailing forward slash.",
-  "wallpaper_folder": "",
+  "wallpaper_folder": "/home/ahummaitra/.config/themes/Catppuccin Mocha/backgrounds",
   "saved_wallpapers_doc": "The collection of the currently saved wallpapers with their corresponding monitor, path and changer.",
   "saved_wallpapers": [
     {
       "monitor": "",
       "path": "",
-      "changer": {
-        "Hyprpaper": "Cover"
-      }
+      "changer": [
+        "No",
+        {
+          "red": 0.0,
+          "green": 0.0,
+          "blue": 0.0
+        },
+        "Simple",
+        90,
+        3,
+        30,
+        45,
+        {
+          "position": "center"
+        },
+        false,
+        {
+          "p0": 0.99,
+          "p1": 0.99,
+          "p2": 0.99,
+          "p3": 0.99
+        },
+        {
+          "width": 200,
+          "height": 200
+        }
+      ]
+    },
+    {
+      "monitor": "All",
+      "path": "/home/ahummaitra/.config/themes/Catppuccin Mocha/backgrounds/Cloudsnight.jpg",
+      "changer": [
+        "No",
+        {
+          "red": 0.0,
+          "green": 0.0,
+          "blue": 0.0
+        },
+        "Simple",
+        90,
+        3,
+        30,
+        45,
+        {
+          "position": "center"
+        },
+        false,
+        {
+          "p0": 0.99,
+          "p1": 0.99,
+          "p2": 0.99,
+          "p3": 0.99
+        },
+        {
+          "width": 200,
+          "height": 200
+        }
+      ]
     }
   ],
   "monitor_doc": "The internal numeric identifier in the monitor dropdown used by dconf for the currently selected monitor. Do not change unless you know what you are doing.",
@@ -41,8 +96,6 @@
   "awww_resize": 0,
   "awww_fill_color_doc": "The hex color for awww background fill. Must be six characters long.",
   "awww_fill_color": "000000",
-  "awww_scaling_filter_doc": "The internal numeric identifier in the changer dropdown used by dconf for the currently selected awww scaling filter option. Do not change unless you know what you are doing.",
-  "awww_scaling_filter": 0,
   "awww_transition_type_doc": "The internal numeric identifier in the changer dropdown used by dconf for the currently selected awww transition type option. Do not change unless you know what you are doing.",
   "awww_transition_type": 1,
   "awww_transition_step_doc": "How fast the transition approaches the new image used by awww.",
@@ -60,11 +113,11 @@
   "awww_transition_wave_height_doc": "Currently only used for 'wave' transition to control the height of each wave used by awww.",
   "awww_transition_wave_height": 200.0,
   "awww_transition_bezier_p0_doc": "Point 0 for the Bezier curve to use for the transition",
-  "awww_transition_bezier_p0": 0.54,
+  "awww_transition_bezier_p0": 0.99,
   "awww_transition_bezier_p1_doc": "Point 1 for the Bezier curve to use for the transition",
-  "awww_transition_bezier_p1": 0.0,
+  "awww_transition_bezier_p1": 0.99,
   "awww_transition_bezier_p2_doc": "Point 2 for the Bezier curve to use for the transition",
-  "awww_transition_bezier_p2": 0.34,
+  "awww_transition_bezier_p2": 0.99,
   "awww_transition_bezier_p3_doc": "Point 3 for the Bezier curve to use for the transition",
   "awww_transition_bezier_p3": 0.99,
   "awww_transition_fps_doc": "Frame rate for the transition effect used by awww.",

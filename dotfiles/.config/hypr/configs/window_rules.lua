@@ -80,3 +80,8 @@ hl.window_rule({
 	match = { class = "blueman-manager" },
 	float = true,
 })
+hl.window_rule({
+	name = "Wallaper Switcher - Waytroegn for Aurora",
+	match = { class = "org.Waytrogen.Waytrogen" },
+	float = true,
+})

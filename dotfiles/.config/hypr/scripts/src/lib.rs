@@ -18,6 +18,7 @@
 
 use serde::Deserialize;
 use std::fs;
+
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -57,15 +58,9 @@ struct Config {
     version: String,
     authors: Vec<String>,
     repo_url: Option<String>,
-    wallpapers_source: Option<String>,
-    settings: Settings,
-}
-
-// get all the authors name and github
-#[derive(Debug, Deserialize)]
-struct Author {
-    name: String,
-    github: String,
+    wallpapers_sources: Option<Vec<String>>,
+    license: Option<String>,
+    settings: Option<Settings>,
 }
 
 // get options inside of the toml file (we only need required options)
@@ -117,19 +112,24 @@ pub fn apply_theme(theme_name: &str) {
 
     fs::write(&theme_name_log_file, theme_name)
         .expect("Failed to write theme name into the theme logs file.");
-    // write theme logs 
+    // write theme logs
     let theme_log_file = format!("{}/theme.log", logs_directory);
 
     if let Some(config) = &config {
-       let authors = config.authors.join(", ");
+        let authors = config.authors.join(", ");
+        let wallpaper_sources = match &config.wallpapers_sources {
+            Some(sources) => sources.join(", "),
+            None => "None".to_string(),
+        };
 
         let information_about_theme = format!(
-            "Theme Name = {}\nTheme Version = {}\nAuthors = {}\nRepo url = {}\nWallpaper source = {}",
+            "Theme Name = {}\nTheme Version = {}\nAuthors = {}\nRepo url = {}\nLicense = {}\nWallpaper sources = {}",
             config.name,
             config.version,
             authors,
             config.repo_url.as_deref().unwrap_or("None"),
-            config.wallpapers_source.as_deref().unwrap_or("None")
+            config.license.as_deref().unwrap_or("None"),
+            wallpaper_sources
         );
 
         fs::write(&theme_log_file, information_about_theme).expect("Failed to write theme info");
@@ -139,24 +139,29 @@ pub fn apply_theme(theme_name: &str) {
 
     // Get the options from valid categories and do the job
     if let Some(config) = &config {
-        if let Some(script) = &config.settings.script {
-            let interpreter = config.settings.interpreter.as_deref().unwrap_or("bash"); //get the parsed interpreter or simply set it to bash
+        if let Some(settings) = &config.settings {
+            if let Some(script) = &settings.script {
+                let interpreter = settings.interpreter.as_deref().unwrap_or("bash"); //get the parsed interpreter or simply set it to bash
 
-            let mut path = themes_dir.clone();
-            path.push(theme_name);
-            path.push(script);
+                let mut path = themes_dir.clone();
+                path.push(theme_name);
+                path.push(script);
 
-            Command::new(interpreter)
-                .arg(path)
-                .spawn()
-                .expect("Failed to run script"); //if it is failed
+                Command::new(interpreter)
+                    .arg(path)
+                    .spawn()
+                    .expect("Failed to run script"); //if it is failed
+            } else {
+                //skip if no script variable found in settings category file is available
+                println!("No script in config, skipping...");
+            }
         } else {
-            //skip if no script variable found in settings category file is available
-            println!("No script in config, skipping...");
+            //skip if no settings category exists in config file
+            println!("No settings in config, skipping script...");
         }
     } else {
-        //skip if no configuration file is available
-        println!("No config.toml found, skipping script...");
+        //skip if no readable/valid configuration file is available
+        println!("No valid config.toml found, skipping script...");
     }
 
     //Send the message for selected theme is applied

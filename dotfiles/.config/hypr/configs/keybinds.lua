@@ -61,7 +61,6 @@ hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("waytrogen_line_change_for_th
 -- open wallpaper switcher for showing global wallpapers 
 hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd(" waytrogen_line_change_for_global_wallpapers  && waytrogen"))
 
-
 -- refresh waybar
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("waybar_refresh"))
 

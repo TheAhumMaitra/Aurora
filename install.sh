@@ -101,7 +101,7 @@ print_error() {
 }
 
 next_step() {
-    ((CURRENT_STEP++))
+    ((++CURRENT_STEP))
     echo ""
     echo -e "${BLUE}[Step $CURRENT_STEP/$TOTAL_STEPS]${NC} $1"
     log_info "Step $CURRENT_STEP: $1"
@@ -631,13 +631,13 @@ install_packages() {
     # Install pacman packages
     for category in core daemons ui utils build; do
         for package in ${pacman_package_groups[$category]}; do
-            ((total_packages++))
+            ((++total_packages))
             
             if pacman -Q "$package" &>/dev/null; then
                 print_success "Package '$package' already installed"
             else
                 if sudo pacman -S "$package" --noconfirm --needed 2>/dev/null; then
-                    ((installed_count++))
+                    ((++installed_count))
                     log_command "Installed: $package"
                 else
                     failed_packages+=("$package")
@@ -664,12 +664,12 @@ install_packages() {
     if command -v yay &> /dev/null; then
         for category in aur_extras; do
             for package in ${yay_package_groups[$category]}; do
-                ((total_packages++))
+                ((++total_packages))
                 if pacman -Q "$package" &>/dev/null; then
                     print_success "AUR package '$package' already installed"
                 else
                     if yay -S "$package" --noconfirm --needed 2>/dev/null; then
-                        ((installed_count++))
+                        ((++installed_count))
                         log_command "Installed AUR package: $package"
                     else
                         print_warning "Failed to install AUR package: $package"

@@ -30,11 +30,11 @@ NC='\033[0m' # No Color
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_LOG="$SCRIPT_DIR/.aurora_install.log"
+INSTALL_LOG="$HOME/.local/share/Aurora/install.log"
 BACKUP_DIR="$HOME/.config/aurora_backup_$(date +%s)"
 INTERACTIVE=true
 DRY_RUN=false
-TOTAL_STEPS=9
+TOTAL_STEPS=10
 CURRENT_STEP=0
 INSTALL_MODE="stable"
 INSTALL_STATE_FILE="$HOME/.aurora_install_state"
@@ -111,6 +111,17 @@ log_command() {
     log_debug "$*"
 }
 
+initialize_logging() {
+    local log_dir
+    log_dir="$(dirname "$INSTALL_LOG")"
+    mkdir -p "$log_dir"
+    touch "$INSTALL_LOG"
+
+    # Stream all output to both console and log file.
+    exec > >(tee -a "$INSTALL_LOG")
+    exec 2>&1
+}
+
 # Package Detection Functions
 is_package_installed() {
     local package="$1"
@@ -146,6 +157,14 @@ get_install_source() {
 
 # Hyprland Runtime Detection (Issue #10 - improved)
 detect_hyprland_runtime() {
+    # Primary installation check requested by user: hyprland command exists.
+    if command -v hyprland &>/dev/null; then
+        local hyprland_path
+        hyprland_path="$(command -v hyprland)"
+        log_info "Hyprland command found at: $hyprland_path"
+        return 0
+    fi
+
     # Check if running
     if pgrep -x "Hyprland" > /dev/null 2>&1; then
         if command -v hyprctl &>/dev/null; then
@@ -507,69 +526,90 @@ install_packages() {
         return
     fi
     
-    # Organized package groups with comments
-declare local -A package_groups=(
+    local hyprland_pkg="hyprland"
+    local xdp_hyprland_pkg="xdg-desktop-portal-hyprland"
+    if [ "$INSTALL_MODE" = "git" ]; then
+        hyprland_pkg="hyprland-git"
+        xdp_hyprland_pkg="xdg-desktop-portal-hyprland-git"
+    fi
 
-    # Core system (Wayland + Hyprland essentials)
-    [core]="
-        hyprland
-        wayland
-        xdg-desktop-portal-hyprland
-        pipewire
-        pipewire-pulse
-        wireplumber
-    "
+    local -A pacman_package_groups=(
+        [core]="
+            $hyprland_pkg
+            wayland
+            $xdp_hyprland_pkg
+            pipewire
+            pipewire-pulse
+            wireplumber
+        "
+        [daemons]="
+            swaync
+            hypridle
+            hyprlock
+            polkit-gnome
+        "
+        [ui]="
+            waybar
+            rofi
+            wlogout
+            gtk3
+            gtk4
+            adwaita-gtk-theme
+        "
+        [utils]="
+            kitty
+            cliphist
+            nautilus
+            wl-clipboard
+            hyprshot
+            network-manager-applet
+            brightnessctl
+            libnotify
+            ttf-dejavu
+            noto-fonts
+            noto-fonts-emoji
+            awww
+            papirus-icon-theme
+            rofi-emoji
+        "
+        [build]="
+            git
+            base-devel
+            glib2
+            uv
+            sudo-rs
+        "
+    )
 
-    # Core daemons (notifications, idle, lock, auth)
-    [daemons]="
-        swaync
-        hypridle
-        hyprlock
-        polkit-gnome
-    "
-
-    # UI components (bar, launcher, GTK)
-    [ui]="
-        waybar
-        rofi
-        wlogout
-        gtk3
-        gtk4
-        adwaita-gtk-theme
-        
-    "
-
-    # Utilities (apps, tools, fonts, system helpers)
-    [utils]="
-        kitty
-        cliphist
-        nautilus
-        wl-clipboard
-        hyprshot
-        network-manager-applet
-        brightnessctl
-        libnotify
-        ttf-dejavu
-        noto-fonts
-        noto-fonts-emoji
-        awww
-    "
-)
+    local -A yay_package_groups=(
+        [aur_extras]="
+            nordzy-hyprcursors
+        "
+    )
     
     echo ""
     echo -e "${YELLOW}Aurora requires the following packages:${NC}"
     echo ""
     
-    # Display packages by category
-    for category in core daemons ui utils; do
+    # Display packages grouped by manager and category
+    echo "  ${BLUE}pacman packages:${NC}"
+    for category in core daemons ui utils build; do
         category_name="${category^}"
         [ "$category" = "daemons" ] && category_name="Daemons"
         [ "$category" = "ui" ] && category_name="UI Components"
         [ "$category" = "utils" ] && category_name="Utilities"
-        
-        echo "  ${BLUE}${category_name}:${NC}"
-        for pkg in ${package_groups[$category]}; do
-            echo "    - $pkg"
+        [ "$category" = "build" ] && category_name="Build & Toolchain"
+        echo "    ${YELLOW}${category_name}:${NC}"
+        for pkg in ${pacman_package_groups[$category]}; do
+            echo "      - $pkg"
+        done
+    done
+
+    echo "  ${BLUE}yay (AUR) packages:${NC}"
+    for category in aur_extras; do
+        echo "    ${YELLOW}AUR Extras:${NC}"
+        for pkg in ${yay_package_groups[$category]}; do
+            echo "      - $pkg"
         done
     done
     
@@ -588,9 +628,9 @@ declare local -A package_groups=(
     local installed_count=0
     local total_packages=0
     
-    # Install all packages
-    for category in core daemons ui utils; do
-        for package in ${package_groups[$category]}; do
+    # Install pacman packages
+    for category in core daemons ui utils build; do
+        for package in ${pacman_package_groups[$category]}; do
             ((total_packages++))
             
             if pacman -Q "$package" &>/dev/null; then
@@ -608,38 +648,37 @@ declare local -A package_groups=(
     done
     
     if [ ${#failed_packages[@]} -gt 0 ]; then
-        print_warning "Some packages failed to install (${#failed_packages[@]}/${total_packages}). They may be in AUR:"
+        print_warning "Some pacman packages failed (${#failed_packages[@]}/${total_packages}):"
         printf '%s\n' "${failed_packages[@]}" | sed 's/^/  - /'
         echo ""
-        
-        # Try to install yay if not present
-        if ! command -v yay &> /dev/null; then
-            if [ "$INTERACTIVE" = true ]; then
-                read -p "Install AUR helper 'yay' to install missing packages? (y/n) " -n 1 -r
-                echo
-                
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    install_aur_helper
-                fi
-            fi
+    fi
+
+    # Ensure yay exists for AUR package installation.
+    if ! command -v yay &> /dev/null; then
+        print_warning "AUR helper 'yay' is not installed. Installing it now..."
+        if ! install_aur_helper; then
+            print_warning "Could not install yay automatically. AUR packages will be skipped."
         fi
-        
-        # Try to install with yay
-        if command -v yay &> /dev/null && [ "$INTERACTIVE" = true ]; then
-            read -p "Try installing with yay (AUR helper)? (y/n) " -n 1 -r
-            echo
-            
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                for package in "${failed_packages[@]}"; do
-                    if yay -S "$package" --noconfirm 2>/dev/null; then
+    fi
+
+    if command -v yay &> /dev/null; then
+        for category in aur_extras; do
+            for package in ${yay_package_groups[$category]}; do
+                ((total_packages++))
+                if pacman -Q "$package" &>/dev/null; then
+                    print_success "AUR package '$package' already installed"
+                else
+                    if yay -S "$package" --noconfirm --needed 2>/dev/null; then
                         ((installed_count++))
-                        log_command "Installed via AUR: $package"
+                        log_command "Installed AUR package: $package"
                     else
-                        print_warning "Failed to install $package with yay"
+                        print_warning "Failed to install AUR package: $package"
                     fi
-                done
-            fi
-        fi
+                fi
+            done
+        done
+    else
+        print_warning "Skipping AUR packages because yay is unavailable"
     fi
     
     print_success "Package installation completed ($installed_count/$total_packages packages installed/updated)"
@@ -700,6 +739,42 @@ build_rust_scripts() {
     
     cd - > /dev/null
     return 0
+}
+
+install_waytrogen_aurora() {
+    next_step "Installing waytrogen-aurora"
+
+    local repo_url="https://github.com/TheAhumMaitra/waytrogen-aurora.git"
+    local repo_dir="$HOME/.local/share/Aurora/src/waytrogen-aurora"
+    local schema_src="$repo_dir/schemas"
+    local user_schema_dir="$HOME/.local/share/glib-2.0/schemas"
+
+    mkdir -p "$(dirname "$repo_dir")"
+    mkdir -p "$user_schema_dir"
+
+    if [ -d "$repo_dir/.git" ]; then
+        log_info "Updating existing waytrogen-aurora checkout at $repo_dir"
+        git -C "$repo_dir" pull --ff-only
+    else
+        log_info "Cloning waytrogen-aurora from $repo_url"
+        git clone "$repo_url" "$repo_dir"
+    fi
+
+    log_info "Installing waytrogen-aurora via cargo"
+    cargo install --path "$repo_dir" --force
+
+    if [ -d "$schema_src" ]; then
+        find "$schema_src" -maxdepth 1 -type f -name '*.gschema.xml' -exec cp -f {} "$user_schema_dir/" \;
+        glib-compile-schemas "$user_schema_dir"
+        log_success "Installed and compiled user GLib schemas in $user_schema_dir"
+    else
+        log_warn "No schemas directory found in waytrogen-aurora repo, skipping schema copy/compile"
+    fi
+
+    if [ -d "/usr/share/glib-2.0/schemas" ]; then
+        log_info "Attempting system schema compile via sudo (if permitted)"
+        sudo glib-compile-schemas /usr/share/glib-2.0/schemas || log_warn "System schema compile failed (this may be expected without sudo permissions)"
+    fi
 }
 
 # Copy dotfiles
@@ -1056,6 +1131,8 @@ main() {
             ;;
     esac
     
+    initialize_logging
+
     # Initialize log (rotate before clearing)
     if [ -f "$INSTALL_LOG" ]; then
         rotate_logs
@@ -1097,11 +1174,15 @@ EOF
     
     if [ "$DRY_RUN" = false ]; then
         build_rust_scripts
+        install_waytrogen_aurora
         copy_dotfiles
         setup_shell_config
     else
         next_step "Building and installing Rust scripts"
         print_warning "[DRY RUN] Would build and install Rust scripts"
+
+        next_step "Installing waytrogen-aurora"
+        print_warning "[DRY RUN] Would clone/build/install waytrogen-aurora and compile schemas"
         
         next_step "Installing configuration files"
         print_warning "[DRY RUN] Would copy configuration files"

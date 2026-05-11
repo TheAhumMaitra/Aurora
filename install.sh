@@ -34,7 +34,6 @@ INSTALL_LOG="$HOME/.local/share/Aurora/install.log"
 BACKUP_DIR="$HOME/.config/aurora_backup_$(date +%s)"
 INTERACTIVE=true
 DRY_RUN=false
-TOTAL_STEPS=10
 CURRENT_STEP=0
 INSTALL_MODE="stable"
 INSTALL_STATE_FILE="$HOME/.aurora_install_state"
@@ -42,6 +41,7 @@ LOG_LEVEL="${LOG_LEVEL:-INFO}"
 PRESERVE_FOLDERS=()
 PRESERVE_FILES=()
 DETECTED_INSTALL_TYPE="fresh"  # fresh, update, reinstall 
+DISCOVERED_BINS=()
 
 error_handler() {
     local exit_code=$?
@@ -50,7 +50,7 @@ error_handler() {
     echo ""
     echo "[ERROR] Exit code: $exit_code"
     echo "[ERROR] Line: $line_number"
-    echo "[ERROR] Command: $BASH_COMMAND"
+    printf '[ERROR] Failed command: %q\n' "$BASH_COMMAND"
 }
 
 trap 'error_handler $LINENO' ERR
@@ -116,15 +116,103 @@ print_error() {
     log_error "$1"
 }
 
+clear_screen() {
+    command -v clear &>/dev/null && clear || true
+}
+
 next_step() {
     ((++CURRENT_STEP))
     echo ""
-    echo -e "${BLUE}[Step $CURRENT_STEP/$TOTAL_STEPS]${NC} $1"
+    echo -e "${BLUE}[Step $CURRENT_STEP]${NC} $1"
     log_info "Step $CURRENT_STEP: $1"
 }
 
 log_command() {
     log_debug "$*"
+}
+
+cargo_bin_in_path() {
+    case ":${PATH:-}:" in
+        *":$HOME/.cargo/bin:"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+append_unique() {
+    local new_item="$1"
+    local existing_item
+
+    for existing_item in "${DISCOVERED_BINS[@]}"; do
+        if [ "$existing_item" = "$new_item" ]; then
+            return
+        fi
+    done
+
+    DISCOVERED_BINS+=("$new_item")
+}
+
+discover_cargo_binaries() {
+    local manifest_dir="$1"
+    local manifest="$manifest_dir/Cargo.toml"
+    local package_name=""
+    local bin_name
+    local bin_file
+    DISCOVERED_BINS=()
+
+    if [ ! -f "$manifest" ]; then
+        return 1
+    fi
+
+    if cargo metadata --manifest-path "$manifest" --no-deps --format-version 1 >/dev/null 2>&1; then
+        log_debug "Cargo metadata validated for $manifest"
+    else
+        log_warn "Cargo metadata validation failed for $manifest"
+    fi
+
+    package_name="$(awk -F= '
+        /^\[package\]/ { in_package=1; next }
+        /^\[/ { in_package=0 }
+        in_package {
+            key=$1
+            gsub(/[[:space:]]/, "", key)
+            if (key == "name") {
+                value=$2
+                gsub(/^[[:space:]]*"/, "", value)
+                gsub(/".*$/, "", value)
+                print value
+                exit
+            }
+        }
+    ' "$manifest")"
+
+    if [ -n "$package_name" ] && [ -f "$manifest_dir/src/main.rs" ]; then
+        append_unique "$package_name"
+    fi
+
+    while IFS= read -r bin_name; do
+        [ -n "$bin_name" ] && append_unique "$bin_name"
+    done < <(awk -F= '
+        /^\[\[bin\]\]/ { in_bin=1; next }
+        /^\[/ { in_bin=0 }
+        in_bin {
+            key=$1
+            gsub(/[[:space:]]/, "", key)
+            if (key == "name") {
+                value=$2
+                gsub(/^[[:space:]]*"/, "", value)
+                gsub(/".*$/, "", value)
+                print value
+            }
+        }
+    ' "$manifest")
+
+    if [ -d "$manifest_dir/src/bin" ]; then
+        while IFS= read -r bin_file; do
+            append_unique "$(basename "$bin_file" .rs)"
+        done < <(find "$manifest_dir/src/bin" -maxdepth 1 -type f -name '*.rs' | sort)
+    fi
+
+    [ ${#DISCOVERED_BINS[@]} -gt 0 ]
 }
 
 initialize_logging() {
@@ -379,29 +467,39 @@ install_aur_helper() {
     print_warning "AUR helper 'yay' not found. Installing..."
     
     # Clone and build yay with proper cleanup
+    local old_pwd="$PWD"
     local tmp_dir
     tmp_dir=$(mktemp -d) || {
         print_error "Failed to create temporary directory"
         return 1
     }
     
-    # Ensure cleanup on exit
-    trap "rm -rf '$tmp_dir'" RETURN
-    
-    cd "$tmp_dir" || return 1
+    cd "$tmp_dir" || {
+        rm -rf "$tmp_dir"
+        return 1
+    }
     
     git clone https://aur.archlinux.org/yay.git 2>/dev/null || {
         print_warning "Failed to clone yay repository"
+        cd "$old_pwd" || true
+        rm -rf "$tmp_dir"
         return 1
     }
     
-    cd yay || return 1
+    cd yay || {
+        cd "$old_pwd" || true
+        rm -rf "$tmp_dir"
+        return 1
+    }
     makepkg -si --noconfirm 2>/dev/null || {
         print_warning "Failed to build yay"
+        cd "$old_pwd" || true
+        rm -rf "$tmp_dir"
         return 1
     }
     
-    cd - > /dev/null
+    cd "$old_pwd" || true
+    rm -rf "$tmp_dir"
     print_success "yay installed successfully"
     return 0
 }
@@ -435,6 +533,7 @@ prepare_install_log() {
 # Rollback on critical failure (Issue #8)
 rollback_on_failure() {
     local failure_reason="$1"
+    local config_dir
     log_error "Critical failure: $failure_reason"
     print_error "CRITICAL FAILURE: $failure_reason"
     print_warning "Attempting to restore from backup..."
@@ -446,11 +545,12 @@ rollback_on_failure() {
         echo
         
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            [ -d "$BACKUP_DIR/hypr" ] && rm -rf "$HOME/.config/hypr" 2>/dev/null; cp -r "$BACKUP_DIR/hypr" "$HOME/.config/" 2>/dev/null
-            [ -d "$BACKUP_DIR/waybar" ] && rm -rf "$HOME/.config/waybar" 2>/dev/null; cp -r "$BACKUP_DIR/waybar" "$HOME/.config/" 2>/dev/null
-            [ -d "$BACKUP_DIR/kitty" ] && rm -rf "$HOME/.config/kitty" 2>/dev/null; cp -r "$BACKUP_DIR/kitty" "$HOME/.config/" 2>/dev/null
-            [ -d "$BACKUP_DIR/fish" ] && rm -rf "$HOME/.config/fish" 2>/dev/null; cp -r "$BACKUP_DIR/fish" "$HOME/.config/" 2>/dev/null
-            [ -d "$BACKUP_DIR/rofi" ] && rm -rf "$HOME/.config/rofi" 2>/dev/null; cp -r "$BACKUP_DIR/rofi" "$HOME/.config/" 2>/dev/null
+            for config_dir in hypr waybar kitty fish rofi; do
+                if [ -d "$BACKUP_DIR/$config_dir" ]; then
+                    rm -rf "$HOME/.config/$config_dir" 2>/dev/null
+                    cp -r "$BACKUP_DIR/$config_dir" "$HOME/.config/" 2>/dev/null
+                fi
+            done
             print_success "Configs restored from backup"
             log_info "Configs restored from backup after failure"
         fi
@@ -713,6 +813,7 @@ build_rust_scripts() {
     next_step "Building and installing Rust scripts"
     
     local script_dir="$SCRIPT_DIR/dotfiles/.config/hypr/scripts"
+    local old_pwd="$PWD"
     
     if [ ! -d "$script_dir" ]; then
         log_error "Scripts directory not found at $script_dir"
@@ -753,7 +854,7 @@ build_rust_scripts() {
         echo "$cargo_error" | sed 's/^/  /'
         rm -f "$cargo_log"
         rollback_on_failure "Cargo build failed"
-        cd - > /dev/null
+        cd "$old_pwd" || true
         return 1
     fi
     
@@ -761,7 +862,7 @@ build_rust_scripts() {
     log_info "Successfully installed Rust scripts to ~/.cargo/bin"
     print_success "Rust scripts installed successfully to ~/.cargo/bin"
     
-    cd - > /dev/null
+    cd "$old_pwd" || true
     return 0
 }
 
@@ -785,9 +886,14 @@ install_waytrogen_aurora() {
     fi
 
     log_info "Installing waytrogen-aurora via cargo"
-    cargo install --path "$repo_dir" --force
+    cargo install --path "$repo_dir" --locked
 
     if [ -d "$schema_src" ]; then
+        if ! command -v glib-compile-schemas &>/dev/null; then
+            print_warning "glib-compile-schemas not found; skipping GLib schema compilation"
+            return 0
+        fi
+
         find "$schema_src" -maxdepth 1 -type f -name '*.gschema.xml' -exec cp -f {} "$user_schema_dir/" \;
         glib-compile-schemas "$user_schema_dir"
         log_success "Installed and compiled user GLib schemas in $user_schema_dir"
@@ -795,7 +901,7 @@ install_waytrogen_aurora() {
         log_warn "No schemas directory found in waytrogen-aurora repo, skipping schema copy/compile"
     fi
 
-    if [ -d "/usr/share/glib-2.0/schemas" ]; then
+    if command -v glib-compile-schemas &>/dev/null && [ -d "/usr/share/glib-2.0/schemas" ]; then
         log_info "Attempting system schema compile via sudo (if permitted)"
         sudo glib-compile-schemas /usr/share/glib-2.0/schemas || log_warn "System schema compile failed (this may be expected without sudo permissions)"
     fi
@@ -807,6 +913,7 @@ copy_dotfiles() {
     
     local config_src="$SCRIPT_DIR/dotfiles/.config"
     local config_dest="$HOME/.config"
+    local config_dir
     
     if [ ! -d "$config_src" ]; then
         print_error "Dotfiles directory not found at $config_src"
@@ -854,11 +961,12 @@ copy_dotfiles() {
         print_warning "Creating backup..."
         mkdir -p "$BACKUP_DIR"
         
-        [ -d "$config_dest/hypr" ] && cp -r "$config_dest/hypr" "$BACKUP_DIR/" && rm -rf "$config_dest/hypr"
-        [ -d "$config_dest/waybar" ] && cp -r "$config_dest/waybar" "$BACKUP_DIR/" && rm -rf "$config_dest/waybar"
-        [ -d "$config_dest/kitty" ] && cp -r "$config_dest/kitty" "$BACKUP_DIR/" && rm -rf "$config_dest/kitty"
-        [ -d "$config_dest/fish" ] && cp -r "$config_dest/fish" "$BACKUP_DIR/" && rm -rf "$config_dest/fish"
-        [ -d "$config_dest/rofi" ] && cp -r "$config_dest/rofi" "$BACKUP_DIR/" && rm -rf "$config_dest/rofi"
+        for config_dir in hypr waybar kitty fish rofi; do
+            if [ -d "$config_dest/$config_dir" ]; then
+                cp -r "$config_dest/$config_dir" "$BACKUP_DIR/"
+                rm -rf "$config_dest/$config_dir"
+            fi
+        done
         
         print_success "Backup saved to $BACKUP_DIR and old configs removed"
         log_command "Created backup at $BACKUP_DIR and cleaned old configs"
@@ -871,7 +979,16 @@ copy_dotfiles() {
     fi
     
     print_warning "Copying .config files..."
-    cp -rv "$config_src"/* "$config_dest/"
+    shopt -s dotglob nullglob
+    local config_items=("$config_src"/*)
+    shopt -u dotglob nullglob
+
+    if [ ${#config_items[@]} -eq 0 ]; then
+        print_warning "No configuration files found in $config_src"
+        return
+    fi
+
+    cp -rv "${config_items[@]}" "$config_dest/"
     
     log_command "Configuration files installed"
     print_success "Configuration files installed"
@@ -883,7 +1000,13 @@ setup_shell_config() {
     
     # Add ~/.cargo/bin to PATH if not already there
     local add_to_path="export PATH=\"\$HOME/.cargo/bin:\$PATH\""
-    local path_added=false
+    local path_was_missing=false
+    local shell_name
+    shell_name="$(basename "${SHELL:-}")"
+
+    if ! cargo_bin_in_path; then
+        path_was_missing=true
+    fi
     
     # For bash
     if [ -f ~/.bashrc ]; then
@@ -893,7 +1016,6 @@ setup_shell_config() {
             echo "$add_to_path" >> ~/.bashrc
             print_success "Updated .bashrc"
             log_command "Updated .bashrc with PATH"
-            path_added=true
         fi
     fi
     
@@ -905,7 +1027,6 @@ setup_shell_config() {
             echo "$add_to_path" >> ~/.zshrc
             print_success "Updated .zshrc"
             log_command "Updated .zshrc with PATH"
-            path_added=true
         fi
     fi
     
@@ -917,14 +1038,72 @@ setup_shell_config() {
             echo "set -gx PATH \$HOME/.cargo/bin \$PATH" >> ~/.config/fish/config.fish
             print_success "Updated fish config"
             log_command "Updated fish config.fish with PATH"
-            path_added=true
         fi
     fi
     
-    # Auto-source for bash if running in bash
-    if [ -n "$BASH_VERSION" ] && [ "$path_added" = true ] && [ -f ~/.bashrc ]; then
-        source ~/.bashrc 2>/dev/null || true
-        print_success "Shell PATH reloaded automatically"
+    if [ "$path_was_missing" = true ]; then
+        export PATH="$HOME/.cargo/bin:$PATH"
+        print_warning "Aurora binaries were added to shell config, but your current terminal may need to reload PATH."
+        case "$shell_name" in
+            fish)
+                echo "  Run: source ~/.config/fish/config.fish"
+                ;;
+            zsh)
+                echo "  Run: source ~/.zshrc"
+                ;;
+            bash)
+                echo "  Run: source ~/.bashrc"
+                ;;
+            *)
+                echo "  Run: exec \$SHELL"
+                ;;
+        esac
+        echo "  Then verify with: command -v <installed-binary>"
+    fi
+}
+
+verify_installation() {
+    next_step "Verifying installation"
+
+    local cargo_bin="$HOME/.cargo/bin"
+    local script_dir="$SCRIPT_DIR/dotfiles/.config/hypr/scripts"
+    local required_bins=()
+    local missing_bins=()
+    local bin
+    local first_bin=""
+
+    if discover_cargo_binaries "$script_dir"; then
+        required_bins=("${DISCOVERED_BINS[@]}")
+    else
+        print_error "Could not determine Aurora Rust binaries from $script_dir"
+        return 1
+    fi
+
+    for bin in "${required_bins[@]}"; do
+        if [ ! -x "$cargo_bin/$bin" ]; then
+            missing_bins+=("$bin")
+        fi
+    done
+
+    if [ ${#missing_bins[@]} -gt 0 ]; then
+        print_error "Missing or non-executable Aurora binaries in ~/.cargo/bin:"
+        printf '%s\n' "${missing_bins[@]}" | sed 's/^/  - /'
+        return 1
+    fi
+
+    print_success "Aurora binaries found in ~/.cargo/bin"
+    first_bin="${required_bins[0]}"
+
+    if ! cargo_bin_in_path; then
+        print_warning "~/.cargo/bin is not in PATH for this installer process"
+    fi
+
+    if command -v "$first_bin" &>/dev/null; then
+        print_success "$first_bin is accessible from PATH"
+    else
+        print_warning "Aurora binaries are installed but not accessible in the current shell"
+        echo "  Example installed binary: $cargo_bin/$first_bin"
+        echo "  Reload your shell, then run: command -v $first_bin"
     fi
 }
 
@@ -976,7 +1155,7 @@ check_existing_install() {
 
 # Uninstall Aurora
 uninstall_aurora() {
-    clear
+    clear_screen
     echo -e "${BLUE}"
     cat << "EOF"
     ╔═══════════════════════════════════════╗
@@ -1068,7 +1247,7 @@ STATE_EOF
     echo ""
     
     echo -e "${YELLOW}Next steps:${NC}"
-    echo "  1. Reload your shell configuration (if not auto-reloaded):"
+    echo "  1. Reload your shell configuration if ~/.cargo/bin was newly added:"
     echo "     exec \$SHELL"
     echo ""
     echo "  2. Start Hyprland from your login manager"
@@ -1164,7 +1343,7 @@ main() {
     log_debug "Interactive mode: $INTERACTIVE"
     log_debug "Dry-run mode: $DRY_RUN"
     
-    clear
+    clear_screen
     echo -e "${BLUE}"
     cat << "EOF"
     ╔═══════════════════════════════════════╗
@@ -1197,6 +1376,7 @@ EOF
         install_waytrogen_aurora
         copy_dotfiles
         setup_shell_config
+        verify_installation
     else
         next_step "Building and installing Rust scripts"
         print_warning "[DRY RUN] Would build and install Rust scripts"
@@ -1209,6 +1389,9 @@ EOF
         
         next_step "Setting up shell configuration"
         print_warning "[DRY RUN] Would update shell PATH"
+
+        next_step "Verifying installation"
+        print_warning "[DRY RUN] Would verify installed binaries and PATH"
     fi
     
     final_setup

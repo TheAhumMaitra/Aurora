@@ -94,11 +94,11 @@ pub fn apply_theme(theme_name: &str) {
     let theme_config = format!("{}/.config/hypr/Theme/theme.lua", home);
     fs::write(&theme_config, "").expect("Failed to empty theme configuration");
 
-    // reset any gtk configuration
-    Command::new("dconf")
-        .args(["reset", "-f", "/org/gnome/"])
-        .output()
-        .expect("failed to reset gtk settings");
+    // reset any gtk theme configurations
+    Command::new("gsettings")
+        .args(["reset", "org.gnome.desktop.interface", "gtk-theme"])
+        .status()
+        .expect("failed to reset gtk-theme");
 
     //get the logs directory of Aurora
     let logs_directory = format!("{}/.local/share/Aurora", home);

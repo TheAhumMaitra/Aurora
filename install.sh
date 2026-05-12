@@ -808,7 +808,8 @@ install_waytrogen_aurora() {
 
     local repo_url="https://github.com/TheAhumMaitra/waytrogen-aurora.git"
     local repo_dir="$HOME/.local/share/Aurora/src/waytrogen-aurora"
-    local schema_src="$repo_dir/schemas"
+
+    local schema_src="$repo_dir/org.Waytrogen.Waytrogen.gschema.xml"
     local user_schema_dir="$HOME/.local/share/glib-2.0/schemas"
 
     mkdir -p "$(dirname "$repo_dir")"
@@ -825,22 +826,18 @@ install_waytrogen_aurora() {
     log_info "Installing waytrogen-aurora via cargo"
     cargo install --path "$repo_dir" --locked
 
-    if [ -d "$schema_src" ]; then
+    if [ -f "$schema_src" ]; then
         if ! command -v glib-compile-schemas &>/dev/null; then
             print_warning "glib-compile-schemas not found; skipping GLib schema compilation"
             return 0
         fi
 
-        find "$schema_src" -maxdepth 1 -type f -name '*.gschema.xml' -exec cp -f {} "$user_schema_dir/" \;
+        cp -f "$schema_src" "$user_schema_dir/"
         glib-compile-schemas "$user_schema_dir"
+
         log_success "Installed and compiled user GLib schemas in $user_schema_dir"
     else
-        log_warn "No schemas directory found in waytrogen-aurora repo, skipping schema copy/compile"
-    fi
-
-    if command -v glib-compile-schemas &>/dev/null && [ -d "/usr/share/glib-2.0/schemas" ]; then
-        log_info "Attempting system schema compile via sudo (if permitted)"
-        sudo glib-compile-schemas /usr/share/glib-2.0/schemas || log_warn "System schema compile failed (this may be expected without sudo permissions)"
+        log_warn "No schema file found in waytrogen-aurora repo, skipping schema install"
     fi
 }
 

@@ -38,8 +38,6 @@ CURRENT_STEP=0
 INSTALL_MODE="stable"
 INSTALL_STATE_FILE="$HOME/.aurora_install_state"
 LOG_LEVEL="${LOG_LEVEL:-INFO}"
-PRESERVE_FOLDERS=()
-PRESERVE_FILES=()
 DETECTED_INSTALL_TYPE="fresh"  # fresh, update, reinstall 
 DISCOVERED_BINS=()
 
@@ -371,74 +369,6 @@ select_installation_mode() {
             log_info "Installation mode set to: STABLE (default)"
             ;;
     esac
-}
-
-# Config Preservation Selector (Issue #18 & #3 - with path validation)
-select_config_preservation() {
-    if [ "$DRY_RUN" = true ] || [ "$INTERACTIVE" = false ]; then
-        log_info "No config preservation selected"
-        return
-    fi
-    
-    echo ""
-    echo -e "${YELLOW}Select configurations to preserve (optional):${NC}"
-    echo ""
-    echo "  This will prevent overwriting your custom configs."
-    echo "  Leave empty to backup and replace all configs."
-    echo ""
-    
-    read -p "Folders to preserve (comma-separated, e.g., hypr,waybar): " folders_input
-    read -p "Files to preserve (full paths, e.g., ~/.config/file1,~/.config/file2): " files_input
-    
-    # Validate and parse folder input (Issue #3)
-    if [ -n "$folders_input" ]; then
-        IFS=',' read -ra folder_array <<< "$folders_input"
-        local valid_folders=()
-        
-        for folder in "${folder_array[@]}"; do
-            folder="${folder##*( )}"
-            folder="${folder%%*( )}"
-            
-            local folder_path="$HOME/.config/$folder"
-            
-            if [ -d "$folder_path" ]; then
-                valid_folders+=("$folder")
-                log_debug "Folder to preserve: $folder (exists at $folder_path)"
-            else
-                log_warn "Folder '$folder' not found at $folder_path - skipping"
-            fi
-        done
-        
-        PRESERVE_FOLDERS=("${valid_folders[@]}")
-        if [ ${#PRESERVE_FOLDERS[@]} -gt 0 ]; then
-            log_info "Folders to preserve: ${PRESERVE_FOLDERS[*]}"
-        fi
-    fi
-    
-    # Validate and parse file input (Issue #3)
-    if [ -n "$files_input" ]; then
-        IFS=',' read -ra file_array <<< "$files_input"
-        local valid_files=()
-        
-        for file in "${file_array[@]}"; do
-            file="${file##*( )}"
-            file="${file%%*( )}"
-            file="${file/#~\//$HOME/}"
-            file=$(eval echo "$file")
-            
-            if [ -f "$file" ]; then
-                valid_files+=("$file")
-                log_debug "File to preserve: $file (exists)"
-            else
-                log_warn "File '$file' not found - skipping"
-            fi
-        done
-        
-        PRESERVE_FILES=("${valid_files[@]}")
-        if [ ${#PRESERVE_FILES[@]} -gt 0 ]; then
-            log_info "Files to preserve: ${PRESERVE_FILES[*]}"
-        fi
-    fi
 }
 
 # Install AUR helper if needed
@@ -914,84 +844,41 @@ copy_dotfiles() {
     local config_src="$SCRIPT_DIR/dotfiles/.config"
     local config_dest="$HOME/.config"
     local config_dir
+    local config_name
+    local target_item
     
     if [ ! -d "$config_src" ]; then
         print_error "Dotfiles directory not found at $config_src"
         exit 1
     fi
     
-    # Create config directory if it doesn't exist
     mkdir -p "$config_dest"
     
-    # Check for existing Aurora configs
-    local has_existing=false
-    for dir in hypr waybar kitty fish rofi; do
-        if [ -d "$config_dest/$dir" ]; then
-            has_existing=true
-            break
-        fi
-    done
-    
-    # Backup and clean existing configs if they exist
-    if [ "$has_existing" = true ]; then
-        print_warning "Existing configuration detected:"
-        [ -d "$config_dest/hypr" ] && echo "  - ~/.config/hypr"
-        [ -d "$config_dest/waybar" ] && echo "  - ~/.config/waybar"
-        [ -d "$config_dest/kitty" ] && echo "  - ~/.config/kitty"
-        [ -d "$config_dest/fish" ] && echo "  - ~/.config/fish"
-        [ -d "$config_dest/rofi" ] && echo "  - ~/.config/rofi"
-        echo ""
-        
-        if [ "$DRY_RUN" = true ]; then
-            print_warning "[DRY RUN] Would backup existing configs to $BACKUP_DIR"
-            return
-        fi
-        
-        if [ "$INTERACTIVE" = true ]; then
-            read -p "Create backup and REPLACE (not merge)? (y/n) " -n 1 -r
-            echo
-            
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                print_warning "Skipping config installation"
-                log_command "User declined to overwrite existing configs"
-                return
-            fi
-        fi
-        
-        print_warning "Creating backup..."
-        mkdir -p "$BACKUP_DIR"
-        
-        for config_dir in hypr waybar kitty fish rofi; do
-            if [ -d "$config_dest/$config_dir" ]; then
-                cp -r "$config_dest/$config_dir" "$BACKUP_DIR/"
-                rm -rf "$config_dest/$config_dir"
-            fi
-        done
-        
-        print_success "Backup saved to $BACKUP_DIR and old configs removed"
-        log_command "Created backup at $BACKUP_DIR and cleaned old configs"
-    fi
-    
-    # Copy all config files (clean install now)
     if [ "$DRY_RUN" = true ]; then
+        print_warning "[DRY RUN] Would backup existing Aurora configs to $BACKUP_DIR"
+        print_warning "[DRY RUN] Would remove existing Aurora config files and directories"
         print_warning "[DRY RUN] Would copy config files from $config_src to $config_dest"
         return
     fi
     
-    print_warning "Copying .config files..."
-    shopt -s dotglob nullglob
-    local config_items=("$config_src"/*)
-    shopt -u dotglob nullglob
+    print_warning "Forcefully replacing existing Aurora configs..."
+    mkdir -p "$BACKUP_DIR"
+    
+    while IFS= read -r -d '' config_dir; do
+        config_name="${config_dir##*/}"
+        target_item="$config_dest/$config_name"
 
-    if [ ${#config_items[@]} -eq 0 ]; then
-        print_warning "No configuration files found in $config_src"
-        return
-    fi
-
-    cp -rv "${config_items[@]}" "$config_dest/"
+        if [ -e "$target_item" ] || [ -L "$target_item" ]; then
+            rm -rf "$BACKUP_DIR/$config_name"
+            cp -r "$target_item" "$BACKUP_DIR/"
+            rm -rf "$target_item"
+        fi
+    done < <(find "$config_src" -mindepth 1 -maxdepth 1 -print0)
+    
+    cp -rfv "$config_src"/. "$config_dest/"
     
     log_command "Configuration files installed"
-    print_success "Configuration files installed"
+    print_success "Configuration files installed successfully"
 }
 
 # Set up shell configuration
@@ -1245,6 +1132,30 @@ STATE_EOF
     
     echo -e "${YELLOW}Installation log saved to: $INSTALL_LOG${NC}"
     echo ""
+
+    if [ "$INTERACTIVE" = true ] && [ "$DRY_RUN" = false ] && [ "${SHELL##*/}" != "fish" ]; then
+        echo ""
+        print_warning "Aurora is optimized for Fish shell."
+
+        read -p "Change default shell to Fish? (y/n) " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if command -v fish >/dev/null 2>&1; then
+                local fish_path
+                fish_path="$(command -v fish)"
+
+                if chsh -s "$fish_path"; then
+                    print_success "Default shell changed to Fish"
+                    print_warning "Log out and log back in for changes to apply"
+                else
+                    print_error "Failed to change default shell to Fish"
+                fi
+            else
+                print_error "Fish shell is not installed"
+            fi
+        fi
+    fi
     
     echo -e "${YELLOW}Next steps:${NC}"
     echo "  1. Reload your shell configuration if ~/.cargo/bin was newly added:"
@@ -1294,7 +1205,7 @@ Features:
   - Detects existing Aurora installations (fresh/update/reinstall modes)
   - Supports stable (repo) and git (bleeding edge) package installations
   - Hyprland runtime detection and validation
-  - Selective config preservation and backup
+  - Forceful Aurora config replacement with backups
   - Structured logging with INFO/WARN/ERROR/DEBUG levels
   - Dry-run mode to preview changes
   - AUR package detection via yay
@@ -1367,7 +1278,6 @@ EOF
     create_directories
     check_dependencies
     select_installation_mode  # Issue #7 - Feature request
-    select_config_preservation  # Issue #18 - Feature request
     validate_hyprland
     install_packages
     

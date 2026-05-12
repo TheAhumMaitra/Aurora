@@ -645,6 +645,7 @@ install_packages() {
     local -A yay_package_groups=(
         [aur_extras]="
             nordzy-hyprcursors
+            google-chrome
         "
     )
     

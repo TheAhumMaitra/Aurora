@@ -22,11 +22,16 @@
 set -Eeuo pipefail
 
 # Colors for output
+RESET='\033[0m'
+BG_DARK_PURPLE='\033[48;5;17m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+BLUE="$YELLOW"
+NC="${RESET}${BG_DARK_PURPLE}" # Reset text styling while keeping the installer background
+
+printf "%b" "$BG_DARK_PURPLE"
+trap 'printf "%b" "$RESET"' EXIT
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -46,9 +51,9 @@ error_handler() {
     local line_number="$1"
 
     echo ""
-    echo "[ERROR] Exit code: $exit_code"
-    echo "[ERROR] Line: $line_number"
-    printf '[ERROR] Failed command: %q\n' "$BASH_COMMAND"
+    echo -e "${RED}[ERROR] Exit code: $exit_code${NC}"
+    echo -e "${RED}[ERROR] Line: $line_number${NC}"
+    printf "${RED}[ERROR] Failed command: %q${NC}\n" "$BASH_COMMAND"
 }
 
 trap 'error_handler $LINENO' ERR
@@ -590,7 +595,6 @@ install_packages() {
     local -A pacman_package_groups=(
         [core]="
             $hyprland_pkg
-            wayland
             $xdp_hyprland_pkg
             pipewire
             pipewire-pulse
@@ -625,6 +629,8 @@ install_packages() {
             awww
             papirus-icon-theme
             rofi-emoji
+            ttf-jetbrains-mono-nerd
+            mise
         "
         [build]="
             git

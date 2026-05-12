@@ -98,8 +98,10 @@ papirus-icon-theme
 uv
 sudo-rs
 nordzy-hyprcursors (AUR)
-waytrogen (AUR)
 rofi-emoji
+ttf-jetbrains-mono-nerd
+mise
+starship
 ```
 
 ### Step 2. Clone this repository
@@ -115,12 +117,34 @@ rofi-emoji
 #### Go to `.config/hypr/scripts`
 `cd ~/.config/hypr/scripts`
 
-#### Install them in 
+#### Install them 
 
 Run - `cargo install --path .`
 
 **Note : You need to install compiler of Rust to do that**
 
+
+### Install Step 4. Install Wallpaper Switcher
+
+#### Clone the custom Waytrogen repo
+```bash
+git clone https://github.com/TheAhumMaitra/waytrogen-aurora.git
+```
+#### Go to the repo folder
+```bash
+cd waytrogen-aurora
+```
+
+#### Install it
+```bash
+cargo install --path .
+```
+### Copy and compile gsettings schema
+```bash
+sudo cp ./org.Waytrogen.Waytrogen.gschema.xml \
+/usr/share/glib-2.0/schemas/
+sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
+```
 
 # License
 GNU Public License V3 or later

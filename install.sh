@@ -631,6 +631,7 @@ install_packages() {
             rofi-emoji
             ttf-jetbrains-mono-nerd
             mise
+            starship
         "
         [build]="
             git

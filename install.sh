@@ -465,6 +465,71 @@ prepare_install_log() {
     : > "$INSTALL_LOG"
 }
 
+copy_hypr_children_without_user() {
+    local src_hypr="$1"
+    local dest_hypr="$2"
+    local item
+    local item_name
+
+    [ -d "$src_hypr" ] || return 0
+    mkdir -p "$dest_hypr"
+
+    while IFS= read -r -d '' item; do
+        item_name="${item##*/}"
+        [ "$item_name" = "User" ] && continue
+        cp -rfv "$item" "$dest_hypr/"
+    done < <(find "$src_hypr" -mindepth 1 -maxdepth 1 -print0)
+}
+
+backup_hypr_without_user() {
+    local target_hypr="$1"
+    local backup_hypr="$2"
+    local item
+    local item_name
+
+    [ -d "$target_hypr" ] || return 0
+    mkdir -p "$backup_hypr"
+
+    while IFS= read -r -d '' item; do
+        item_name="${item##*/}"
+        [ "$item_name" = "User" ] && continue
+        cp -r "$item" "$backup_hypr/"
+    done < <(find "$target_hypr" -mindepth 1 -maxdepth 1 -print0)
+}
+
+remove_hypr_children_without_user() {
+    local target_hypr="$1"
+    local item
+    local item_name
+
+    [ -d "$target_hypr" ] || return 0
+
+    while IFS= read -r -d '' item; do
+        item_name="${item##*/}"
+        [ "$item_name" = "User" ] && continue
+        rm -rf "$item"
+    done < <(find "$target_hypr" -mindepth 1 -maxdepth 1 -print0)
+}
+
+restore_config_from_backup() {
+    local config_name="$1"
+    local backup_root="$2"
+    local backup_item="$backup_root/$config_name"
+    local target_item="$HOME/.config/$config_name"
+
+    [ -d "$backup_item" ] || return 0
+
+    if [ "$config_name" = "hypr" ]; then
+        mkdir -p "$target_item"
+        remove_hypr_children_without_user "$target_item"
+        copy_hypr_children_without_user "$backup_item" "$target_item"
+        return 0
+    fi
+
+    rm -rf "$target_item" 2>/dev/null
+    cp -r "$backup_item" "$HOME/.config/" 2>/dev/null
+}
+
 # Rollback on critical failure (Issue #8)
 rollback_on_failure() {
     local failure_reason="$1"
@@ -481,10 +546,7 @@ rollback_on_failure() {
         
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             for config_dir in hypr waybar kitty fish rofi; do
-                if [ -d "$BACKUP_DIR/$config_dir" ]; then
-                    rm -rf "$HOME/.config/$config_dir" 2>/dev/null
-                    cp -r "$BACKUP_DIR/$config_dir" "$HOME/.config/" 2>/dev/null
-                fi
+                restore_config_from_backup "$config_dir" "$BACKUP_DIR"
             done
             print_success "Configs restored from backup"
             log_info "Configs restored from backup after failure"
@@ -861,7 +923,7 @@ copy_dotfiles() {
     
     if [ "$DRY_RUN" = true ]; then
         print_warning "[DRY RUN] Would backup existing Aurora configs to $BACKUP_DIR"
-        print_warning "[DRY RUN] Would remove existing Aurora config files and directories"
+        print_warning "[DRY RUN] Would remove existing Aurora config files and directories, preserving ~/.config/hypr/User"
         print_warning "[DRY RUN] Would copy config files from $config_src to $config_dest"
         return
     fi
@@ -873,6 +935,14 @@ copy_dotfiles() {
         config_name="${config_dir##*/}"
         target_item="$config_dest/$config_name"
 
+        if [ "$config_name" = "hypr" ]; then
+            rm -rf "$BACKUP_DIR/$config_name"
+            backup_hypr_without_user "$target_item" "$BACKUP_DIR/$config_name"
+            mkdir -p "$target_item"
+            remove_hypr_children_without_user "$target_item"
+            continue
+        fi
+
         if [ -e "$target_item" ] || [ -L "$target_item" ]; then
             rm -rf "$BACKUP_DIR/$config_name"
             cp -r "$target_item" "$BACKUP_DIR/"
@@ -880,7 +950,16 @@ copy_dotfiles() {
         fi
     done < <(find "$config_src" -mindepth 1 -maxdepth 1 -print0)
     
-    cp -rfv "$config_src"/. "$config_dest/"
+    while IFS= read -r -d '' config_dir; do
+        config_name="${config_dir##*/}"
+
+        if [ "$config_name" = "hypr" ]; then
+            copy_hypr_children_without_user "$config_dir" "$config_dest/$config_name"
+            continue
+        fi
+
+        cp -rfv "$config_dir" "$config_dest/"
+    done < <(find "$config_src" -mindepth 1 -maxdepth 1 -print0)
     
     log_command "Configuration files installed"
     print_success "Configuration files installed successfully"
@@ -1021,7 +1100,7 @@ check_existing_install() {
     
     # Check for Aurora configs
     if [ -d "$HOME/.config/hypr" ]; then
-        if find "$HOME/.config/hypr" -type f -exec grep -q "Aurora" {} + 2>/dev/null; then
+        if grep -R -q --exclude-dir=User "Aurora" "$HOME/.config/hypr" 2>/dev/null; then
             has_aurora=true
             aurora_items+=("Aurora config: ~/.config/hypr")
         fi
@@ -1051,8 +1130,7 @@ uninstall_aurora() {
     echo -e "${BLUE}"
     cat << "EOF"
     ╔═══════════════════════════════════════╗
-    ║      Aurora ™  Uninstall Script          ║
-    ║    Remove Aurora and restore backup   ║
+    ║      Aurora ™  Uninstallation Script  ║
     ╚═══════════════════════════════════════╝
 EOF
     echo -e "${NC}"
@@ -1090,11 +1168,11 @@ EOF
         
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             print_warning "Restoring configs..."
-            [ -d "$latest_backup/hypr" ] && cp -r "$latest_backup/hypr" "$HOME/.config/"
-            [ -d "$latest_backup/waybar" ] && cp -r "$latest_backup/waybar" "$HOME/.config/"
-            [ -d "$latest_backup/kitty" ] && cp -r "$latest_backup/kitty" "$HOME/.config/"
-            [ -d "$latest_backup/fish" ] && cp -r "$latest_backup/fish" "$HOME/.config/"
-            [ -d "$latest_backup/rofi" ] && cp -r "$latest_backup/rofi" "$HOME/.config/"
+            restore_config_from_backup "hypr" "$latest_backup"
+            restore_config_from_backup "waybar" "$latest_backup"
+            restore_config_from_backup "kitty" "$latest_backup"
+            restore_config_from_backup "fish" "$latest_backup"
+            restore_config_from_backup "rofi" "$latest_backup"
             print_success "Configs restored"
         fi
     fi

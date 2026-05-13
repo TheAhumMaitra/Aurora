@@ -97,6 +97,7 @@ fn build_ui(app: &Application) {
                 let theme_name = path.file_name().unwrap().to_string_lossy().to_string();
 
                 let row = ListBoxRow::new();
+                row.add_css_class("section-row-theme");
                 let label = Label::new(Some(&theme_name));
                 label.set_xalign(0.0);
 

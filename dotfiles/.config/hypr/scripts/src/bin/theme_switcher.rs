@@ -19,7 +19,8 @@
 use aurora::load_css;
 use gtk4::prelude::*;
 use gtk4::{
-    Application, ApplicationWindow, EventControllerKey, Label, ListBox, ListBoxRow, ScrolledWindow,
+    Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, ListBox, ListBoxRow,
+    Orientation, ScrolledWindow, SearchEntry,
 };
 
 use aurora::apply_theme;
@@ -37,8 +38,8 @@ fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Theme Switcher")
-        .default_width(320)
-        .default_height(420)
+        .default_width(340)
+        .default_height(500)
         .decorated(false)
         .build();
 
@@ -47,6 +48,38 @@ fn build_ui(app: &Application) {
 
     let list_box = ListBox::new();
     list_box.set_selection_mode(gtk4::SelectionMode::Single);
+
+    let search_entry = SearchEntry::builder()
+        .placeholder_text("Search...")
+        .hexpand(true)
+        .build();
+
+    let search_bar = GtkBox::new(Orientation::Vertical, 0);
+    search_bar.add_css_class("search-bar");
+    search_bar.append(&search_entry);
+
+    search_entry.add_css_class("search-entry");
+
+    list_box.set_filter_func({
+        let search_entry = search_entry.clone();
+        move |row| {
+            let query = search_entry.text().trim().to_lowercase();
+
+            if query.is_empty() {
+                return true;
+            }
+
+            row.child()
+                .and_then(|child| child.downcast::<Label>().ok())
+                .map(|label| label.text().to_lowercase().contains(&query))
+                .unwrap_or(false)
+        }
+    });
+
+    search_entry.connect_search_changed({
+        let list_box = list_box.clone();
+        move |_| list_box.invalidate_filter()
+    });
 
     let scroll = ScrolledWindow::builder()
         .vexpand(true)
@@ -65,6 +98,7 @@ fn build_ui(app: &Application) {
 
                 let row = ListBoxRow::new();
                 let label = Label::new(Some(&theme_name));
+                label.set_xalign(0.0);
 
                 row.set_child(Some(&label));
                 list_box.append(&row);
@@ -92,7 +126,11 @@ fn build_ui(app: &Application) {
     });
 
     window.add_controller(controller);
-    window.set_child(Some(&scroll));
+    let vbox = GtkBox::new(Orientation::Vertical, 0);
+    vbox.append(&search_bar);
+    vbox.append(&scroll);
+
+    window.set_child(Some(&vbox));
     window.show();
 }
 

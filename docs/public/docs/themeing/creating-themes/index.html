@@ -9,19 +9,24 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
 <link fetchpriority="low" href="/site.webmanifest" rel="manifest" />
 <title>Creating Themess – Aurora</title>
-  <meta name="description" content="Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure.
-Example structure of a theme Aurora Default hypr colors.lua rofi colors.rasi waybar colors.css wlogout colors.css default.png #Wallpaper config.toml Tip" /><link rel="canonical" href="https://example.org/docs/themeing/creating-themes/" itemprop="url" />
+  <meta name="description" content="Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure. You can add many wallpapers on the background folder
+Example structure of a theme Aurora Default backgrounds wallpaper1.png wallpaper2.png wallpaper3.png main.png #If you want users to switch to default background also hypr colors.lua rofi colors.rasi waybar colors.css wlogout colors.css default.png #Wallpaper config.toml Tip" /><link rel="canonical" href="https://example.org/docs/themeing/creating-themes/" itemprop="url" />
 
 <meta property="og:title" content="Creating Themess">
 <meta
   property="og:description"
   content="
     
-      Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure.
+      Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure. You can add many wallpapers on the background folder
 Example structure of a theme
     
 
 Aurora Default 
+      backgrounds
+         wallpaper1.png
+         wallpaper2.png
+         wallpaper3.png
+         main.png #If you want users to switch to default background also
       hypr 
          colors.lua
       rofi 
@@ -53,13 +58,13 @@ Aurora Default
 
 
   <meta itemprop="name" content="Creating Themess">
-  <meta itemprop="description" content="Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure.
-Example structure of a theme Aurora Default hypr colors.lua rofi colors.rasi waybar colors.css wlogout colors.css default.png #Wallpaper config.toml Tip">
-  <meta itemprop="wordCount" content="117">
+  <meta itemprop="description" content="Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure. You can add many wallpapers on the background folder
+Example structure of a theme Aurora Default backgrounds wallpaper1.png wallpaper2.png wallpaper3.png main.png #If you want users to switch to default background also hypr colors.lua rofi colors.rasi waybar colors.css wlogout colors.css default.png #Wallpaper config.toml Tip">
+  <meta itemprop="wordCount" content="201">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Creating Themess">
-  <meta name="twitter:description" content="Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure.
-Example structure of a theme Aurora Default hypr colors.lua rofi colors.rasi waybar colors.css wlogout colors.css default.png #Wallpaper config.toml Tip">
+  <meta name="twitter:description" content="Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - hypr, rofi, waybar, wlogout and a default wallpaper (which should be named default.png). You can look our official 4 themes folders for understanding theming structure. You can add many wallpapers on the background folder
+Example structure of a theme Aurora Default backgrounds wallpaper1.png wallpaper2.png wallpaper3.png main.png #If you want users to switch to default background also hypr colors.lua rofi colors.rasi waybar colors.css wlogout colors.css default.png #Wallpaper config.toml Tip">
 
     <link rel="preload" href="/css/compiled/main.min.1a431501cdeb52323c920e7761f7d9e327b2bee53160196c4bd1d34a3fd9fbc9.css" as="style" integrity="sha256-GkMVAc3rUjI8kg53YffZ4yeyvuUxYBlsS9HTSj/Z&#43;8k=" />
     <link href="/css/compiled/main.min.1a431501cdeb52323c920e7761f7d9e327b2bee53160196c4bd1d34a3fd9fbc9.css" rel="stylesheet" integrity="sha256-GkMVAc3rUjI8kg53YffZ4yeyvuUxYBlsS9HTSj/Z&#43;8k=" />
@@ -468,11 +473,16 @@ Example structure of a theme Aurora Default hypr colors.lua rofi colors.rasi way
             
           </div>
           
-          <p>Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - <code>hypr</code>, <code>rofi</code>, <code>waybar</code>, <code>wlogout</code> and a default wallpaper (which should be named <code>default.png</code>). You can look our official 4 themes folders for understanding theming structure.</p>
+          <p>Aurora provides developers unique features to customize their theme. In your theme folder, create essential services folders - <code>hypr</code>, <code>rofi</code>, <code>waybar</code>, <code>wlogout</code> and a default wallpaper (which should be named <code>default.png</code>). You can look our official 4 themes folders for understanding theming structure. You can add many wallpapers on the <code>background</code> folder</p>
 <h3>Example structure of a theme<span class="hx:absolute hx:-mt-20" id="example-structure-of-a-theme"></span>
     <a href="#example-structure-of-a-theme" class="subheading-anchor" aria-label="Permalink for this section"></a></h3><div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code">
 
 <div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span><span style="color:#ae81ff">Aurora Default </span>
+</span></span><span style="display:flex;"><span>      <span style="color:#ae81ff">backgrounds</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">wallpaper1.png</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">wallpaper2.png</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">wallpaper3.png</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">main.png</span> <span style="color:#75715e">#If you want users to switch to default background also</span>
 </span></span><span style="display:flex;"><span>      <span style="color:#ae81ff">hypr </span>
 </span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">colors.lua</span>
 </span></span><span style="display:flex;"><span>      <span style="color:#ae81ff">rofi </span>
@@ -498,15 +508,33 @@ Example structure of a theme Aurora Default hypr colors.lua rofi colors.rasi way
   <p class="hx:flex hx:items-center hx:font-medium"><svg height=16px class="hx:inline-block hx:align-middle hx:mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>Tip</p>
 
   <div class="hx:w-full hx:min-w-0 hx:leading-7">
-    <div class="hx:mt-6 hx:leading-7 hx:first:mt-0"><p>You can create a <code>config.toml</code> in your theme folder and you can create a custom script with custom interpreter there</p></div>
+    <div class="hx:mt-6 hx:leading-7 hx:first:mt-0"><p>You can create a <code>config.toml</code> in your theme folder and you can create a custom script with custom interpreter there. A config toml also keeps theme&rsquo;s information</p></div>
   </div>
 </div>
 <h3>Example of <code>config.toml</code><span class="hx:absolute hx:-mt-20" id="example-of-configtoml"></span>
     <a href="#example-of-configtoml" class="subheading-anchor" aria-label="Permalink for this section"></a></h3><div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code">
 
-<div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span>[<span style="color:#a6e22e">settings</span>]
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">script</span> = <span style="color:#e6db74">&#34;default.sh&#34;</span> <span style="color:#75715e">#we can use default.py or main.py or main.lua</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">interpreter</span> = <span style="color:#e6db74">&#34;bash&#34;</span> <span style="color:#75715e">#we can use python, lua, node</span></span></span></code></pre></div></div><div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0">
+<div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span><span style="color:#a6e22e">name</span> = <span style="color:#e6db74">&#34;Aurora Default&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">version</span> = <span style="color:#e6db74">&#34;0.1.0&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># this is optional</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">authors</span> = [
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;NAME (@GITHUB_USER_NAME&lt;Optional&gt;) EMAIL&#34;</span>,
+</span></span><span style="display:flex;"><span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># this is optional </span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">repo_url</span> = <span style="color:#e6db74">&#34;https://github.com/UserName/ThemeRepo.git&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># this is optional but highly recommended </span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">wallpaper_sources</span> = [<span style="color:#e6db74">&#34;https://credit.blahblah/blah&#34;</span>, <span style="color:#e6db74">&#34;https://blah.nalahbalahbalah&#34;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># this is optional but highly recommended </span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">license</span> = <span style="color:#e6db74">&#34;GPL-3.0-or-later&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># this is optional but highly recommended </span>
+</span></span><span style="display:flex;"><span>[<span style="color:#a6e22e">settings</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">script</span> = <span style="color:#e6db74">&#34;default.py&#34;</span> <span style="color:#75715e">#we can use default.py or main.py or main.lua</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">interpreter</span> = <span style="color:#e6db74">&#34;python&#34;</span> <span style="color:#75715e">#we can use bash, lua, node</span></span></span></code></pre></div></div><div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0">
   <button
     class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
     title="Copy code"

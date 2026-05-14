@@ -36,36 +36,27 @@ const KEYBIND_CATEGORIES: &[KeybindCategory] = &[
             ("Close current window", "SUPER + C"),
             ("Exit Hyprland", "SUPER + M"),
             ("Switch keyboard layout", "SUPER +SPACE"),
-
             ("Move focus to up window", "SUPER + UP"),
             ("Move focus to down window", "SUPER + DOWN"),
             ("Move focus to right window", "SUPER + RIGHT"),
             ("Move focus to left window", "SUPER + LEFT"),
-
             ("Toggle floating mode", "SUPER + V"),
             ("Toggle pseudo mode", "SUPER + P"),
-
             ("Open scratchpad workspace", "SUPER + S"),
             ("Move current window to scratchpad", "SUPER + SHIFT + S"),
-
             ("Resize window right", "SUPER + SHIFT + RIGHT"),
             ("Resize window left", "SUPER + SHIFT + LEFT"),
             ("Resize window up", "SUPER + SHIFT + UP"),
             ("Resize window down", "SUPER + SHIFT + DOWN"),
-
             ("Switch to dwindle layout", "SUPER + B"),
             ("Switch to master layout", "SUPER + K"),
             ("Switch to scrolling layout", "SUPER + X"),
             ("Switch to monocle layout", "SUPER + Z"),
-
             ("Toggle dwindle split", "SUPER + J"),
-
             ("Open application launcher", "SUPER + R"),
-
             ("Take screenshot", "SUPER + ALT + Z"),
         ],
     },
-
     KeybindCategory {
         title: "Application keybinds",
         keybinds: &[
@@ -73,12 +64,10 @@ const KEYBIND_CATEGORIES: &[KeybindCategory] = &[
             ("Open file manager", "SUPER + E"),
             ("Open browser", "SUPER + ALT + B"),
             ("Open code editor", "SUPER + ALT + V"),
-
             ("Open emoji picker", "SUPER + ALT + E"),
             ("Open clipboard manager", "SUPER + SHIFT + V"),
         ],
     },
-
     KeybindCategory {
         title: "Aurora guis and scripts",
         keybinds: &[
@@ -87,60 +76,47 @@ const KEYBIND_CATEGORIES: &[KeybindCategory] = &[
             ("Open Hyprland layout switcher", "SUPER + ALT + L"),
             ("Open settings", "SUPER + SHIFT + Z"),
             ("Open search popup", "SUPER + ALT + S"),
-
             ("Refresh waybar", "SUPER + W"),
             ("Toggle waybar", "SUPER + SHIFT + W"),
-
             ("Open wallpaper switcher (theme)", "SUPER + SHIFT + T"),
             ("Open wallpaper switcher (global)", "SUPER + SHIFT + I"),
-
             ("Open power menu", "SUPER + ALT + P"),
         ],
     },
-
     KeybindCategory {
         title: "System keybinds",
         keybinds: &[
             ("Lock screen", "SUPER + L"),
-
             ("Increase volume", "XF86AudioRaiseVolume"),
             ("Decrease volume", "XF86AudioLowerVolume"),
             ("Mute audio", "XF86AudioMute"),
             ("Mute microphone", "XF86AudioMicMute"),
-
             ("Increase brightness", "XF86MonBrightnessUp"),
             ("Decrease brightness", "XF86MonBrightnessDown"),
-
             ("Next media track", "XF86AudioNext"),
             ("Play/Pause media", "XF86AudioPlay / XF86AudioPause"),
             ("Previous media track", "XF86AudioPrev"),
         ],
     },
-
     KeybindCategory {
         title: "Workspace keybinds",
         keybinds: &[
             ("Switch workspace", "SUPER + [1-0]"),
             ("Move window to workspace", "SUPER + SHIFT + [1-0]"),
-
             ("Next workspace", "SUPER + Mouse Scroll Down"),
             ("Previous workspace", "SUPER + Mouse Scroll Up"),
         ],
     },
-
     KeybindCategory {
         title: "Scrolling layout keybinds",
         keybinds: &[
             ("Move column left", "SUPER + COMMA"),
             ("Move column right", "SUPER + PERIOD"),
-
             ("Swap column left", "SUPER + SHIFT + COMMA"),
             ("Swap column right", "SUPER + SHIFT + PERIOD"),
-
             ("Resize column", "SUPER + ALT + COMMA / PERIOD"),
         ],
     },
-
     KeybindCategory {
         title: "Monocle layout keybinds",
         keybinds: &[

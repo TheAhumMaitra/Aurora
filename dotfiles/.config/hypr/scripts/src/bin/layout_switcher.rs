@@ -28,13 +28,25 @@ use std::process::Command;
 const LAYOUTS: &[&str] = &["dwindle", "master", "scrolling", "monocle", "grid"];
 
 fn run_layout_command(layout: &str) {
-    let command = format!(
-        r#"hl.config({{ general = {{ layout = "{}" }} }})"#,
-        layout
-    );
+    let command = format!(r#"hl.config({{ general = {{ layout = "{}" }} }})"#, layout);
 
-    if let Err(err) = Command::new("hyprctl").arg("eval").arg(command).spawn() {
-        eprintln!("Failed to run layout command `{layout}`: {err}");
+    match Command::new("hyprctl")
+        .args(["eval", command.as_str()])
+        .spawn()
+    {
+        Ok(_) => {
+            println!("Layout `{layout}` applied");
+            Command::new("notify-send")
+                .arg(format!("{} layout is applied!", layout))
+                .spawn();
+        }
+
+        Err(err) => {
+            eprintln!("Failed to run layout command `{layout}`: {err}");
+            Command::new("notify-send")
+                .arg(format!("Failed to apply {} layout!", layout))
+                .spawn();
+        }
     }
 }
 
@@ -129,7 +141,6 @@ fn build_ui(app: &Application) {
     window.set_child(Some(&vbox));
     window.show();
 }
-
 
 fn main() {
     let app = Application::builder()

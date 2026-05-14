@@ -70,14 +70,7 @@ end
 handle:close()
 
 -- Load all custom layouts
-local layouts = home .. "/.config/hypr/custom_layouts"
-
-local handle = io.popen('find "' .. layouts .. '" -type f -name "*.lua"')
-for file in handle:lines() do
-	dofile(file)
-end
-
-handle:close()
+dofile(configs .. "/custom_layouts.lua")
 
 -- load theme based configurations
 dofile(home .. "/.config/hypr/Theme/theme.lua")

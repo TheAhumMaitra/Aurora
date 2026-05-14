@@ -36,6 +36,11 @@ hl.layer_rule({
 	ignore_alpha = 0,
 })
 hl.layer_rule({
+	match = { namespace = "com.aurora.layout_switcher" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
 	match = { namespace = "logout_dialog" },
 	blur = true,
 	ignore_alpha = 0,

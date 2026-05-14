@@ -56,6 +56,11 @@ hl.window_rule({
 	float = true,
 })
 hl.window_rule({
+	name = "layout_switcher",
+	match = { class = "com.aurora.layout_switcher" },
+	float = true,
+})
+hl.window_rule({
 	name = "welcome-app",
 	match = { class = "com.aurora.welcome" },
 	float = true,

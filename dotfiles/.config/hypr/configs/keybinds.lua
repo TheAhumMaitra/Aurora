@@ -50,6 +50,8 @@ hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 -- launch search pop up
 hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("search"))
 
+-- launch layout switcher (which will switch Hyprland layouts)
+hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("layout_switcher"))
 -- Aurora's special scripts
 
 -- on/off (toggle) waybar

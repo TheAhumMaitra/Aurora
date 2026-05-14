@@ -84,6 +84,7 @@ const KEYBIND_CATEGORIES: &[KeybindCategory] = &[
         keybinds: &[
             ("Open keybinds help", "SUPER + H"),
             ("Open theme switcher", "SUPER + T"),
+            ("Open Hyprland layout switcher", "SUPER + ALT + L"),
             ("Open settings", "SUPER + SHIFT + Z"),
             ("Open search popup", "SUPER + ALT + S"),
 

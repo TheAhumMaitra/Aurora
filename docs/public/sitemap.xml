@@ -12,7 +12,15 @@
   </url><url>
     <loc>https://example.org/docs/getting-started/getting-familar/</loc>
   </url><url>
+    <loc>https://example.org/</loc>
+    <lastmod>2026-05-03T12:13:18+05:30</lastmod>
+  </url><url>
+    <loc>https://example.org/docs/</loc>
+    <lastmod>2026-05-03T12:13:18+05:30</lastmod>
+  </url><url>
     <loc>https://example.org/docs/auroras-cli/</loc>
+  </url><url>
+    <loc>https://example.org/docs/keybinds/</loc>
   </url><url>
     <loc>https://example.org/docs/themeing/</loc>
   </url><url>

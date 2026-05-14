@@ -64,10 +64,20 @@ local user_configs_path = home .. "/.config/hypr/User/configs"
 
 local handle = io.popen('find "' .. user_configs_path .. '" -type f -name "*.lua"')
 for file in handle:lines() do
-    dofile(file)
+	dofile(file)
 end
 
 handle:close()
 
--- load theme based configurations 
-dofile(home.."/.config/hypr/Theme/theme.lua")
+-- Load all custom layouts
+local layouts = home .. "/.config/hypr/custom_layouts"
+
+local handle = io.popen('find "' .. layouts .. '" -type f -name "*.lua"')
+for file in handle:lines() do
+	dofile(file)
+end
+
+handle:close()
+
+-- load theme based configurations
+dofile(home .. "/.config/hypr/Theme/theme.lua")

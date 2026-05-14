@@ -25,7 +25,7 @@ use gtk4::{
 
 use std::process::Command;
 
-const LAYOUTS: &[&str] = &["dwindle", "master", "scrolling", "monocle"];
+const LAYOUTS: &[&str] = &["dwindle", "master", "scrolling", "monocle", "grid"];
 
 fn run_layout_command(layout: &str) {
     let command = format!(

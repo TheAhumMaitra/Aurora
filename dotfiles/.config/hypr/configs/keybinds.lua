@@ -135,6 +135,9 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 -- dwindle switch
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"dwindle\" } })'"))
 
+-- grid switch
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"grid\" } })'"))
+
 -- master switch
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("hyprctl eval 'hl.config({ general = { layout = \"master\" } })'"))
 

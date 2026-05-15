@@ -63,7 +63,7 @@ window#waybar.empty #window {
 #custom-wlogout, #custom-bluetooth {
   margin-right: 18px;
 }
-#custom-wifi{
+#custom-wifi, #custom-weather{
   margin-right: 10px;
 }
 
@@ -74,6 +74,6 @@ window#waybar.empty #window {
         background-repeat: no-repeat;
         background-size: contain;
 }
-#custom-bluetooth{
+#custom-bluetooth, #custom-weather{
   font-size: 19px;
 }

@@ -25,6 +25,7 @@
     "clock",
     "pulseaudio",
     "battery",
+    "custom/weather",
     "custom/wifi",
     "custom/bluetooth",
     "custom/notification",
@@ -138,5 +139,10 @@
         "format":"",
         "tooltip": false,
         "on-click": "exec kitty wiremix",
+  },
+    "custom/weather": {
+        "format":"󰼲 ",
+        "tooltip": false,
+        "on-click": "exec kitty weathr --auto-location",
   },
 }

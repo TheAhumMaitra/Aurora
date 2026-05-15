@@ -710,6 +710,7 @@ install_packages() {
             nordzy-hyprcursors
             google-chrome
             wifitui-bin
+            weathr-bin
         "
     )
     

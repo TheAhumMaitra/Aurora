@@ -28,6 +28,7 @@
     "custom/weather",
     "custom/wifi",
     "custom/bluetooth",
+    "custom/system-resources-info",
     "custom/notification",
     "custom/wlogout",
   ],
@@ -139,6 +140,11 @@
         "format":"",
         "tooltip": false,
         "on-click": "exec kitty --class \"bluetui\" bluetui",
+  },
+   "custom/system-resources-info": {
+        "format":" ",
+        "tooltip": false,
+        "on-click": "exec kitty --class \"bottom\" btm",
   },
     "custom/weather": {
         "format":"󰼲 ",

@@ -106,6 +106,7 @@ wiremix
 wifitui-bin (AUR)
 weathr-bin
 bluetui
+bottom
 ```
 
 ### Step 2. Clone this repository

@@ -86,6 +86,7 @@ wiremix
 wifitui-bin (AUR)
 weathr-bin
 bluetui
+bottom
 ```
 
 > [!WARNING]

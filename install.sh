@@ -695,6 +695,7 @@ install_packages() {
             starship
             wiremix
             bluetui
+            bottom
         "
         [build]="
             git

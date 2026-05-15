@@ -695,6 +695,7 @@ install_packages() {
             mise
             starship
             wiremix
+            bluetui
         "
         [build]="
             git

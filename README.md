@@ -105,6 +105,7 @@ starship
 wiremix
 wifitui-bin (AUR)
 weathr-bin
+bluetui
 ```
 
 ### Step 2. Clone this repository

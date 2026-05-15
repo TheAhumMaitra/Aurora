@@ -90,3 +90,27 @@ hl.window_rule({
 	match = { class = "org.Waytrogen.Waytrogen" },
 	float = true,
 })
+hl.window_rule({
+	name = "Weather tui used by Aurora",
+	match = { class = "weathr" },
+	float = true,
+	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+})
+hl.window_rule({
+	name = "Bluetooth manager used by Aurora",
+	match = { class = "bluetui" },
+	float = true,
+	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+})
+hl.window_rule({
+	name = "Playback manager used by Aurora",
+	match = { class = "wiremix" },
+	float = true,
+	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+})
+hl.window_rule({
+	name = "Wifi manager used by Aurora",
+	match = { class = "wifitui" },
+	float = true,
+	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+})

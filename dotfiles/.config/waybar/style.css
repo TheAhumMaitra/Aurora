@@ -60,8 +60,11 @@ window#waybar.empty #window {
 #pulseaudio,
 #battery,
 #custom-notification,
-#custom-wlogout {
-  margin-right: 20px;
+#custom-wlogout, #custom-bluetooth {
+  margin-right: 18px;
+}
+#custom-wifi{
+  margin-right: 10px;
 }
 
 #custom-logo{
@@ -71,6 +74,6 @@ window#waybar.empty #window {
         background-repeat: no-repeat;
         background-size: contain;
 }
-#tray {
-  margin-right: 15px;
+#custom-bluetooth{
+  font-size: 19px;
 }

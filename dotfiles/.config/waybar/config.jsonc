@@ -25,7 +25,8 @@
     "clock",
     "pulseaudio",
     "battery",
-    "tray",
+    "custom/wifi",
+    "custom/bluetooth",
     "custom/notification",
     "custom/wlogout",
   ],
@@ -128,7 +129,14 @@
     "tooltip-format": "Power Menu",
     "interval": 0,
   },
-  "tray": {
-    "spacing": 10
-},
+ "custom/wifi": {
+        "format":" ",
+        "tooltip": false,
+        "on-click": "exec kitty wifitui tui",
+  },
+  "custom/bluetooth": {
+        "format":"",
+        "tooltip": false,
+        "on-click": "exec kitty wiremix",
+  },
 }

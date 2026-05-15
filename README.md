@@ -102,6 +102,8 @@ rofi-emoji
 ttf-jetbrains-mono-nerd
 mise
 starship
+wiremix
+wifitui-bin (AUR)
 ```
 
 ### Step 2. Clone this repository

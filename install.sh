@@ -682,7 +682,6 @@ install_packages() {
             nautilus
             wl-clipboard
             hyprshot
-            network-manager-applet
             brightnessctl
             libnotify
             ttf-dejavu

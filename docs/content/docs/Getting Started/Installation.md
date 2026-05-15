@@ -44,6 +44,7 @@ You need to install rust
 
 ##### Recommended Packages
 Make sure your package manger has these packages. This packages will give you the best experience of Aurora
+
 ```
 hyprland (You can use Hyprland git version also)
 xdg-desktop-portal-hyprland (you can use git version also)
@@ -81,6 +82,10 @@ rofi-emoji
 ttf-jetbrains-mono-nerd
 mise
 starship
+wiremix
+wifitui-bin (AUR)
+weathr-bin
+bluetui
 ```
 
 > [!WARNING]

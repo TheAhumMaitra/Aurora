@@ -694,6 +694,7 @@ install_packages() {
             ttf-jetbrains-mono-nerd
             mise
             starship
+            wiremix
         "
         [build]="
             git
@@ -708,6 +709,7 @@ install_packages() {
         [aur_extras]="
             nordzy-hyprcursors
             google-chrome
+            wifitui-bin
         "
     )
     

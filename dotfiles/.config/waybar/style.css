@@ -32,7 +32,7 @@ window#waybar {
   border-bottom: 3px solid @accent;
 }
 #workspaces {
-  margin: 5px;
+  margin: 3px;
   padding: 6px;
 }
 #workspaces button {

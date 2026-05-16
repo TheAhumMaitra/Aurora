@@ -107,6 +107,7 @@ wifitui-bin (AUR)
 weathr-bin
 bluetui
 bottom
+jolt
 ```
 
 ### Step 2. Clone this repository

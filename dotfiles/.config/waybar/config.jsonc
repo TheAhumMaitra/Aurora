@@ -20,7 +20,6 @@
 {
   "spacing": 3, // Gaps between modules
   "modules-left": ["custom/logo", "hyprland/workspaces"],
-  "modules-center": ["hyprland/window"],
   "modules-right": [
     "clock",
     "pulseaudio",
@@ -41,12 +40,6 @@
     "persistent-workspaces": {
       "*": 10,
     },
-  },
-  "hyprland/window": {
-    "format": "{title:.69}",
-    "tooltip": true,
-    "tooltip-format": "{title}",
-
   },
   "clock": {
     "tooltip": true,
@@ -104,6 +97,7 @@
     "format": "{capacity}% {icon}",
     "format-icons": ["", "", "", "", ""],
     "max-length": 25,
+    "on-click" :"exec kitty --class \"jolt\" jolt"
   },
   "custom/notification": {
     "format": "<span size='16pt'>{icon}</span>",

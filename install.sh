@@ -712,6 +712,7 @@ install_packages() {
             google-chrome
             wifitui-bin
             weathr-bin
+            jolt
         "
     )
     

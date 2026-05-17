@@ -16,8 +16,9 @@
      You should have received a copy of the GNU General Public License
      along with this program.  If not, see <https://www.gnu.org/licenses/>.*/
 
-
 {
+  "layer": "top",
+  "position": "top",
   "spacing": 3, // Gaps between modules
   "modules-left": ["custom/logo", "hyprland/workspaces"],
   "modules-right": [
@@ -68,12 +69,12 @@
     },
   },
   "pulseaudio": {
-    "format": "{volume}% {icon}",
-    "format-bluetooth": "{volume}% {icon}",
+    "format": "{volume}%",
+    "format-bluetooth": "{volume}% ",
     "format-muted": "",
     "format-icons": {
-      "alsa_output.pci-0000_00_1f.3.analog-stereo": "",
-      "alsa_output.pci-0000_00_1f.3.analog-stereo-muted": "",
+      "alsa_output.pci-0000_00_1f.3.analog-stereo": " ",
+      "alsa_output.pci-0000_00_1f.3.analog-stereo-muted": " " ,
       "headphone": "",
       "hands-free": "",
       "headset": "",

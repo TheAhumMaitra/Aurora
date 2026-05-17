@@ -87,6 +87,11 @@ notificationwindow, blankwindow {
   border: none;
 }
 
+.notification {
+  padding: 10px; /* Space inside the notification bubble */
+  margin: 5px;   /* Space between notifications */
+}
+
 .notification-row {
   background: none;
   outline: none;

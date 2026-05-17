@@ -86,6 +86,11 @@ hl.window_rule({
 	float = true,
 })
 hl.window_rule({
+	name = "Waybar Position Switcher used by Aurora",
+	match = { class = "com.aurora.waybar_position_switcher" },
+	float = true,
+})
+hl.window_rule({
 	name = "Wallaper Switcher - Waytroegn for Aurora",
 	match = { class = "org.Waytrogen.Waytrogen" },
 	float = true,

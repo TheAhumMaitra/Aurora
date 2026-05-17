@@ -44,6 +44,8 @@ hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("keybinds_help"))
 -- launch theme switcher
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 
+-- launch waybar position switcher
+hl.bind(mainMod.." + ALT + W", hl.dsp.exec_cmd("waybar_position_switcher"))
 -- launch custom settings
 hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 
@@ -187,7 +189,7 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"
 
 -- scrolling layout
 hl.bind(mainMod .. " + comma", hl.dsp.layout("move -col"))
-hl.bind(mainMod .. " + period", hl.dsp.layout("move -col"))
+hl.bind(mainMod .. " + period", hl.dsp.layout("move +col"))
 hl.bind(mainMod .. " + SHIFT + comma", hl.dsp.layout("swapcol l"))
 hl.bind(mainMod .. " + SHIFT + period", hl.dsp.layout("swapcol r"))
 hl.bind(mainMod .. " + ALT + comma", hl.dsp.layout("colresize +0.4"))

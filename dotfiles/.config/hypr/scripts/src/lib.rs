@@ -26,21 +26,36 @@ use gtk4 as gtk;
 use gtk4::CssProvider;
 use gtk4::gdk::Display;
 
-// Returns commonly used paths for theme switcher
-fn get_paths() -> (PathBuf, PathBuf) {
-    let home = std::env::var("HOME").expect("Could not get HOME");
-    let themes_dir = PathBuf::from(format!("{}/.config/themes", home));
-    let config_base = PathBuf::from(format!("{}/.config", home));
-    (themes_dir, config_base)
+pub struct AuroraPaths {
+    pub home: PathBuf,
+    pub config: PathBuf,
+    pub themes: PathBuf,
+}
+
+impl AuroraPaths {
+    pub fn new() -> Self {
+        let home = dirs::home_dir().expect("Could not get HOME directory");
+        let config = home.join(".config");
+
+        Self {
+            themes: config.join("themes"),
+            home,
+            config,
+        }
+    }
+}
+
+pub fn aurora_paths() -> AuroraPaths {
+    AuroraPaths::new()
 }
 
 // list all available themes in `~/.config/themes` for mostly cli
 pub fn list_themes() {
-    let (themes_dir, _) = get_paths();
+    let paths = aurora_paths();
 
     println!("Showing Available Themes:\n");
 
-    if let Ok(entries) = fs::read_dir(&themes_dir) {
+    if let Ok(entries) = fs::read_dir(&paths.themes) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
@@ -72,11 +87,12 @@ struct Settings {
 
 // apply the selected theme
 pub fn apply_theme(theme_name: &str) {
-    let home = std::env::var("HOME").expect("Could not get HOME");
-    let (themes_dir, config_base) = get_paths();
+    let paths = aurora_paths();
+    let aurora_data = paths.home.join(".local/share/Aurora");
+    let hypr_theme_file = paths.config.join("hypr/Theme/theme.lua");
 
     // get the `config.toml` from the selected theme
-    let mut config_path = themes_dir.clone();
+    let mut config_path = paths.themes.clone();
     config_path.push(theme_name);
     config_path.push("config.toml");
 
@@ -90,9 +106,7 @@ pub fn apply_theme(theme_name: &str) {
     let message = format!("{theme_name} is applied!");
 
     // Empty the current theme configuration for Hyprland
-    // get theme configuration directory
-    let theme_config = format!("{}/.config/hypr/Theme/theme.lua", home);
-    fs::write(&theme_config, "").expect("Failed to empty theme configuration");
+    fs::write(&hypr_theme_file, "").expect("Failed to empty theme configuration");
 
     // reset any gtk theme configurations
     Command::new("gsettings")
@@ -100,20 +114,17 @@ pub fn apply_theme(theme_name: &str) {
         .status()
         .expect("failed to reset gtk-theme");
 
-    //get the logs directory of Aurora
-    let logs_directory = format!("{}/.local/share/Aurora", home);
-
     // write selected theme name into the theme name log file
     // Ensure the directory exists
-    fs::create_dir_all(&logs_directory).expect("Failed to create logs directory");
+    fs::create_dir_all(&aurora_data).expect("Failed to create logs directory");
 
     // Now write the file
-    let theme_name_log_file = format!("{}/theme_name.log", logs_directory);
+    let theme_name_log_file = aurora_data.join("theme_name.log");
 
     fs::write(&theme_name_log_file, theme_name)
         .expect("Failed to write theme name into the theme logs file.");
     // write theme logs
-    let theme_log_file = format!("{}/theme.log", logs_directory);
+    let theme_log_file = aurora_data.join("theme.log");
 
     if let Some(config) = &config {
         let authors = config.authors.join(", ");
@@ -143,7 +154,7 @@ pub fn apply_theme(theme_name: &str) {
             if let Some(script) = &settings.script {
                 let interpreter = settings.interpreter.as_deref().unwrap_or("bash"); //get the parsed interpreter or simply set it to bash
 
-                let mut path = themes_dir.clone();
+                let mut path = paths.themes.clone();
                 path.push(theme_name);
                 path.push(script);
 
@@ -176,13 +187,13 @@ pub fn apply_theme(theme_name: &str) {
 
         for file in filenames {
             // source path is directory of the theme folder
-            let mut source = themes_dir.clone();
+            let mut source = paths.themes.clone();
             source.push(theme_name);
             source.push(folder);
             source.push(file);
 
             // our target is `.config`
-            let mut target = config_base.clone();
+            let mut target = paths.config.clone();
             target.push(folder);
             target.push(file);
 
@@ -214,7 +225,7 @@ pub fn apply_theme(theme_name: &str) {
         .expect("Failed to refresh the system.");
 
     //get the default wallpaper
-    let mut wallpaper = themes_dir.clone();
+    let mut wallpaper = paths.themes.clone();
     wallpaper.push(theme_name);
     wallpaper.push("default.png");
 
@@ -237,6 +248,29 @@ pub fn apply_theme(theme_name: &str) {
         println!("No default.jpg found for this theme");
     }
 }
+
+pub fn waybar_position_change(position: String) -> std::io::Result<()> {
+    let paths = aurora_paths();
+    let waybar_config = paths.config.join("waybar/config.jsonc");
+    let content = fs::read_to_string(&waybar_config)?;
+
+    let mut lines: Vec<String> = content.lines().map(String::from).collect();
+
+    // Replace the Waybar position line regardless of the current value.
+    for line in &mut lines {
+        if line.trim_start().starts_with("\"position\":") {
+            *line = format!("  \"position\": \"{}\",", position);
+        }
+    }
+
+    let new_content = lines.join("\n");
+
+    fs::write(waybar_config, new_content)?;
+
+    println!("Updated!");
+
+    Ok(())
+}
 // load the `style.css` file for gtk apps
 pub fn load_css() {
     let provider = CssProvider::new();
@@ -255,8 +289,10 @@ pub fn load_css() {
 }
 
 pub fn download_theme(repo_url: String) {
+    let paths = aurora_paths();
+
     Command::new("git")
-        .current_dir(format!("{}/.config/themes", std::env::var("HOME").unwrap()))
+        .current_dir(paths.themes)
         .args(["clone", repo_url.as_str()])
         .status()
         .expect("Failed to clone theme");

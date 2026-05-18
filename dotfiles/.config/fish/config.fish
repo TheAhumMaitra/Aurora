@@ -23,4 +23,4 @@ end
 
 starship init fish | source
 mise activate fish | source
-macchina
+leenfetch --config ~/.config/leenfetch/minmal/config.jsonc --custom_ascii_path ~/.config/leenfetch/ASCIIs/Aurora.ascii

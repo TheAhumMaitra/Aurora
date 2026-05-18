@@ -104,11 +104,12 @@ mise
 starship
 wiremix
 wifitui-bin (AUR)
-weathr-bin
+weathr-bin (AUR)
 bluetui
 bottom
-jolt
-macchina
+jolt (AUR)
+leenfetch (AUR)
+google-chrome (AUR)
 ```
 
 ### Step 2. Clone this repository

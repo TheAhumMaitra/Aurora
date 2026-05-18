@@ -696,7 +696,6 @@ install_packages() {
             wiremix
             bluetui
             bottom
-            macchina
         "
         [build]="
             git
@@ -714,6 +713,7 @@ install_packages() {
             wifitui-bin
             weathr-bin
             jolt
+            leenfetch
         "
     )
     

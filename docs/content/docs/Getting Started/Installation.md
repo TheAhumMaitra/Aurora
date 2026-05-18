@@ -84,11 +84,12 @@ mise
 starship
 wiremix
 wifitui-bin (AUR)
-weathr-bin
+weathr-bin (AUR)
 bluetui
 bottom
-jolt
-macchina
+jolt (AUR)
+leenfetch (AUR)
+google-chrome (AUR)
 ```
 
 > [!WARNING]

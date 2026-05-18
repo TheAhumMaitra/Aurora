@@ -78,6 +78,7 @@ const KEYBIND_CATEGORIES: &[KeybindCategory] = &[
             ("Open search popup", "SUPER + ALT + S"),
             ("Refresh waybar", "SUPER + W"),
             ("Toggle waybar", "SUPER + SHIFT + W"),
+            ("Change the waybar position", "SUPER + ALT + W"),
             ("Open wallpaper switcher (theme)", "SUPER + SHIFT + T"),
             ("Open wallpaper switcher (global)", "SUPER + SHIFT + I"),
             ("Open power menu", "SUPER + ALT + P"),

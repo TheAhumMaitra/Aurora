@@ -87,10 +87,11 @@ wifitui-bin (AUR)
 weathr-bin
 bluetui
 bottom
+jolt
 ```
 
 > [!WARNING]
-> You can use `Hyprland-git`. It  might be very unstable 
+> You can use `Hyprland-git`. It might be very unstable 
 
 ### Step 2. Clone this repository
 
@@ -118,7 +119,7 @@ cd ~/.config/hypr/scripts
 cargo install --path .
 ```
 
-### Install Step 4. Install Wallpaper Switcher
+### Step 4. Install Wallpaper Switcher
 
 #### Clone the custom Waytrogen repo
 ```bash
@@ -139,5 +140,18 @@ sudo cp ./org.Waytrogen.Waytrogen.gschema.xml \
 /usr/share/glib-2.0/schemas/
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
+
+### Step 5. Switch to `sudo-rs` (recommended)
+After installing `sudo-rs`, check the binary by running `sudo ls /usr/bin/sudo-rs`
+
+#### Move your original sudo binary 
+```bash
+sudo mv /usr/bin/sudo /usr/bin/sudo-original
+```
+### Create a symlink for `sudo-rs` binary
+```bash
+sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo
+```
+
 ### Done
 Enjoy Aurora!

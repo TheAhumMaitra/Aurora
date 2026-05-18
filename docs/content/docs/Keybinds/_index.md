@@ -58,6 +58,7 @@ This page conatins all keybinds used in AUrora. Keybinds are bascially keycombon
 | `SUPER + SHIFT + I` | Open global wallpaper switcher |
 | `SUPER + ALT + P` | Open power menu |
 | `SUPER + ALT + L` | Open Hyprland layout switcher |
+| `SUPER + ALT + W` | Change waybar position |
 
 ---
 

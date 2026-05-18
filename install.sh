@@ -696,6 +696,7 @@ install_packages() {
             wiremix
             bluetui
             bottom
+            macchina
         "
         [build]="
             git

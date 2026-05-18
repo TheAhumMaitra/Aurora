@@ -108,6 +108,7 @@ weathr-bin
 bluetui
 bottom
 jolt
+macchina
 ```
 
 ### Step 2. Clone this repository

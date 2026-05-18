@@ -88,6 +88,7 @@ weathr-bin
 bluetui
 bottom
 jolt
+macchina
 ```
 
 > [!WARNING]

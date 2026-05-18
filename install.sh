@@ -1083,6 +1083,59 @@ verify_installation() {
     fi
 }
 
+switch_to_sudo_rs() {
+    next_step "Switching sudo to sudo-rs"
+
+    if [ "$DRY_RUN" = true ]; then
+        print_warning "[DRY RUN] Would run: sudo mv /usr/bin/sudo /usr/bin/sudo-original"
+        print_warning "[DRY RUN] Would run: sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo"
+        return 0
+    fi
+
+    if [ ! -x /usr/bin/sudo-rs ]; then
+        print_warning "sudo-rs is not installed at /usr/bin/sudo-rs; skipping sudo switch"
+        log_warn "sudo-rs binary missing at /usr/bin/sudo-rs"
+        return 0
+    fi
+
+    if [ -L /usr/bin/sudo ] && [ "$(readlink /usr/bin/sudo)" = "/usr/bin/sudo-rs" ]; then
+        print_success "sudo already points to sudo-rs"
+        log_info "sudo already linked to sudo-rs"
+        return 0
+    fi
+
+    if [ ! -e /usr/bin/sudo-original ]; then
+        if [ ! -e /usr/bin/sudo ]; then
+            print_warning "/usr/bin/sudo does not exist; skipping sudo switch"
+            log_warn "/usr/bin/sudo missing before sudo-rs switch"
+            return 0
+        fi
+
+        if ! sudo mv /usr/bin/sudo /usr/bin/sudo-original; then
+            print_error "Failed to move /usr/bin/sudo to /usr/bin/sudo-original"
+            log_error "Could not move /usr/bin/sudo to /usr/bin/sudo-original"
+            return 1
+        fi
+    fi
+
+    if [ -e /usr/bin/sudo ] || [ -L /usr/bin/sudo ]; then
+        if ! sudo rm -f /usr/bin/sudo; then
+            print_error "Failed to replace existing /usr/bin/sudo"
+            log_error "Could not remove existing /usr/bin/sudo before linking sudo-rs"
+            return 1
+        fi
+    fi
+
+    if ! sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo; then
+        print_error "Failed to link /usr/bin/sudo to /usr/bin/sudo-rs"
+        log_error "Could not symlink /usr/bin/sudo to /usr/bin/sudo-rs"
+        return 1
+    fi
+
+    print_success "sudo now points to sudo-rs"
+    log_info "Switched /usr/bin/sudo to /usr/bin/sudo-rs"
+}
+
 # Create required directories
 create_directories() {
     mkdir -p ~/.config
@@ -1375,6 +1428,7 @@ EOF
         copy_dotfiles
         setup_shell_config
         verify_installation
+        switch_to_sudo_rs
     else
         next_step "Building and installing Rust scripts"
         print_warning "[DRY RUN] Would build and install Rust scripts"
@@ -1390,6 +1444,9 @@ EOF
 
         next_step "Verifying installation"
         print_warning "[DRY RUN] Would verify installed binaries and PATH"
+
+        next_step "Switching sudo to sudo-rs"
+        print_warning "[DRY RUN] Would switch /usr/bin/sudo to /usr/bin/sudo-rs"
     fi
     
     final_setup

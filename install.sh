@@ -1083,12 +1083,44 @@ verify_installation() {
     fi
 }
 
+wait_for_pacman_settle() {
+    local timeout_seconds=60
+    local sleep_seconds=2
+    local elapsed_seconds=0
+    local pacman_lock="/var/lib/pacman/db.lck"
+
+    log_info "Waiting for package-manager processes to settle before replacing sudo"
+
+    while pgrep -x pacman &>/dev/null || pgrep -x yay &>/dev/null || pgrep -x makepkg &>/dev/null || [ -e "$pacman_lock" ]; do
+        if [ "$elapsed_seconds" -ge "$timeout_seconds" ]; then
+            print_warning "Timed out waiting for pacman/yay to settle; skipping sudo-rs switch"
+            log_warn "pacman/yay still active or lock file present after ${timeout_seconds}s"
+            return 1
+        fi
+
+        sleep "$sleep_seconds"
+        elapsed_seconds=$((elapsed_seconds + sleep_seconds))
+    done
+
+    return 0
+}
+
 switch_to_sudo_rs() {
     next_step "Switching sudo to sudo-rs"
 
     if [ "$DRY_RUN" = true ]; then
         print_warning "[DRY RUN] Would run: sudo mv /usr/bin/sudo /usr/bin/sudo-original"
         print_warning "[DRY RUN] Would run: sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo"
+        return 0
+    fi
+
+    if ! wait_for_pacman_settle; then
+        return 0
+    fi
+
+    if ! pacman -Q sudo-rs &>/dev/null; then
+        print_warning "sudo-rs package is not installed according to pacman; skipping sudo switch"
+        log_warn "sudo-rs package missing from pacman database"
         return 0
     fi
 
@@ -1428,7 +1460,6 @@ EOF
         copy_dotfiles
         setup_shell_config
         verify_installation
-        switch_to_sudo_rs
     else
         next_step "Building and installing Rust scripts"
         print_warning "[DRY RUN] Would build and install Rust scripts"
@@ -1450,6 +1481,10 @@ EOF
     fi
     
     final_setup
+
+    if [ "$DRY_RUN" = false ]; then
+        switch_to_sudo_rs
+    fi
     
     log_command "Aurora Installation Completed Successfully"
 }

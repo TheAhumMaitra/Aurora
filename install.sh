@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Aurora Installation Script for Arch Linux
 
-#  SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> */
-#  SPDX-License-Identifier: GPL-3.0-or-later */
+#  SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> 
+#  SPDX-License-Identifier: GPL-3.0-or-later 
 
 #    Copyright (C) 2026 Ahum Maitra
 
@@ -1110,8 +1110,7 @@ switch_to_sudo_rs() {
     next_step "Switching sudo to sudo-rs"
 
     if [ "$DRY_RUN" = true ]; then
-        print_warning "[DRY RUN] Would run: sudo mv /usr/bin/sudo /usr/bin/sudo-original"
-        print_warning "[DRY RUN] Would run: sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo"
+        print_warning "[DRY RUN] Would atomically replace /usr/bin/sudo with a symlink to /usr/bin/sudo-rs"
         return 0
     fi
 
@@ -1137,31 +1136,28 @@ switch_to_sudo_rs() {
         return 0
     fi
 
-    if [ ! -e /usr/bin/sudo-original ]; then
-        if [ ! -e /usr/bin/sudo ]; then
-            print_warning "/usr/bin/sudo does not exist; skipping sudo switch"
-            log_warn "/usr/bin/sudo missing before sudo-rs switch"
-            return 0
+    if ! sudo /bin/bash -c '
+        set -e
+
+        if [ ! -x /usr/bin/sudo-rs ]; then
+            echo "sudo-rs binary missing at /usr/bin/sudo-rs" >&2
+            exit 1
         fi
 
-        if ! sudo mv /usr/bin/sudo /usr/bin/sudo-original; then
-            print_error "Failed to move /usr/bin/sudo to /usr/bin/sudo-original"
-            log_error "Could not move /usr/bin/sudo to /usr/bin/sudo-original"
-            return 1
-        fi
-    fi
+        if [ ! -e /usr/bin/sudo-original ]; then
+            if [ ! -e /usr/bin/sudo ] && [ ! -L /usr/bin/sudo ]; then
+                echo "/usr/bin/sudo does not exist and no backup is present" >&2
+                exit 1
+            fi
 
-    if [ -e /usr/bin/sudo ] || [ -L /usr/bin/sudo ]; then
-        if ! sudo rm -f /usr/bin/sudo; then
-            print_error "Failed to replace existing /usr/bin/sudo"
-            log_error "Could not remove existing /usr/bin/sudo before linking sudo-rs"
-            return 1
+            mv /usr/bin/sudo /usr/bin/sudo-original
         fi
-    fi
 
-    if ! sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo; then
+        rm -f /usr/bin/sudo
+        ln -s /usr/bin/sudo-rs /usr/bin/sudo
+    '; then
         print_error "Failed to link /usr/bin/sudo to /usr/bin/sudo-rs"
-        log_error "Could not symlink /usr/bin/sudo to /usr/bin/sudo-rs"
+        log_error "Could not atomically switch /usr/bin/sudo to /usr/bin/sudo-rs"
         return 1
     fi
 

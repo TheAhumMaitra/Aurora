@@ -49,20 +49,53 @@ pub fn aurora_paths() -> AuroraPaths {
     AuroraPaths::new()
 }
 
-// list all available themes in `~/.config/themes` for mostly cli
-pub fn list_themes() {
-    let paths = aurora_paths();
+#[derive(Debug, Clone)]
+pub struct ThemeEntry {
+    pub directory_name: String,
+    pub display_name: String,
+}
 
-    println!("Showing Available Themes:\n");
+fn read_theme_config(theme_dir: &std::path::Path) -> Option<Config> {
+    let config_path = theme_dir.join("config.toml");
+    fs::read_to_string(config_path)
+        .ok()
+        .and_then(|content| toml::from_str(&content).ok())
+}
+
+pub fn theme_entries() -> Vec<ThemeEntry> {
+    let paths = aurora_paths();
+    let mut themes = Vec::new();
 
     if let Ok(entries) = fs::read_dir(&paths.themes) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
-                let name: std::borrow::Cow<'_, str> = path.file_name().unwrap().to_string_lossy();
-                println!("• {}", name);
+            if !path.is_dir() {
+                continue;
             }
+
+            let directory_name = path.file_name().unwrap().to_string_lossy().to_string();
+            let display_name = read_theme_config(&path)
+                .map(|config| config.name)
+                .filter(|name| !name.trim().is_empty())
+                .unwrap_or_else(|| directory_name.clone());
+
+            themes.push(ThemeEntry {
+                directory_name,
+                display_name,
+            });
         }
+    }
+
+    themes.sort_by(|a, b| a.display_name.to_lowercase().cmp(&b.display_name.to_lowercase()));
+    themes
+}
+
+// list all available themes in `~/.config/themes` for mostly cli
+pub fn list_themes() {
+    println!("Showing Available Themes:\n");
+
+    for theme in theme_entries() {
+        println!("• {}", theme.display_name);
     }
 }
 

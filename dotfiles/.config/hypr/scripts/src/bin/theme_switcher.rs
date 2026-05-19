@@ -17,6 +17,7 @@
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use aurora::load_css;
+use aurora::theme_entries;
 use gtk4::prelude::*;
 use gtk4::{
     Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, ListBox, ListBoxRow,
@@ -24,15 +25,6 @@ use gtk4::{
 };
 
 use aurora::apply_theme;
-use std::fs;
-use std::path::PathBuf;
-
-fn get_paths() -> (PathBuf, PathBuf) {
-    let home = std::env::var("HOME").expect("Could not get HOME");
-    let themes_dir = PathBuf::from(format!("{}/.config/themes", home));
-    let config_base = PathBuf::from(format!("{}/.config", home));
-    (themes_dir, config_base)
-}
 
 fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
@@ -87,31 +79,20 @@ fn build_ui(app: &Application) {
         .child(&list_box)
         .build();
 
-    let (themes_dir, _) = get_paths();
+    for theme in theme_entries() {
+        let row = ListBoxRow::new();
+        row.add_css_class("section-row-theme");
+        row.set_widget_name(&theme.directory_name);
 
-    if let Ok(entries) = fs::read_dir(&themes_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
+        let label = Label::new(Some(&theme.display_name));
+        label.set_xalign(0.0);
 
-            if path.is_dir() {
-                let theme_name = path.file_name().unwrap().to_string_lossy().to_string();
-
-                let row = ListBoxRow::new();
-                row.add_css_class("section-row-theme");
-                let label = Label::new(Some(&theme_name));
-                label.set_xalign(0.0);
-
-                row.set_child(Some(&label));
-                list_box.append(&row);
-            }
-        }
+        row.set_child(Some(&label));
+        list_box.append(&row);
     }
 
     list_box.connect_row_activated(move |_, row| {
-        let label = row.child().unwrap().downcast::<Label>().unwrap();
-        let theme_name = label.text();
-
-        apply_theme(&theme_name);
+        apply_theme(&row.widget_name());
         load_css();
     });
 

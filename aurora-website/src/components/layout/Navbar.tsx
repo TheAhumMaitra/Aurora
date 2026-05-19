@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { name: "Home", href: "/" },
+  { name: "Themes", href: "/themes" },
   { name: "Wiki", href: "https://aurorawiki.vercel.app/" },
 ];
 function MobileNavbar() {

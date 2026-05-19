@@ -19,7 +19,7 @@
 use serde::Deserialize;
 use std::fs;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use gtk4 as gtk;
@@ -133,8 +133,7 @@ pub fn apply_theme(theme_name: &str) {
         .ok()
         .and_then(|content| toml::from_str(&content).ok());
 
-    let folders = ["waybar", "wlogout", "hypr", "rofi"]; //directories want to be copied
-    let filenames = ["colors.css", "colors.lua", "colors.rasi", "config.toml"]; //files need to be copied form that directories
+    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim"]; //directories want to be copied
 
     let message = format!("{theme_name} is applied!");
 
@@ -214,41 +213,18 @@ pub fn apply_theme(theme_name: &str) {
         .output()
         .expect("failed to execute process");
 
-    // copy the files
+    // copy the configured theme directories, including nested files like nvim/lua/plugins/*
     for folder in folders {
-        let mut found = false;
+        let source = paths.themes.join(theme_name).join(folder);
+        let target = paths.config.join(folder);
 
-        for file in filenames {
-            // source path is directory of the theme folder
-            let mut source = paths.themes.clone();
-            source.push(theme_name);
-            source.push(folder);
-            source.push(file);
-
-            // our target is `.config`
-            let mut target = paths.config.clone();
-            target.push(folder);
-            target.push(file);
-
-            // if theme file exists
-            if source.exists() {
-                // if the parent directory exists (.config)
-                if let Some(parent) = target.parent() {
-                    fs::create_dir_all(parent).ok();
-                }
-
-                // copy the files from source to target
-                match fs::copy(&source, &target) {
-                    Ok(_) => println!("Applied {}/{}", folder, file),
-                    Err(e) => eprintln!("Copy error in {}: {}", folder, e),
-                }
-
-                found = true;
+        if source.exists() {
+            match copy_theme_path(&source, &target) {
+                Ok(_) => println!("Applied {}", folder),
+                Err(e) => eprintln!("Copy error in {}: {}", folder, e),
             }
-        }
-
-        if !found {
-            println!("No colors file found in {}", folder);
+        } else {
+            println!("No theme directory found for {}", folder);
         }
     }
 
@@ -280,6 +256,45 @@ pub fn apply_theme(theme_name: &str) {
     } else {
         println!("No default.jpg found for this theme");
     }
+}
+
+fn copy_theme_path(source: &Path, target: &Path) -> std::io::Result<()> {
+    if source.is_file() {
+        if should_copy(source, target)? {
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::copy(source, target)?;
+        }
+        return Ok(());
+    }
+
+    fs::create_dir_all(target)?;
+
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        copy_theme_path(&entry.path(), &target.join(entry.file_name()))?;
+    }
+
+    Ok(())
+}
+
+fn should_copy(source: &Path, target: &Path) -> std::io::Result<bool> {
+    let source_meta = fs::metadata(source)?;
+
+    let target_meta = match fs::metadata(target) {
+        Ok(meta) => meta,
+        Err(_) => return Ok(true),
+    };
+
+    if !target_meta.is_file() || source_meta.len() != target_meta.len() {
+        return Ok(true);
+    }
+
+    let source_modified = source_meta.modified()?;
+    let target_modified = target_meta.modified()?;
+
+    Ok(source_modified > target_modified)
 }
 
 pub fn waybar_position_change(position: String) -> std::io::Result<()> {

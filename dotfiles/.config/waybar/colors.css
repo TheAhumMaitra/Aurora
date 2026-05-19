@@ -1,7 +1,26 @@
-@define-color background #111c18;
-@define-color foreground #C1C497;
-@define-color accent #509475;
-@define-color active-background #549e6a;
-@define-color active-accent #63b07a;
-@define-color urgent-background #FF5345;
-@define-color border #53685B;
+/* SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> */
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+/*    Copyright (C) 2026 Ahum Maitra
+
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+
+      You should have received a copy of the GNU General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>. */
+
+      
+@define-color background rgb(6, 6, 6);
+@define-color foreground white;
+@define-color accent rgba(100, 114, 125, 0.5);
+@define-color active-background #484a4b;
+@define-color active-accent rgb(165, 165, 165);
+@define-color urgent-background #df0000;
+@define-color border rgb(78, 78, 78);

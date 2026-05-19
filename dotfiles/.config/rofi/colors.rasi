@@ -1,7 +1,8 @@
 * {
-    foreground: #C1C497;
-    background: #111c18;
-    entry-background: #459451;
-    urgent-background: #53685B;
-    bordercolor: #53685B;
+    foreground: white;
+    background: #000000;
+    entry-background: #1a1a1a;
+    urgent-background: #555555;
+    bordercolor: #454545;
+
 }

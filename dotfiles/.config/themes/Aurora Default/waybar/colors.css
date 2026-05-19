@@ -18,6 +18,7 @@
 
       
 @define-color background rgb(6, 6, 6);
+@define-color foreground white;
 @define-color accent rgba(100, 114, 125, 0.5);
 @define-color active-background #484a4b;
 @define-color active-accent rgb(165, 165, 165);

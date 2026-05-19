@@ -18,6 +18,7 @@
 
 
 @define-color background #1a1b26;
+@define-color foreground #9aa5ce;
 @define-color accent #7aa2f7;
 @define-color active-background #24283b;
 @define-color active-accent #7dcfff;

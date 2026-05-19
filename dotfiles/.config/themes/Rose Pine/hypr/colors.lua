@@ -17,7 +17,7 @@
 --     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 return {
-	main = "#eb6f92",
-	accent = "#eb6f92",
-	shadow = "#b4637a",
+	main = "#524f67",
+	accent = "#56526e",
+	shadow = "#403d52",
 }

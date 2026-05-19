@@ -18,6 +18,7 @@
 
 use serde::Deserialize;
 use std::fs;
+use std::io::Read;
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -86,7 +87,11 @@ pub fn theme_entries() -> Vec<ThemeEntry> {
         }
     }
 
-    themes.sort_by(|a, b| a.display_name.to_lowercase().cmp(&b.display_name.to_lowercase()));
+    themes.sort_by(|a, b| {
+        a.display_name
+            .to_lowercase()
+            .cmp(&b.display_name.to_lowercase())
+    });
     themes
 }
 
@@ -271,9 +276,28 @@ fn copy_theme_path(source: &Path, target: &Path) -> std::io::Result<()> {
 
     fs::create_dir_all(target)?;
 
-    for entry in fs::read_dir(source)? {
-        let entry = entry?;
-        copy_theme_path(&entry.path(), &target.join(entry.file_name()))?;
+    let mut pending = vec![(source.to_path_buf(), target.to_path_buf())];
+
+    while let Some((current_source, current_target)) = pending.pop() {
+        fs::create_dir_all(&current_target)?;
+
+        for entry in fs::read_dir(current_source)? {
+            let entry = entry?;
+            let entry_path = entry.path();
+            let entry_target = current_target.join(entry.file_name());
+
+            if entry.file_type()?.is_dir() {
+                pending.push((entry_path, entry_target));
+                continue;
+            }
+
+            if should_copy(&entry_path, &entry_target)? {
+                if let Some(parent) = entry_target.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::copy(entry_path, entry_target)?;
+            }
+        }
     }
 
     Ok(())
@@ -294,7 +318,37 @@ fn should_copy(source: &Path, target: &Path) -> std::io::Result<bool> {
     let source_modified = source_meta.modified()?;
     let target_modified = target_meta.modified()?;
 
-    Ok(source_modified > target_modified)
+    if source_modified > target_modified {
+        return Ok(true);
+    }
+
+    Ok(!files_match(source, target)?)
+}
+
+fn files_match(source: &Path, target: &Path) -> std::io::Result<bool> {
+    const BUFFER_SIZE: usize = 16 * 1024;
+
+    let mut source_file = fs::File::open(source)?;
+    let mut target_file = fs::File::open(target)?;
+    let mut source_buffer = [0_u8; BUFFER_SIZE];
+    let mut target_buffer = [0_u8; BUFFER_SIZE];
+
+    loop {
+        let source_read = source_file.read(&mut source_buffer)?;
+        let target_read = target_file.read(&mut target_buffer)?;
+
+        if source_read != target_read {
+            return Ok(false);
+        }
+
+        if source_read == 0 {
+            return Ok(true);
+        }
+
+        if source_buffer[..source_read] != target_buffer[..target_read] {
+            return Ok(false);
+        }
+    }
 }
 
 pub fn waybar_position_change(position: String) -> std::io::Result<()> {
@@ -344,4 +398,57 @@ pub fn download_theme(repo_url: String) {
         .args(["clone", repo_url.as_str()])
         .status()
         .expect("Failed to clone theme");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{copy_theme_path, should_copy};
+    use std::fs;
+    use std::path::PathBuf;
+    use std::thread;
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+    fn test_dir(name: &str) -> PathBuf {
+        let suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("aurora-{name}-{suffix}"))
+    }
+
+    #[test]
+    fn should_copy_when_target_is_newer_but_contents_differ() {
+        let root = test_dir("should-copy");
+        fs::create_dir_all(&root).unwrap();
+
+        let source = root.join("source.txt");
+        let target = root.join("target.txt");
+
+        fs::write(&source, "theme-a").unwrap();
+        thread::sleep(Duration::from_millis(20));
+        fs::write(&target, "theme-b").unwrap();
+
+        assert!(should_copy(&source, &target).unwrap());
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn copy_theme_path_copies_nested_files() {
+        let root = test_dir("nested-copy");
+        let source = root.join("source");
+        let target = root.join("target");
+
+        fs::create_dir_all(source.join("nvim/lua/plugins")).unwrap();
+        fs::write(source.join("nvim/lua/plugins/init.lua"), "return {}").unwrap();
+
+        copy_theme_path(&source, &target).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(target.join("nvim/lua/plugins/init.lua")).unwrap(),
+            "return {}"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
 }

@@ -1,28 +1,31 @@
--- SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
--- SPDX-License-Identifier: GPL-3.0-or-later
+-- accent = "#509475"
+-- cursor = "#D7C995"
+-- foreground = "#C1C497"
+-- background = "#111c18"
+-- selection_foreground = "#111C18"
+-- selection_background = "#C1C497"
 
---   Copyright (C) 2026 Ahum Maitra
+-- color0 = "#23372B"
+-- color1 = "#FF5345"
+-- color2 = "#549e6a"
+-- color3 = "#459451"
+-- color4 = "#509475"
+-- color5 = "#D2689C"
+-- color6 = "#2DD5B7"
+-- color7 = "#F6F5DD"
+-- color8 = "#53685B"
+-- color9 = "#db9f9c"
+-- color10 = "#63b07a"
+-- color11 = "#E5C736"
+-- color12 = "#ACD4CF"
+-- color13 = "#75bbb3"
+-- color14 = "#8CD3CB"
+-- color15 = "#9eebb3"
 
---     This program is free software: you can redistribute it and/or modify
---     it under the terms of the GNU General Public License as published by
---     the Free Software Foundation, either version 3 of the License, or
---     (at your option) any later version.
+-- See https://github.com/basecamp/omarchy/blob/dev/themes/osaka-jade/colors.toml
 
---     This program is distributed in the hope that it will be useful,
---     but WITHOUT ANY WARRANTY; without even the implied warranty of
---     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
---     GNU General Public License for more details.
-
---     You should have received a copy of the GNU General Public License
---     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local color1 = "rgba(000000ff)"
-local color2 = "rgba(383838ff)"
 return {
-	main = {
-		colors = { color1, color2 },
-		angle = 45,
-	},
-	accent = "rgba(020000ff)",
-	shadow = "rgba(1a1a1aee)",
+    main = "#111c18",
+    accent = "#509475",
+    shadow = "#549e6a",
 }

@@ -25,6 +25,7 @@ hl.config({
 	scrolling = {
 		fullscreen_on_one_column = true,
 		column_width = 0.8,
+		focus_fit_method = 1
 	},
 
 	-- See https://wiki.hypr.land/Configuring/Dwindle-Layout/

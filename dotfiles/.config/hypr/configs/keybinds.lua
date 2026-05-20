@@ -25,8 +25,8 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local terminal = "kitty"
 local fileManager = "nautilus"
 local menu = "rofi"
-local browser = "google-chrome-stable"
-local editor = "code"
+local browser = "zen-browser"
+local editor = "nvim"
 
 -- program binds
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))

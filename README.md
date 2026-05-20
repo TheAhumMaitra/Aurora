@@ -92,6 +92,7 @@ gtk3
 gtk4
 adwaita-gtk-theme
 kitty
+neovim
 cliphist
 nautilus
 wl-clipboard
@@ -119,7 +120,7 @@ bluetui
 btop
 jolt (AUR)
 leenfetch (AUR)
-google-chrome (AUR)
+zen-browser-bin (AUR)
 ```
 
 ### Step 2. Clone this repository

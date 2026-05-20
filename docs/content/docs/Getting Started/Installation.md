@@ -70,6 +70,7 @@ wlogout
 gtk3
 gtk4
 adwaita-gtk-theme
+neovim
 kitty
 cliphist
 nautilus
@@ -98,7 +99,7 @@ bluetui
 btop
 jolt (AUR)
 leenfetch (AUR)
-google-chrome (AUR)
+zen-browser-bin (AUR)
 ```
 
 > [!WARNING]

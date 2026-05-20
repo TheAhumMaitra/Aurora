@@ -693,6 +693,7 @@ install_packages() {
             ttf-jetbrains-mono-nerd
             mise
             starship
+            neovim
             wiremix
             bluetui
             btop
@@ -908,6 +909,53 @@ install_waytrogen_aurora() {
     else
         log_warn "No schema file found in waytrogen-aurora repo, skipping schema install"
     fi
+}
+
+move_to_backup() {
+    local source_path="$1"
+    local backup_path="$2"
+    local resolved_backup="$backup_path"
+
+    [ -e "$source_path" ] || [ -L "$source_path" ] || return 0
+
+    if [ -e "$resolved_backup" ] || [ -L "$resolved_backup" ]; then
+        resolved_backup="${backup_path}.$(date +%s)"
+    fi
+
+    mv "$source_path" "$resolved_backup"
+    log_info "Moved $source_path to $resolved_backup"
+}
+
+setup_lazyvim() {
+    next_step "Installing LazyVim starter"
+
+    local nvim_config_dir="$HOME/.config/nvim"
+    local nvim_data_dir="$HOME/.local/share/nvim"
+    local nvim_state_dir="$HOME/.local/state/nvim"
+    local nvim_cache_dir="$HOME/.cache/nvim"
+
+    if [ "$DRY_RUN" = true ]; then
+        print_warning "[DRY RUN] Would backup existing Neovim config/data/cache directories"
+        print_warning "[DRY RUN] Would clone LazyVim starter into ~/.config/nvim and remove its .git directory"
+        return 0
+    fi
+
+    if ! command -v git &>/dev/null; then
+        print_error "git is required to install LazyVim"
+        return 1
+    fi
+
+    move_to_backup "$nvim_config_dir" "${nvim_config_dir}.bak"
+    move_to_backup "$nvim_data_dir" "${nvim_data_dir}.bak"
+    move_to_backup "$nvim_state_dir" "${nvim_state_dir}.bak"
+    move_to_backup "$nvim_cache_dir" "${nvim_cache_dir}.bak"
+
+    mkdir -p "$(dirname "$nvim_config_dir")"
+    git clone https://github.com/LazyVim/starter "$nvim_config_dir"
+    rm -rf "$nvim_config_dir/.git"
+
+    print_success "LazyVim starter installed to ~/.config/nvim"
+    log_info "LazyVim starter installed and repository metadata removed"
 }
 
 # Copy dotfiles
@@ -1280,6 +1328,7 @@ final_setup() {
     echo -e "${GREEN}Installation Summary:${NC}"
     echo "  ✓ System dependencies verified"
     echo "  ✓ Rust scripts installed to ~/.cargo/bin"
+    echo "  ✓ LazyVim starter installed to ~/.config/nvim"
     echo "  ✓ Configuration files installed"
     echo "  ✓ Shell environment configured"
     echo ""
@@ -1454,6 +1503,7 @@ EOF
     if [ "$DRY_RUN" = false ]; then
         build_rust_scripts
         install_waytrogen_aurora
+        setup_lazyvim
         copy_dotfiles
         setup_shell_config
         verify_installation
@@ -1463,6 +1513,9 @@ EOF
 
         next_step "Installing waytrogen-aurora"
         print_warning "[DRY RUN] Would clone/build/install waytrogen-aurora and compile schemas"
+
+        next_step "Installing LazyVim starter"
+        print_warning "[DRY RUN] Would backup Neovim files and install LazyVim starter"
         
         next_step "Installing configuration files"
         print_warning "[DRY RUN] Would copy configuration files"

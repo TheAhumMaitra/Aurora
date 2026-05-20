@@ -121,7 +121,7 @@ hl.window_rule({
 })
 hl.window_rule({
 	name = "Graphical system resources monitor used by Aurora",
-	match = { class = "bottom" },
+	match = { class = "btop" },
 	float = true,
 	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
 })

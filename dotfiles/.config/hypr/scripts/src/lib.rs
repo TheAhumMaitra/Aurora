@@ -138,7 +138,7 @@ pub fn apply_theme(theme_name: &str) {
         .ok()
         .and_then(|content| toml::from_str(&content).ok());
 
-    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim"]; //directories want to be copied
+    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop"]; //directories want to be copied
 
     let message = format!("{theme_name} is applied!");
 

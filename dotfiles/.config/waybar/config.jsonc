@@ -139,7 +139,7 @@
    "custom/system-resources-info": {
         "format":" ",
         "tooltip": false,
-        "on-click": "exec kitty --class \"bottom\" btm",
+        "on-click": "exec kitty --class \"btop\" btop",
   },
     "custom/weather": {
         "format":"󰼲 ",

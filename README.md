@@ -106,7 +106,7 @@ wiremix
 wifitui-bin (AUR)
 weathr-bin (AUR)
 bluetui
-bottom
+btop
 jolt (AUR)
 leenfetch (AUR)
 google-chrome (AUR)

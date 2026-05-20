@@ -60,6 +60,16 @@ Clone this repo into your home directory
 ### Step 2 - Make the installation script executable and run it
 `chmod +x install.sh && ./install.sh`
 
+The installer also bootstraps Neovim with the `LazyVim/starter` config. If you already have Neovim files, it moves these paths aside first:
+
+`~/.config/nvim -> ~/.config/nvim.bak`
+
+`~/.local/share/nvim -> ~/.local/share/nvim.bak`
+
+`~/.local/state/nvim -> ~/.local/state/nvim.bak`
+
+`~/.cache/nvim -> ~/.cache/nvim.bak`
+
 ## Manually
 
 #### Step 1. Install all required + recommended packages :- 
@@ -152,6 +162,16 @@ cargo install --path .
 sudo cp ./org.Waytrogen.Waytrogen.gschema.xml \
 /usr/share/glib-2.0/schemas/
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
+```
+
+### Step 5. Install LazyVim starter for Neovim
+```bash
+mv ~/.config/nvim{,.bak}
+mv ~/.local/share/nvim{,.bak}
+mv ~/.local/state/nvim{,.bak}
+mv ~/.cache/nvim{,.bak}
+git clone https://github.com/LazyVim/starter ~/.config/nvim
+rm -rf ~/.config/nvim/.git
 ```
 
 # License

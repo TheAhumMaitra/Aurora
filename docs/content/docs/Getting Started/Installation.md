@@ -29,6 +29,15 @@ cd ~ && git clone https://github.com/TheAhumMaitra/Aurora.git
 chmod +x install.sh && ./install.sh
 ```
 
+The installer also bootstraps Neovim with the `LazyVim/starter` config. If Neovim already has local files, Aurora backs these up first:
+
+```bash
+mv ~/.config/nvim ~/.config/nvim.bak
+mv ~/.local/share/nvim ~/.local/share/nvim.bak
+mv ~/.local/state/nvim ~/.local/state/nvim.bak
+mv ~/.cache/nvim ~/.cache/nvim.bak
+```
+
 ### Done
 It may ask some questions but it will INstall Aurora
 
@@ -153,6 +162,16 @@ sudo mv /usr/bin/sudo /usr/bin/sudo-original
 ### Create a symlink for `sudo-rs` binary
 ```bash
 sudo ln -s /usr/bin/sudo-rs /usr/bin/sudo
+```
+
+### Step 6. Install LazyVim starter for Neovim
+```bash
+mv ~/.config/nvim{,.bak}
+mv ~/.local/share/nvim{,.bak}
+mv ~/.local/state/nvim{,.bak}
+mv ~/.cache/nvim{,.bak}
+git clone https://github.com/LazyVim/starter ~/.config/nvim
+rm -rf ~/.config/nvim/.git
 ```
 
 ### Done

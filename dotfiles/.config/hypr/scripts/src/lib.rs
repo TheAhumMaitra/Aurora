@@ -150,6 +150,17 @@ pub fn apply_theme(theme_name: &str) {
         .args(["reset", "org.gnome.desktop.interface", "gtk-theme"])
         .status()
         .expect("failed to reset gtk-theme");
+    
+    // set gtk colorscheme preference as dark always
+    Command::new("gsettings")
+        .args([
+            "set",
+            "org.gnome.desktop.interface",
+            "color-scheme",
+            "\'prefer-dark\'",
+        ])
+        .status()
+        .expect("Failed to set preference of gtk colorscheme");
 
     // write selected theme name into the theme name log file
     // Ensure the directory exists

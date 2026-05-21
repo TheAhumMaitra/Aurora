@@ -117,11 +117,11 @@ print_spacer() {
 
 render_banner() {
   print_spacer
-  echo -e "${MAGENTA}${BOLD}        _                                 ${NC}"
-  echo -e "${MAGENTA}${BOLD}   __ _| |  _ __ ___  _ __ __ _          ${NC}"
-  echo -e "${BLUE}${BOLD}  / _\` | | | '__/ _ \\| '__/ _\` |         ${NC}"
-  echo -e "${CYAN}${BOLD} | (_| | | | | | (_) | | | (_| |         ${NC}"
-  echo -e "${GREEN}${BOLD}  \\__,_|_| |_|  \\___/|_|  \\__,_|         ${NC}"
+echo -e "${MAGENTA}${BOLD}        ▄▄▄    █    ██   ██▀███   ▒█████   ██▀███   ▄▄▄       ${NC}"
+echo -e "${MAGENTA}${BOLD}      ▒████▄   ██  ▓██▒ ▓██ ▒ ██▒▒██▒  ██▒▓██ ▒ ██▒ ▒████▄     ${NC}"
+echo -e "${BLUE}${BOLD}        ▒██  ▀█▄  ▓██  ▒██ ░▓██ ░▄█ ▒▒██░  ██▒▓██ ░▄█  ▒██  ▀█▄   ${NC}"
+echo -e "${CYAN}${BOLD}        ░██▄▄▄▄██ ▓▓█  ░██ ░▒██▀▀█▄  ▒██   ██░▒██▀▀█▄  ░██▄▄▄▄██  ${NC}"
+echo -e "${GREEN}${BOLD}        ▓█   ▓██ ▒▒█████▓ ░██▓ ▒██▒░ ████▓▒░░██▓ ▒██▒ ▓█   ▓██▒ ${NC}"
   echo -e "${WHITE}${BOLD}  Arch Linux Hyprland setup, tuned for Aurora${NC}"
   echo -e "${DARK}  Minimal shell noise. Clear steps. Safer install flow.${NC}"
   print_rule
@@ -1565,16 +1565,6 @@ Examples:
   ./install.sh --non-interactive  # Automated installation (default: stable mode)
   ./install.sh --debug            # Installation with verbose logging
   ./install.sh --uninstall        # Remove Aurora and restore backups
-
-Features:
-  - Detects existing Aurora installations (fresh/update/reinstall modes)
-  - Supports stable (repo) and git (bleeding edge) package installations
-  - Hyprland runtime detection and validation
-  - Forceful Aurora config replacement with backups
-  - Structured logging with INFO/WARN/ERROR/DEBUG levels
-  - Dry-run mode to preview changes
-  - AUR package detection via yay
-  - Installation state tracking for version upgrades
 
 EOF
 }

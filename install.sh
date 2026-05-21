@@ -45,6 +45,7 @@ INSTALL_STATE_FILE="$HOME/.aurora_install_state"
 LOG_LEVEL="${LOG_LEVEL:-INFO}"
 DETECTED_INSTALL_TYPE="fresh" # fresh, update, reinstall
 DISCOVERED_BINS=()
+SDDM_THEME_STATUS="not-run"
 
 error_handler() {
   local exit_code=$?
@@ -675,6 +676,9 @@ install_packages() {
             gtk3
             gtk4
             adwaita-gtk-theme
+            qt6-svg
+            qt6-virtualkeyboard
+            qt6-multimedia-ffmpeg
         "
     [utils]="
             kitty
@@ -694,9 +698,11 @@ install_packages() {
             mise
             starship
             neovim
+            sddm
             wiremix
             bluetui
             btop
+            xcb-util-cursor
         "
     [build]="
             git
@@ -813,6 +819,73 @@ install_packages() {
   fi
 
   print_success "Package installation completed ($installed_count/$total_packages packages installed/updated)"
+}
+
+install_sddm_theme() {
+  next_step "Installing SDDM astronaut theme"
+
+  local theme_repo="https://github.com/keyitdev/sddm-astronaut-theme.git"
+  local theme_dir="/usr/share/sddm/themes/sddm-astronaut-theme"
+  local sddm_conf="/etc/sddm.conf"
+  local virtualkbd_conf="/etc/sddm.conf.d/virtualkbd.conf"
+
+  if [ "$DRY_RUN" = true ]; then
+    SDDM_THEME_STATUS="dry-run"
+    print_warning "[DRY RUN] Would clone $theme_repo into $theme_dir"
+    print_warning "[DRY RUN] Would copy theme fonts into /usr/share/fonts and refresh font cache"
+    print_warning "[DRY RUN] Would write $sddm_conf and $virtualkbd_conf"
+    return 0
+  fi
+
+  if ! pacman -Q sddm &>/dev/null; then
+    SDDM_THEME_STATUS="skipped"
+    print_warning "sddm is not installed according to pacman; skipping theme setup"
+    log_warn "Skipped SDDM theme installation because sddm package is missing"
+    return 0
+  fi
+
+  print_warning "Installing SDDM astronaut theme (requires sudo)..."
+
+  sudo mkdir -p /usr/share/sddm/themes
+  sudo mkdir -p /etc/sddm.conf.d
+
+  if [ -d "$theme_dir/.git" ]; then
+    log_info "Updating existing SDDM astronaut theme checkout"
+    sudo git -C "$theme_dir" pull --ff-only
+  elif [ -d "$theme_dir" ]; then
+    log_warn "Theme directory already exists without git metadata: $theme_dir"
+    print_warning "Reusing existing SDDM theme directory at $theme_dir"
+  else
+    log_info "Cloning SDDM astronaut theme from $theme_repo"
+    sudo git clone -b master --depth 1 "$theme_repo" "$theme_dir"
+  fi
+
+  if [ -d "$theme_dir/Fonts" ]; then
+    sudo mkdir -p /usr/share/fonts
+    sudo cp -rf "$theme_dir/Fonts/." /usr/share/fonts/
+    if command -v fc-cache &>/dev/null; then
+      sudo fc-cache -f /usr/share/fonts
+    fi
+    log_info "Installed SDDM theme fonts into /usr/share/fonts"
+  else
+    log_warn "Fonts directory not found in $theme_dir"
+  fi
+
+  cat <<'EOF' | sudo tee "$sddm_conf" >/dev/null
+[Theme]
+Current=sddm-astronaut-theme
+EOF
+
+  cat <<'EOF' | sudo tee "$virtualkbd_conf" >/dev/null
+[General]
+InputMethod=qtvirtualkeyboard
+EOF
+
+  sudo systemctl enable sddm.service
+
+  SDDM_THEME_STATUS="configured and enabled"
+  print_success "SDDM astronaut theme installed and SDDM enabled at boot"
+  log_info "Configured SDDM to use sddm-astronaut-theme with qtvirtualkeyboard and enabled sddm.service"
 }
 
 # Build Rust scripts
@@ -1327,6 +1400,7 @@ final_setup() {
   echo ""
   echo -e "${GREEN}Installation Summary:${NC}"
   echo "  ✓ System dependencies verified"
+  echo "  • SDDM theme setup: $SDDM_THEME_STATUS"
   echo "  ✓ Rust scripts installed to ~/.cargo/bin"
   echo "  ✓ LazyVim starter installed to ~/.config/nvim"
   echo "  ✓ Configuration files installed"
@@ -1382,7 +1456,10 @@ STATE_EOF
   echo ""
   echo "  2. Start Hyprland from your login manager"
   echo ""
-  echo "  3. Check keybindings:"
+  echo "  3. Preview the SDDM theme if needed:"
+  echo "     sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/sddm-astronaut-theme/"
+  echo ""
+  echo "  4. Check keybindings:"
   echo "     Super + H"
   echo ""
 
@@ -1501,6 +1578,7 @@ EOF
   install_packages
 
   if [ "$DRY_RUN" = false ]; then
+    install_sddm_theme
     build_rust_scripts
     install_waytrogen_aurora
     setup_lazyvim
@@ -1508,6 +1586,9 @@ EOF
     setup_shell_config
     verify_installation
   else
+    next_step "Installing SDDM astronaut theme"
+    print_warning "[DRY RUN] Would clone/configure the SDDM astronaut theme and install fonts"
+
     next_step "Building and installing Rust scripts"
     print_warning "[DRY RUN] Would build and install Rust scripts"
 

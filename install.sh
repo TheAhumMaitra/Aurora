@@ -23,15 +23,17 @@ set -Eeuo pipefail
 
 # Colors for output
 RESET='\033[0m'
-BG_DARK_PURPLE='\033[48;5;17m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE="$YELLOW"
-NC="${RESET}${BG_DARK_PURPLE}" # Reset text styling while keeping the installer background
-
-printf "%b" "$BG_DARK_PURPLE"
-trap 'printf "%b" "$RESET"' EXIT
+RED='\033[1;38;5;203m'
+GREEN='\033[1;38;5;120m'
+YELLOW='\033[1;38;5;221m'
+BLUE='\033[1;38;5;111m'
+MAGENTA='\033[1;38;5;213m'
+CYAN='\033[1;38;5;159m'
+WHITE='\033[1;97m'
+DARK='\033[38;5;244m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC="$RESET"
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -46,6 +48,7 @@ LOG_LEVEL="${LOG_LEVEL:-INFO}"
 DETECTED_INSTALL_TYPE="fresh" # fresh, update, reinstall
 DISCOVERED_BINS=()
 SDDM_THEME_STATUS="not-run"
+MIN_HOME_FREE_MB="${AURORA_MIN_HOME_FREE_MB:-5120}"
 
 error_handler() {
   local exit_code=$?
@@ -76,23 +79,23 @@ log_message() {
   # Display to console based on log level
   case "$level" in
   ERROR)
-    echo -e "${RED}✗ ERROR: $message${NC}" >&2
+    echo -e "${RED}${BOLD}✗ ERROR${NC} ${WHITE}$message${NC}" >&2
     ;;
   WARN)
-    echo -e "${YELLOW}⚠ WARNING: $message${NC}"
+    echo -e "${YELLOW}${BOLD}▲ WARN ${NC} ${WHITE}$message${NC}"
     ;;
   INFO)
     if [ "$LOG_LEVEL" = "INFO" ] || [ "$LOG_LEVEL" = "DEBUG" ]; then
-      echo -e "${BLUE}ℹ INFO: $message${NC}"
+      echo -e "${CYAN}${BOLD}• INFO ${NC} ${DARK}$message${NC}"
     fi
     ;;
   DEBUG)
     if [ "$LOG_LEVEL" = "DEBUG" ]; then
-      echo -e "${BLUE}🔍 DEBUG: $message${NC}"
+      echo -e "${BLUE}${BOLD}◌ DEBUG${NC} ${DARK}$message${NC}"
     fi
     ;;
   SUCCESS)
-    echo -e "${GREEN}✓ $message${NC}"
+    echo -e "${GREEN}${BOLD}✓ OK   ${NC} ${WHITE}$message${NC}"
     ;;
   esac
 }
@@ -104,8 +107,32 @@ log_debug() { log_message "DEBUG" "$@"; }
 log_success() { log_message "SUCCESS" "$@"; }
 
 # Helper functions
+print_rule() {
+  echo -e "${DIM}${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+print_spacer() {
+  echo ""
+}
+
+render_banner() {
+  print_spacer
+  echo -e "${MAGENTA}${BOLD}        _                                 ${NC}"
+  echo -e "${MAGENTA}${BOLD}   __ _| |  _ __ ___  _ __ __ _          ${NC}"
+  echo -e "${BLUE}${BOLD}  / _\` | | | '__/ _ \\| '__/ _\` |         ${NC}"
+  echo -e "${CYAN}${BOLD} | (_| | | | | | (_) | | | (_| |         ${NC}"
+  echo -e "${GREEN}${BOLD}  \\__,_|_| |_|  \\___/|_|  \\__,_|         ${NC}"
+  echo -e "${WHITE}${BOLD}  Arch Linux Hyprland setup, tuned for Aurora${NC}"
+  echo -e "${DARK}  Minimal shell noise. Clear steps. Safer install flow.${NC}"
+  print_rule
+}
+
 print_header() {
-  echo -e "${BLUE}=== $1 ===${NC}"
+  print_spacer
+  print_rule
+  echo -e "${WHITE}${BOLD}  $1${NC}"
+  echo -e "${DARK}  Aurora installer interface${NC}"
+  print_rule
 }
 
 print_success() {
@@ -127,7 +154,8 @@ clear_screen() {
 next_step() {
   ((++CURRENT_STEP))
   echo ""
-  echo -e "${BLUE}[Step $CURRENT_STEP]${NC} $1"
+  echo -e "${MAGENTA}${BOLD}◉ Step ${CURRENT_STEP}${NC} ${WHITE}${BOLD}$1${NC}"
+  echo -e "${DIM}${CYAN}  Preparing this stage...${NC}"
   log_info "Step $CURRENT_STEP: $1"
 }
 
@@ -340,6 +368,34 @@ check_root() {
   print_success "Running as non-root user"
 }
 
+check_home_disk_space() {
+  next_step "Checking available disk space"
+
+  local disk_target="/home"
+  local available_mb
+
+  if [ ! -d "$disk_target" ]; then
+    disk_target="$HOME"
+  fi
+
+  available_mb="$(df -Pm "$disk_target" 2>/dev/null | awk 'NR==2 {print $4}')"
+
+  if [[ ! "$available_mb" =~ ^[0-9]+$ ]]; then
+    print_error "Could not determine free disk space for $disk_target"
+    exit 1
+  fi
+
+  log_info "Available space on $disk_target: ${available_mb}MB"
+
+  if [ "$available_mb" -lt "$MIN_HOME_FREE_MB" ]; then
+    print_error "Low disk space detected"
+    echo "  Free up disk space and rerun the installer."
+    exit 1
+  fi
+
+  print_success "Sufficient disk space available on $disk_target (${available_mb}MB free)"
+}
+
 # Installation Mode Selector (Issue #7)
 select_installation_mode() {
   if [ "$DRY_RUN" = true ] || [ "$INTERACTIVE" = false ]; then
@@ -350,16 +406,17 @@ select_installation_mode() {
   next_step "Selecting installation mode"
 
   echo ""
-  echo -e "${YELLOW}Choose installation mode:${NC}"
+  echo -e "${MAGENTA}${BOLD}Choose installation mode${NC}"
+  print_rule
   echo ""
-  echo "  1) ${BLUE}Stable (recommended)${NC}"
-  echo "     - Uses official Arch repositories"
-  echo "     - Maximum stability"
+  echo -e "  ${YELLOW}1)${NC} ${WHITE}${BOLD}Stable${NC} ${GREEN}(recommended)${NC}"
+  echo -e "     ${DARK}Uses official Arch repositories${NC}"
+  echo -e "     ${DARK}Maximum stability${NC}"
   echo ""
-  echo "  2) ${YELLOW}Git (bleeding edge)${NC}"
-  echo "     - Uses -git versions (hyprland-git, wayland-git, etc.)"
-  echo "     - Requires yay for AUR packages"
-  echo "     - Latest features but may be unstable"
+  echo -e "  ${YELLOW}2)${NC} ${WHITE}${BOLD}Git${NC} ${MAGENTA}(bleeding edge)${NC}"
+  echo -e "     ${DARK}Uses -git versions (hyprland-git, wayland-git, etc.)${NC}"
+  echo -e "     ${DARK}Requires yay for AUR packages${NC}"
+  echo -e "     ${DARK}Latest features but may be unstable${NC}"
   echo ""
 
   read -p "Enter choice [1-2] (default: 1): " -n 1 choice
@@ -726,28 +783,29 @@ install_packages() {
   )
 
   echo ""
-  echo -e "${YELLOW}Aurora requires the following packages:${NC}"
+  echo -e "${MAGENTA}${BOLD}Aurora requires the following packages${NC}"
+  print_rule
   echo ""
 
   # Display packages grouped by manager and category
-  echo "  ${BLUE}pacman packages:${NC}"
+  echo -e "  ${CYAN}${BOLD}pacman packages${NC}"
   for category in core daemons ui utils build; do
     category_name="${category^}"
     [ "$category" = "daemons" ] && category_name="Daemons"
     [ "$category" = "ui" ] && category_name="UI Components"
     [ "$category" = "utils" ] && category_name="Utilities"
     [ "$category" = "build" ] && category_name="Build & Toolchain"
-    echo "    ${YELLOW}${category_name}:${NC}"
+    echo -e "    ${YELLOW}${BOLD}${category_name}:${NC}"
     for pkg in ${pacman_package_groups[$category]}; do
-      echo "      - $pkg"
+      echo -e "      ${GREEN}•${NC} ${WHITE}$pkg${NC}"
     done
   done
 
-  echo "  ${BLUE}yay (AUR) packages:${NC}"
+  echo -e "  ${CYAN}${BOLD}yay (AUR) packages${NC}"
   for category in aur_extras; do
-    echo "    ${YELLOW}AUR Extras:${NC}"
+    echo -e "    ${YELLOW}${BOLD}AUR Extras:${NC}"
     for pkg in ${yay_package_groups[$category]}; do
-      echo "      - $pkg"
+      echo -e "      ${MAGENTA}•${NC} ${WHITE}$pkg${NC}"
     done
   done
 
@@ -758,6 +816,12 @@ install_packages() {
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     print_warning "Skipping package installation"
     return
+  fi
+
+  print_warning "Updating Arch Linux package databases and installed packages..."
+  if ! sudo pacman -Syu --noconfirm; then
+    print_error "Failed to update Arch Linux. Resolve the pacman error and rerun the installer."
+    exit 1
   fi
 
   print_warning "Installing Aurora dependencies (requires sudo)..."
@@ -1399,16 +1463,17 @@ final_setup() {
   print_header "Aurora Setup Complete!"
 
   echo ""
-  echo -e "${GREEN}Installation Summary:${NC}"
-  echo "  ✓ System dependencies verified"
-  echo "  • SDDM theme setup: $SDDM_THEME_STATUS"
-  echo "  ✓ Rust scripts installed to ~/.cargo/bin"
-  echo "  ✓ LazyVim starter installed to ~/.config/nvim"
-  echo "  ✓ Configuration files installed"
-  echo "  ✓ Shell environment configured"
-  echo ""
-  echo -e "${BLUE}Installation Mode: ${INSTALL_MODE^^}${NC}"
-  echo -e "${BLUE}Installation Type: ${DETECTED_INSTALL_TYPE^^}${NC}"
+  echo -e "${MAGENTA}${BOLD}Installation Summary${NC}"
+  print_rule
+  echo -e "  ${GREEN}✓${NC} ${WHITE}System dependencies verified${NC}"
+  echo -e "  ${CYAN}•${NC} ${WHITE}SDDM theme setup:${NC} ${YELLOW}${SDDM_THEME_STATUS}${NC}"
+  echo -e "  ${GREEN}✓${NC} ${WHITE}Rust scripts installed to ~/.cargo/bin${NC}"
+  echo -e "  ${GREEN}✓${NC} ${WHITE}LazyVim starter installed to ~/.config/nvim${NC}"
+  echo -e "  ${GREEN}✓${NC} ${WHITE}Configuration files installed${NC}"
+  echo -e "  ${GREEN}✓${NC} ${WHITE}Shell environment configured${NC}"
+  print_rule
+  echo -e "  ${BLUE}${BOLD}Mode:${NC} ${WHITE}${INSTALL_MODE^^}${NC}"
+  echo -e "  ${BLUE}${BOLD}Install Type:${NC} ${WHITE}${DETECTED_INSTALL_TYPE^^}${NC}"
   echo ""
 
   # Save installation state (Issue #13)
@@ -1424,7 +1489,7 @@ final_setup() {
 STATE_EOF
   log_info "Saved installation state to $INSTALL_STATE_FILE"
 
-  echo -e "${YELLOW}Installation log saved to: $INSTALL_LOG${NC}"
+  echo -e "${CYAN}${BOLD}Installation log:${NC} ${WHITE}$INSTALL_LOG${NC}"
   echo ""
 
   if [ "$INTERACTIVE" = true ] && [ "$DRY_RUN" = false ] && [ "${SHELL##*/}" != "fish" ]; then
@@ -1451,29 +1516,32 @@ STATE_EOF
     fi
   fi
 
-  echo -e "${YELLOW}Next steps:${NC}"
-  echo "  1. Reload your shell configuration if ~/.cargo/bin was newly added:"
-  echo "     exec \$SHELL"
+  echo -e "${MAGENTA}${BOLD}Next Steps${NC}"
+  print_rule
+  echo -e "  ${YELLOW}1.${NC} ${WHITE}Reload your shell configuration if ~/.cargo/bin was newly added${NC}"
+  echo -e "     ${DARK}exec \$SHELL${NC}"
   echo ""
-  echo "  2. Start Hyprland from your login manager"
+  echo -e "  ${YELLOW}2.${NC} ${WHITE}Start Hyprland from your login manager${NC}"
   echo ""
-  echo "  3. Preview the SDDM theme if needed:"
-  echo "     sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/sddm-astronaut-theme/"
+  echo -e "  ${YELLOW}3.${NC} ${WHITE}Preview the SDDM theme if needed${NC}"
+  echo -e "     ${DARK}sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/sddm-astronaut-theme/${NC}"
   echo ""
-  echo "  4. Check keybindings:"
-  echo "     Super + H"
+  echo -e "  ${YELLOW}4.${NC} ${WHITE}Check keybindings${NC}"
+  echo -e "     ${DARK}Super + H${NC}"
   echo ""
 
-  echo -e "${YELLOW}Restore backups (if needed):${NC}"
+  echo -e "${MAGENTA}${BOLD}Restore Backups${NC}"
+  print_rule
   if [ -d "$BACKUP_DIR" ]; then
-    echo "  Backup location: $BACKUP_DIR"
+    echo -e "  ${WHITE}Backup location:${NC} ${CYAN}$BACKUP_DIR${NC}"
   else
-    echo "  No backups created during this installation"
+    echo -e "  ${DARK}No backups created during this installation${NC}"
   fi
   echo ""
 
-  echo -e "${YELLOW}Uninstall Aurora:${NC}"
-  echo "  ./install.sh --uninstall"
+  echo -e "${MAGENTA}${BOLD}Uninstall Aurora${NC}"
+  print_rule
+  echo -e "  ${DARK}./install.sh --uninstall${NC}"
   echo ""
 }
 
@@ -1552,24 +1620,17 @@ main() {
   log_debug "Dry-run mode: $DRY_RUN"
 
   clear_screen
-  echo -e "${BLUE}"
-  cat <<"EOF"
-    ╔═══════════════════════════════════════╗
-    ║       Aurora Installation Script      ║
-    ║    Arch Linux Wayland Rice Setup      ║
-    ╚═══════════════════════════════════════╝
-EOF
-  echo -e "${NC}"
-  echo ""
+  render_banner
 
   if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN MODE] - No changes will be applied${NC}"
+    echo -e "${YELLOW}${BOLD}[DRY RUN MODE]${NC} ${WHITE}No changes will be applied${NC}"
     echo ""
   fi
 
   # Run installation steps
   check_arch
   check_root
+  check_home_disk_space
   detect_installation_type # Issue #5
   check_existing_install
   create_directories

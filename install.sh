@@ -678,6 +678,7 @@ install_packages() {
             adwaita-gtk-theme
             qt6-svg
             qt6-virtualkeyboard
+            qt6-multimedia
             qt6-multimedia-ffmpeg
         "
     [utils]="

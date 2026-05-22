@@ -6,3 +6,7 @@ authors = [
 ]
 
 wallpapers_source = "https://github.com/atraxsrc/tokyonight-wallpapers"
+
+[gtk]
+theme_name = "Yaru-blue-dark"
+icon_theme = "Yaru-blue"

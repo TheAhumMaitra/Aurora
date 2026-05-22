@@ -114,13 +114,21 @@ struct Config {
     wallpapers_sources: Option<Vec<String>>,
     license: Option<String>,
     settings: Option<Settings>,
+    gtk: Option<GtkOptions>,
 }
 
-// get options inside of the toml file (we only need required options)
+// get options inside of the theme configuration file's settings category (we only need required options)
 #[derive(Deserialize, Debug)]
 struct Settings {
     script: Option<String>,
     interpreter: Option<String>,
+}
+
+// get options inside of the theme configuration file's settings GTK (we only need required options)
+#[derive(Deserialize, Debug)]
+struct GtkOptions {
+    theme_name: Option<String>,
+    icon_theme: Option<String>,
 }
 
 // apply the selected theme
@@ -150,7 +158,7 @@ pub fn apply_theme(theme_name: &str) {
         .args(["reset", "org.gnome.desktop.interface", "gtk-theme"])
         .status()
         .expect("failed to reset gtk-theme");
-    
+
     // set gtk colorscheme preference as dark always
     Command::new("gsettings")
         .args([
@@ -161,6 +169,10 @@ pub fn apply_theme(theme_name: &str) {
         ])
         .status()
         .expect("Failed to set preference of gtk colorscheme");
+
+    if let Some(config) = &config {
+        apply_gtk_options(&paths, config);
+    }
 
     // write selected theme name into the theme name log file
     // Ensure the directory exists
@@ -272,6 +284,105 @@ pub fn apply_theme(theme_name: &str) {
     } else {
         println!("No default.jpg found for this theme");
     }
+}
+
+fn apply_gtk_options(paths: &AuroraPaths, config: &Config) {
+    let Some(gtk) = &config.gtk else {
+        return;
+    };
+
+    let gtk_theme_name = gtk
+        .theme_name
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    let gtk_icon_theme_name = gtk
+        .icon_theme
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+
+    if gtk_theme_name.is_none() && gtk_icon_theme_name.is_none() {
+        return;
+    }
+
+    for settings_path in [
+        paths.config.join("gtk-3.0/settings.ini"),
+        paths.config.join("gtk-4.0/settings.ini"),
+    ] {
+        write_gtk_settings(&settings_path, gtk_theme_name, gtk_icon_theme_name);
+    }
+
+    apply_gsettings_theme(gtk_theme_name, gtk_icon_theme_name);
+}
+
+fn apply_gsettings_theme(gtk_theme_name: Option<&str>, gtk_icon_theme_name: Option<&str>) {
+    if let Some(theme_name) = gtk_theme_name {
+        Command::new("gsettings")
+            .args([
+                "set",
+                "org.gnome.desktop.interface",
+                "gtk-theme",
+                theme_name,
+            ])
+            .status()
+            .expect("Failed to set gtk-theme");
+    }
+
+    if let Some(icon_theme_name) = gtk_icon_theme_name {
+        Command::new("gsettings")
+            .args([
+                "set",
+                "org.gnome.desktop.interface",
+                "icon-theme",
+                icon_theme_name,
+            ])
+            .status()
+            .expect("Failed to set icon-theme");
+    }
+}
+
+fn ensure_ini_setting(lines: &mut Vec<String>, key: &str, value: Option<&str>) {
+    let Some(value) = value else {
+        return;
+    };
+
+    let new_line = format!("{key}={value}");
+
+    if let Some(line) = lines
+        .iter_mut()
+        .find(|line| line.trim_start().starts_with(&format!("{key}=")))
+    {
+        *line = new_line;
+        return;
+    }
+
+    if lines.is_empty() {
+        lines.push("[Settings]".to_string());
+    } else if !lines.iter().any(|line| line.trim() == "[Settings]") {
+        lines.insert(0, "[Settings]".to_string());
+    }
+
+    lines.push(new_line);
+}
+
+fn write_gtk_settings(
+    settings_path: &Path,
+    gtk_theme_name: Option<&str>,
+    gtk_icon_theme_name: Option<&str>,
+) {
+    let mut lines: Vec<String> = fs::read_to_string(settings_path)
+        .map(|content| content.lines().map(String::from).collect())
+        .unwrap_or_else(|_| vec!["[Settings]".to_string()]);
+
+    ensure_ini_setting(&mut lines, "gtk-theme-name", gtk_theme_name);
+    ensure_ini_setting(&mut lines, "gtk-icon-theme-name", gtk_icon_theme_name);
+
+    if let Some(parent) = settings_path.parent() {
+        fs::create_dir_all(parent).expect("Failed to create gtk config directory");
+    }
+
+    fs::write(settings_path, lines.join("\n") + "\n").expect("Failed to write gtk settings.ini");
 }
 
 fn copy_theme_path(source: &Path, target: &Path) -> std::io::Result<()> {

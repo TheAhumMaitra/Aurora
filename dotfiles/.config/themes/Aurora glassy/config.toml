@@ -10,3 +10,7 @@ license = "GPL-3.0-or-later"
 [settings]
 script = "default.lua"
 interpreter = "lua"
+
+[gtk]
+theme_name = "Yaru-dark"
+icon_theme = "Yaru-grey"

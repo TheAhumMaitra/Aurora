@@ -8,3 +8,7 @@ authors = [
 license = "GPL-3.0-or-later"
 
 wallpapers_sources = ["https://github.com/VipinVIP/wallpapers", "https://github.com/orangci/walls-catppuccin-mocha"]
+
+[gtk]
+theme_name = "Yaru-purple-dark"
+icon_theme = "Yaru-purple"

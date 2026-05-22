@@ -11,3 +11,7 @@ wallpapers_sources = ["https://github.com/dracula/wallpaper"]
 [settings]
 script = "activate.sh"
 interpreter = "bash"
+
+[gtk]
+theme_name = "Yaru-purple-dark"
+icon_theme = "Yaru-purple"

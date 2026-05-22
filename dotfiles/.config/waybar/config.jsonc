@@ -28,9 +28,9 @@
     "custom/weather",
     "custom/wifi",
     "custom/bluetooth",
+    "custom/screenrecorder",
     "custom/system-resources-info",
     "custom/notification",
-    "custom/screenrecorder",
     "custom/wlogout",
   ],
   "custom/logo": {
@@ -105,11 +105,10 @@
     "exec": "screenrecorder status",
     "interval": 1,
     "return-type": "json",
+    "escape": false,
     "format": "{}",
-    "tooltip": true,
-    "on-click": "screenrecorder toggle fullscreen",
-    "on-click-right": "screenrecorder toggle region"
-},
+    "on-click": "screenrecorder stop"
+  },
   "custom/notification": {
     "format": "<span size='16pt'>{icon}</span>",
     "format-icons": {

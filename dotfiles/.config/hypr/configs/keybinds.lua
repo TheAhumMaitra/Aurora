@@ -108,6 +108,9 @@ hl.bind(mainMod .. " + down", hl.dsp.focus({ direction = "down" }))
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 closeWindowBind:set_enabled(true)
 
+-- start screenrecorder
+hl.bind(mainMod.." + ALT + R", hl.dsp.exec_cmd("screenrecorder"))
+
 -- exit Hyprland
 hl.bind(
 	mainMod .. " + M",

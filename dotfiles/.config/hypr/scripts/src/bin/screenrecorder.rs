@@ -15,106 +15,92 @@
 
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-use clap::{Parser, Subcommand, ValueEnum};
 use std::{
+    env,
     fs,
-    path::Path,
     process::{Command, Stdio},
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const PID_FILE: &str = "/tmp/waybar-screenrecorder";
-
-#[derive(Parser)]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Status,
-
-    Toggle {
-        #[arg(value_enum)]
-        mode: Mode,
-    },
-
-    Stop,
-}
-
-#[derive(Clone, ValueEnum)]
-enum Mode {
-    Fullscreen,
-    Region,
-}
+const PID: &str = "/tmp/screenrecorder";
 
 fn main() {
-    let cli = Cli::parse();
+    let arg = env::args().nth(1);
 
-    match cli.command {
-        Commands::Status => status(),
-        Commands::Toggle { mode } => toggle(mode),
-        Commands::Stop => stop(),
+    match arg.as_deref() {
+        Some("status") => status(),
+        Some("stop") => stop(),
+        Some("region") => start(true),
+        _ => start(false),
     }
 }
 
 fn status() {
-    if let Ok(content) = fs::read_to_string(PID_FILE) {
-        let lines: Vec<&str> = content.lines().collect();
+    if let Ok(data) = fs::read_to_string(PID) {
+        let v: Vec<&str> = data.lines().collect();
 
-        if lines.len() >= 3 {
-            let started: u64 = lines[2].parse().unwrap_or(0);
-
-            let elapsed = unix().saturating_sub(started);
-
-            let mins = elapsed / 60;
-            let secs = elapsed % 60;
+        if v.len() >= 3 {
+            let secs =
+                now() - v[2].parse::<u64>().unwrap_or(0);
 
             println!(
-                r#"{{"text":"<span color='#ff0000'></span> {:02}:{:02} ","tooltip":"{}"}}"#,
-                mins, secs, lines[1]
+                r#"{{"text":"<span color='#ff0000'> </span> {:02}:{:02}  ","tooltip":"{}"}}"#,
+                secs / 60,
+                secs % 60,
+                v[1]
             );
 
             return;
         }
     }
 
-    println!(r#"{{"text":" ","tooltip":"Stopped"}}"#);
+    println!(r#"{{"text":""}}"#);
 }
 
-fn toggle(mode: Mode) {
-    if Path::new(PID_FILE).exists() {
-        stop();
-    } else {
-        start(mode);
+fn start(region: bool) {
+    if fs::metadata(PID).is_ok() {
+        return;
     }
-}
 
-fn start(mode: Mode) {
-    let home = std::env::var("HOME").unwrap();
+    let home = env::var("HOME").unwrap();
 
-    let dir = format!("{home}/Videos/Screencasts");
+    let dir =
+        format!("{home}/Videos/Screencasts");
 
     let _ = fs::create_dir_all(&dir);
 
-    let output = Command::new("date").arg("+%Y%m%dT%H%M%S").output().unwrap();
+    let time = String::from_utf8_lossy(
+        &Command::new("date")
+            .arg("+%Y%m%dT%H%M%S")
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .trim()
+    .to_string();
 
-    let timestamp = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-    let video = format!("{dir}/{timestamp}.mp4");
+    let file = format!("{dir}/{time}.mp4");
 
     let mut cmd = Command::new("wf-recorder");
 
-    cmd.args(["--codec", "libx264", "--file", &video]);
+    cmd.args([
+        "--codec",
+        "libx264",
+        "--file",
+        &file,
+    ]);
 
-    if matches!(mode, Mode::Region) {
-        let area = Command::new("slurp").output().unwrap();
+    if region {
+        let geo = String::from_utf8_lossy(
+            &Command::new("slurp")
+                .output()
+                .unwrap()
+                .stdout,
+        )
+        .trim()
+        .to_string();
 
-        let geometry = String::from_utf8_lossy(&area.stdout).trim().to_string();
-
-        cmd.args(["--geometry", &geometry]);
+        cmd.args(["--geometry", &geo]);
     }
 
     let child = cmd
@@ -123,31 +109,40 @@ fn start(mode: Mode) {
         .spawn()
         .unwrap();
 
-    fs::write(PID_FILE, format!("{}\n{}\n{}", child.id(), video, unix())).unwrap();
+    fs::write(
+        PID,
+        format!(
+            "{}\n{}\n{}",
+            child.id(),
+            file,
+            now()
+        ),
+    )
+    .unwrap();
 }
 
 fn stop() {
-    if let Ok(content) = fs::read_to_string(PID_FILE) {
-        let lines: Vec<&str> = content.lines().collect();
+    if let Ok(data) = fs::read_to_string(PID) {
+        let v: Vec<&str> = data.lines().collect();
 
-        if lines.len() >= 2 {
-            let pid = lines[0];
-            let video = lines[1];
+        if v.len() >= 2 {
+            let _ = Command::new("kill")
+                .arg(v[0])
+                .status();
 
-            let _ = Command::new("kill").arg(pid).status();
-
-            notify("Recording Saved", video);
+            let _ = Command::new("notify-send")
+                .args([
+                    "Recording Saved",
+                    v[1],
+                ])
+                .status();
         }
     }
 
-    let _ = fs::remove_file(PID_FILE);
+    let _ = fs::remove_file(PID);
 }
 
-fn notify(title: &str, body: &str) {
-    let _ = Command::new("notify-send").args([title, body]).status();
-}
-
-fn unix() -> u64 {
+fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()

@@ -12,7 +12,7 @@
 }
 {
     "label" : "logout",
-    "action" : "loginctl terminate-user $USER",
+    "action" : "hyprshutdown -vt 3",
     "text" : "Logout",
     "keybind" : "e"
 }

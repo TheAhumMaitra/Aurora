@@ -30,6 +30,7 @@
     "custom/bluetooth",
     "custom/system-resources-info",
     "custom/notification",
+    "custom/screenrecorder",
     "custom/wlogout",
   ],
   "custom/logo": {
@@ -100,6 +101,15 @@
     "max-length": 25,
     "on-click" :"exec kitty --class \"jolt\" jolt"
   },
+"custom/screenrecorder": {
+    "exec": "screenrecorder status",
+    "interval": 1,
+    "return-type": "json",
+    "format": "{}",
+    "tooltip": true,
+    "on-click": "screenrecorder toggle fullscreen",
+    "on-click-right": "screenrecorder toggle region"
+},
   "custom/notification": {
     "format": "<span size='16pt'>{icon}</span>",
     "format-icons": {

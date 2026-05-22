@@ -1359,7 +1359,7 @@ create_directories() {
 }
 
 apply_default_theme() {
-  print_warning "Applying default theme"
+  next_step "Applying default theme"
   log_info "Trying to apply Aurora Default"
   aurora apply-theme "Aurora Default"
 

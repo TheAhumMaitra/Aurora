@@ -19,6 +19,7 @@
 //main CLI for Aurora
 
 use aurora::apply_theme;
+use aurora::aurora_paths;
 use aurora::download_theme;
 use aurora::list_themes;
 
@@ -56,6 +57,8 @@ enum Commands {
     ThemeInfo,
     ///Downloads a theme
     DownloadTheme { git_repo_url: String },
+    ///Update all external themes
+    UpdateThemes,
     ///Refresh the system
     Refresh,
 }
@@ -103,6 +106,24 @@ fn main() {
                 .stderr(Stdio::null())
                 .spawn()
                 .expect("failed to execute system refresh program");
+        }
+        Commands::UpdateThemes => {
+            let paths = aurora_paths();
+            let themes = paths.themes.clone();
+
+            for entry in fs::read_dir(themes).unwrap().flatten() {
+                let path = entry.path();
+
+                if path.join(".git").exists() {
+                    println!("Processing the request {}", path.display());
+
+                    let _ = Command::new("git")
+                        .arg("-C")
+                        .arg(&path)
+                        .arg("pull")
+                        .status();
+                }
+            }
         }
     }
 }

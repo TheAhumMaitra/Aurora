@@ -1358,6 +1358,15 @@ create_directories() {
   mkdir -p ~/.config
 }
 
+apply_default_theme() {
+  print_warning "Applying default theme"
+  log_info "Trying to apply Aurora Default"
+  aurora apply-theme "Aurora Default"
+
+  print_success "Applied default theme"
+  log_info "Applied default theme - Aurora Default"
+}
+
 # Check for existing Aurora installation
 check_existing_install() {
   local has_aurora=false
@@ -1639,6 +1648,7 @@ main() {
     copy_dotfiles
     setup_shell_config
     verify_installation
+    apply_default_theme
   else
     next_step "Installing SDDM astronaut theme"
     print_warning "[DRY RUN] Would clone/configure the SDDM astronaut theme and install fonts"
@@ -1663,6 +1673,10 @@ main() {
 
     next_step "Switching sudo to sudo-rs"
     print_warning "[DRY RUN] Would switch /usr/bin/sudo to /usr/bin/sudo-rs"
+
+    next_step "Applying default theme"
+    print_warning "[DRY RUN] Would apply default theme - Aurora Default"
+
   fi
 
   final_setup

@@ -90,7 +90,8 @@ rofi
 wlogout
 gtk3
 gtk4
-adwaita-gtk-theme
+yaru-gtk-theme (AUR)
+yaru-icon-theme (AUR)
 kitty
 neovim
 cliphist
@@ -121,6 +122,7 @@ btop
 jolt (AUR)
 leenfetch (AUR)
 zen-browser-bin (AUR)
+hyprshutdown
 ```
 
 ### Step 2. Clone this repository

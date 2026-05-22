@@ -53,7 +53,6 @@ You need to install rust
 
 ##### Recommended Packages
 Make sure your package manger has these packages. This packages will give you the best experience of Aurora
-
 ```
 hyprland (You can use Hyprland git version also)
 xdg-desktop-portal-hyprland (you can use git version also)
@@ -69,9 +68,10 @@ rofi
 wlogout
 gtk3
 gtk4
-adwaita-gtk-theme
-neovim
+yaru-gtk-theme (AUR)
+yaru-icon-theme (AUR)
 kitty
+neovim
 cliphist
 nautilus
 wl-clipboard
@@ -100,6 +100,7 @@ btop
 jolt (AUR)
 leenfetch (AUR)
 zen-browser-bin (AUR)
+hyprshutdown
 ```
 
 > [!WARNING]

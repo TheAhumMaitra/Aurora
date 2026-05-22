@@ -719,6 +719,7 @@ install_packages() {
             pipewire
             pipewire-pulse
             wireplumber
+            hyprshutdown
         "
     [daemons]="
             swaync
@@ -732,7 +733,6 @@ install_packages() {
             wlogout
             gtk3
             gtk4
-            adwaita-gtk-theme
             qt6-svg
             qt6-virtualkeyboard
             qt6-multimedia
@@ -779,6 +779,8 @@ install_packages() {
             weathr-bin
             jolt
             leenfetch
+            yaru-icon-theme
+            yaru-gtk-theme
         "
   )
 

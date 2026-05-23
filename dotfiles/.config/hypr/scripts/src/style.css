@@ -57,7 +57,7 @@ window{
 .note-warning{
   font-weight: bold;
   color: @warning_color;
-  margin: 4%;
+  margin: 4px;
 }
 
 .hello {

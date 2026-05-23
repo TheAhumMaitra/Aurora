@@ -5,7 +5,7 @@ authors = [
     "Ahum Maitra (@TheAhumMaitra) theahummaitra@gmail.com",
 ]
 
-wallpapers_source = "https://github.com/atraxsrc/tokyonight-wallpapers"
+wallpapers_source = ["https://github.com/tokyo-night/wallpapers","https://github.com/atraxsrc/tokyonight-wallpapers", ""]
 
 [gtk]
 theme_name = "Yaru-blue-dark"

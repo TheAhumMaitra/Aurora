@@ -1,0 +1,8 @@
+* {
+    foreground: #e0f0ff;
+    background: rgba(255, 255, 255, 0.07);
+    entry-background: rgba(30, 40, 70, 0.2);
+    urgent-background: rgba(0, 0, 0, 0.2);
+    bordercolor: rgba(50, 50, 50, 0.3);
+
+}

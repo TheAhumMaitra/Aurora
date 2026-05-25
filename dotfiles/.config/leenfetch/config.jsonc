@@ -1,0 +1,103 @@
+//  SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> 
+//  SPDX-License-Identifier: GPL-3.0-or-later 
+{
+    // -------------------------------
+    //Default leenfetch config for Aurora
+    // -------------------------------
+    "flags": {
+        "ascii_distro": "auto",
+        "ascii_colors": "distro",
+        "custom_ascii_path": "",
+
+
+        "battery_display": "barinfo",
+        "color_blocks": "●",
+
+        // Show the brand name of your CPU.
+        "cpu_brand": true,
+
+        // Show the number of CPU cores.
+        "cpu_cores": true,
+
+        // Show the CPU frequency.
+        "cpu_frequency": true,
+
+        // Show the current CPU speed.
+        "cpu_speed": true,
+
+        // Which temperature unit to use for CPU temperature.
+        "cpu_temp": "C",
+
+        // Show the CPU temperature.
+        "cpu_show_temp": false,
+
+        // Show the version of your desktop environment.
+        "de_version": true,
+
+        // How much detail to show about your operating system.
+        "distro_display": "name",
+
+        // Show disk usage information.
+        "disk_display": "info",
+
+        // What label to show for each disk.
+        "disk_subtitle": "dir",
+
+        // Show memory usage as a percentage.
+        "memory_unit": "mib",
+
+        // How to display package manager information.
+        "package_managers": "tiny",
+
+        // Show the display's refresh rate.
+        "refresh_rate": true,
+
+        // Show the full path to your shell.
+        "shell_path": false,
+
+        // Show the version of your shell.
+        "shell_version": false,
+
+        // How to display system uptime.
+        "uptime_shorthand": "full",
+
+        // How to display os age.
+        "os_age_shorthand": "tiny"
+    },
+
+    
+    // -------------------------------
+    // Formatting modules
+    // -------------------------------
+    "modules": [
+        { "type": "custom", "format": "${reset}╭─────────────────────${c1}System${reset}─────────────────────╮" },
+        { "type": "titles", "key": "${reset}│${c1} ╭:"},
+        // { "type": "os", "key": "${c16}│${c1} ├OS"},
+        { "type": "distro", "key": "${reset}│${c1} ├:"},
+        { "type": "kernel", "key": "${reset}│${c1} ├:"},
+        { "type": "packages", "key": "${reset}│${c1} ├󰏖:"},
+        { "type": "shell", "key": "${reset}│ ${c1}├:"},
+        { "type": "wm", "key": "${reset}│${c1} ├:"},
+        { "type": "de", "key": "${reset}│${c1} ├󰇄:"},
+            { "type": "song", "key": "${reset}│${c1} ├"},
+        { "type": "theme", "key": "${reset}│${c1} ├󰸌:"},
+        { "type": "colors", "key": "${reset}│${c1} ╰:"},
+        { "type": "custom", "format": "${reset}╰────────────────────────────────────────────────╯" },
+        // "break",
+        { "type": "custom", "format": "${reset}╭────────────────────${c1}Hardware${reset}────────────────────╮" },
+        { "type": "model", "key": "${reset}│${c1} ╭:"},
+        { "type": "cpu", "key": "${reset}│${c1} ├:"},
+        { "type": "gpu", "key": "${reset}│${c1} ├:"},
+        { "type": "disk", "key": "${reset}│${c1} ├󰋊:"},
+        { "type": "resolution", "key": "${reset}│${c1} ├󱄄:"},
+        // { "type": "battery", "key": "${reset}│${c1} ├:"},
+        { "type": "memory", "key": "${reset}│${c1} ╰:"},
+        { "type": "custom", "format": "${reset}╰────────────────────────────────────────────────╯" },
+        // "break",
+        { "type": "custom", "format": "${reset}╭───────────────────${c1}Age/Uptime${reset}───────────────────╮" },
+        { "type": "os_age", "key": "${reset}│${c1} ╭󱦟 OS Age"},
+        { "type": "uptime", "key": "${reset}│${c1} ╰󱫐 Uptime"},
+        { "type": "custom", "format": "${reset}╰────────────────────────────────────────────────╯" }
+    ]
+}
+

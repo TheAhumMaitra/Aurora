@@ -1,3 +1,22 @@
+/* SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> */
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+/*    Copyright (C) 2026 Ahum Maitra
+
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+
+      You should have received a copy of the GNU General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>. */
+
+
 @import "./colors.css";
 
 * {
@@ -6,6 +25,7 @@
     "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
   font-weight: 600;
   border: none;
+  color: @foreground;
 }
 
 window#waybar {
@@ -13,7 +33,7 @@ window#waybar {
   border-bottom: 3px solid @accent;
 }
 #workspaces {
-  margin: 5px;
+  margin: 3px;
   padding: 6px;
 }
 #workspaces button {
@@ -41,6 +61,20 @@ window#waybar.empty #window {
 #pulseaudio,
 #battery,
 #custom-notification,
-#custom-wlogout {
-  margin-right: 20px;
+#custom-wlogout, #custom-bluetooth {
+  margin-right: 18px;
+}
+#custom-wifi, #custom-weather, #custom-system-resources-info, #custom-screenrecorder{
+  margin-right: 10px;
+}
+
+#custom-logo{
+        font-size: 12px;
+        background-image: url('./assests/logo-png.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+}
+#custom-bluetooth, #custom-weather{
+  font-size: 19px;
 }

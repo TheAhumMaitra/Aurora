@@ -1,0 +1,13 @@
+name = "Everforest"
+version = "0.1.0"
+
+authors = [
+    "Ahum Maitra (@TheAhumMaitra) theahummaitra@gmail.com",
+]
+
+license = "GPL-3.0-or-later"
+wallpapers_sources = ["https://github.com/Apeiros-46B/everforest-walls"]
+
+[gtk]
+theme_name = "Yaru-sage-dark"
+icon_theme = "Yaru-sage"

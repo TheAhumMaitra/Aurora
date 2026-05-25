@@ -1,22 +1,52 @@
+// SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+/*   Copyright (C) 2026 Ahum Maitra
+
+     This program is free software: you can redistribute it and/or modify
+     it under the terms of the GNU General Public License as published by
+     the Free Software Foundation, either version 3 of the License, or
+     (at your option) any later version.
+
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU General Public License for more details.
+
+     You should have received a copy of the GNU General Public License
+     along with this program.  If not, see <https://www.gnu.org/licenses/>.*/
+
 {
+  "layer": "top",
+  "position": "top",
   "spacing": 3, // Gaps between modules
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["hyprland/window"],
+  "modules-left": ["custom/logo", "hyprland/workspaces"],
   "modules-right": [
     "clock",
     "pulseaudio",
     "battery",
+    "custom/weather",
+    "custom/wifi",
+    "custom/bluetooth",
+    "custom/screenrecorder",
+    "custom/system-resources-info",
     "custom/notification",
     "custom/wlogout",
   ],
+  "custom/logo": {
+        "format":"    ",
+        "tooltip": false,
+        "on-click": "exec settings",
+  },
   "hyprland/workspaces": {
     "persistent-workspaces": {
       "*": 10,
     },
   },
   "clock": {
+    "tooltip": true,
     "format": "{:%H:%M}  ",
-    "format-alt": "{:%A, %B %d, %Y (%R)}  ",
+    "format-alt": "{:%B %d, %Y - %R}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     "calendar": {
       "mode": "year",
@@ -39,26 +69,36 @@
       "on-scroll-down": "shift_down",
     },
   },
-  "pulseaudio": {
-    "format": "{volume}% {icon}",
-    "format-bluetooth": "{volume}% {icon}",
-    "format-muted": "",
-    "format-icons": {
-      "alsa_output.pci-0000_00_1f.3.analog-stereo": "",
-      "alsa_output.pci-0000_00_1f.3.analog-stereo-muted": "",
-      "headphone": "",
-      "hands-free": "",
-      "headset": "",
-      "phone": "",
-      "phone-muted": "",
-      "portable": "",
-      "car": "",
-      "default": ["", ""],
-    },
-    "scroll-step": 1,
-    "on-click": "pavucontrol",
-    "ignored-sinks": ["Easy Effects Sink"],
+ "pulseaudio": {
+  "format": "{icon} {volume}%",
+  "format-bluetooth": "{volume}% ",
+  "format-muted": "",
+
+  "format-icons": {
+    "headphone": "",
+    "hands-free": "",
+    "headset": "",
+    "phone": "",
+    "phone-muted": "",
+    "portable": "",
+    "car": "",
+
+    "default": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
   },
+
+  "scroll-step": 1,
+  "on-click": "exec kitty --class \"wiremix\" wiremix",
+
+  "ignored-sinks": [
+    "Easy Effects Sink"
+  ]
+},
   "battery": {
     "bat": "BAT0",
     "interval": 60,
@@ -69,9 +109,17 @@
     "format": "{capacity}% {icon}",
     "format-icons": ["", "", "", "", ""],
     "max-length": 25,
+    "on-click" :"exec kitty --class \"jolt\" jolt"
+  },
+"custom/screenrecorder": {
+    "exec": "screenrecorder status",
+    "interval": 1,
+    "return-type": "json",
+    "escape": false,
+    "format": "{}",
+    "on-click": "screenrecorder stop"
   },
   "custom/notification": {
-    "tooltip": true,
     "format": "<span size='16pt'>{icon}</span>",
     "format-icons": {
       "notification": "󱅫",
@@ -93,7 +141,28 @@
   "custom/wlogout": {
     "on-click": "wlogout",
     "format": "⏻",
-    "tooltip": false,
+    "tooltip": true,
+    "tooltip-format": "Power Menu",
     "interval": 0,
+  },
+ "custom/wifi": {
+        "format":" ",
+        "tooltip": false,
+        "on-click": "exec kitty --class \"wifitui\" wifitui",
+  },
+  "custom/bluetooth": {
+        "format":"",
+        "tooltip": false,
+        "on-click": "exec kitty --class \"bluetui\" bluetui",
+  },
+   "custom/system-resources-info": {
+        "format":" ",
+        "tooltip": false,
+        "on-click": "exec kitty --class \"btop\" btop",
+  },
+    "custom/weather": {
+        "format":"󰼲 ",
+        "tooltip": false,
+        "on-click": "exec kitty --class \"weathr\" weathr",
   },
 }

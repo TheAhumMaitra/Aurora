@@ -1,0 +1,67 @@
+-- SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
+-- SPDX-License-Identifier: GPL-3.0-or-later
+
+--   Copyright (C) 2026 Ahum Maitra
+
+--     This program is free software: you can redistribute it and/or modify
+--     it under the terms of the GNU General Public License as published by
+--     the Free Software Foundation, either version 3 of the License, or
+--     (at your option) any later version.
+
+--     This program is distributed in the hope that it will be useful,
+--     but WITHOUT ANY WARRANTY; without even the implied warranty of
+--     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--     GNU General Public License for more details.
+
+--     You should have received a copy of the GNU General Public License
+--     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+-- ###################
+-- ### LAYER RULES ###
+-- ###################
+
+hl.layer_rule({
+	match = { namespace = "swaync-control-center" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "swaync-notification-window" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "com.aurora.keybinds_help" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "com.aurora.layout_switcher" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "logout_dialog" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "com.aurora.search" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "waybar" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "rofi" },
+	blur = true,
+	ignore_alpha = 0,
+})
+hl.layer_rule({
+	match = { namespace = "org.Waytrogen.Waytrogen" },
+	blur = true,
+	ignore_alpha = 0,
+})

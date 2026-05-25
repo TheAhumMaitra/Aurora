@@ -1,0 +1,8 @@
+* {
+    foreground: white;
+    background: #000000;
+    entry-background: #1a1a1a;
+    urgent-background: #555555;
+    bordercolor: #454545;
+
+}

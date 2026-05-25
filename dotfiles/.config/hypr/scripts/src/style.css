@@ -1,5 +1,35 @@
-window {
+/* SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com> */
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+/*    Copyright (C) 2026 Ahum Maitra
+
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+
+      You should have received a copy of the GNU General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>. */
+
+window{
    background-color: rgb(33, 33, 33);
+}
+
+.search-bar entry text {
+  padding: 8px;
+}
+
+.search-bar entry {
+  border: none;
+  outline: none;
+  font-weight: bold;
+  margin: 5px;
+  border-radius: 20px;
 }
 .welcome-label {
   font-size: 25px;
@@ -7,12 +37,12 @@ window {
 }
 
 .header {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
-  color: grey;
+  color: @theme_fg_color;
   border: 3px darkgray solid;
   border-radius: 1.5rem;
-  padding: 9px;
+  padding: 5px;
   margin-bottom: 5px;
 }
 
@@ -21,13 +51,13 @@ window {
   font-style: italic;
 }
 .actions {
-  color: lightblue;
+  color: @success_color;
   font-weight: bold;
 }
 .note-warning{
   font-weight: bold;
-  color: rgb(27, 243, 203);
-  margin: 4%;
+  color: @warning_color;
+  margin: 4px;
 }
 
 .hello {
@@ -39,10 +69,23 @@ window {
   padding: 8px;
 }
 
+.settings-header {
+  padding: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: @theme_bg_color;
+}
+
 .settings-title {
   font-weight: bolder;
-  font-size: x-large;
-  margin: 3px;
+  font-size: 20px;
+  margin: 0;
+}
+
+.settings-subtitle,
+.settings-category-description,
+.setting-description,
+.settings-empty {
+  color: rgba(255, 255, 255, 0.68);
 }
 row {
     border: 1px solid #2a2a2a;
@@ -65,31 +108,69 @@ row:selected {
     border: 2px solid darkgrey;
 }
 
-/* Whole settings container */
-.settings {
-    padding: 10px;
+.section-row-theme:selected {
+  border: none;
+  outline: none;
+  border: 2px solid;
 }
 
-/* Each row */
+.settings-list {
+  padding: 14px;
+}
+
+.settings-category {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(32, 34, 42, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-category-title {
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.settings-category-description {
+  font-size: 13px;
+}
+
 .setting-row {
-    padding: 8px;
-    border-radius: 10px;
-    background: rgba(40, 42, 54, 0.4);
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.setting-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .setting-label {
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.setting-description {
+  font-size: 12px;
 }
 
 .setting-button {
-    background: #6272a4;
-    color: white;
-    border-radius: 8px;
-    padding: 6px 12px;
+  background: @theme_bg_color;
+  color: @theme_fg_color;
+  border-radius: 8px;
+  padding: 7px 14px;
+  min-width: 82px;
+  font-weight: bold;
 }
 
 .setting-button:hover {
-    background: #7082b6;
+  background: @accent_bg_color;
+}
+
+.settings-empty {
+  padding: 40px;
+  font-weight: bold;
 }

@@ -1,5 +1,16 @@
+// SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
+// SPDX-License-Identifier: BSL-1.0
 {
+  "Lua.workspace.library": [
+    "/usr/share/hypr/stubs"
+  ],
+  "Lua.diagnostics.globals": [
+    "hl"
+  ],
     "rust-analyzer.linkedProjects": [
         "dotfiles/.config/hypr/scripts/Cargo.toml"
+    ],
+    "cSpell.words": [
+      "Prequirements"
     ]
 }

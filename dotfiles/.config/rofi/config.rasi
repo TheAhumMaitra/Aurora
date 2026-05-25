@@ -1,2 +1,60 @@
+configuration {
+    modes: [ window, run, drun, emoji ];
+    display-drun: "";
+    show-icons: true;
+    icon-theme: "Papirus";
+    font: "JetBrainsMono Nerd Font 11";
+    sort: true;
+    drun-display-format: "{name}";
+}
 
-@theme "/usr/share/rofi/themes/paper-float.rasi"
+@theme "~/.config/rofi/colors.rasi"
+
+* {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    color: @foreground;
+}
+
+window {
+    background-color: @background;
+    border-radius: 12px;
+    width: 500px;
+    height: 700px;
+    padding: 10px;
+}
+
+entry {
+    background-color: @entry-background;
+    border-radius: 8px;
+    padding: 8px;
+    placeholder: "Search...";
+}
+
+listview {
+    spacing: 6px;
+    margin: 10px 0 0;
+}
+
+element {
+    background-color: @background;
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px;
+    border-color: @bordercolor;
+    spacing: 7px;
+}
+
+element-text {
+    background-color: transparent;
+}
+
+element-icon {
+    size: 1.7em;
+    background-color: transparent;
+}
+element selected {
+    background-color: @urgent-background;
+}

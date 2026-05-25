@@ -1,0 +1,16 @@
+name = "Aurora Default"
+version = "0.1.0"
+
+authors = [
+    "Ahum Maitra (@TheAhumMaitra) theahummaitra@gmail.com",
+]
+
+license = "GPL-3.0-or-later"
+
+[settings]
+script = "default.lua"
+interpreter = "lua" 
+
+[gtk]
+theme_name = "Yaru-dark"
+icon_theme = "Yaru-grey"

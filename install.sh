@@ -48,6 +48,7 @@ LOG_LEVEL="${LOG_LEVEL:-INFO}"
 DETECTED_INSTALL_TYPE="fresh" # fresh, update, reinstall
 DISCOVERED_BINS=()
 SDDM_THEME_STATUS="not-run"
+DEFAULT_THEME_STATUS="not-run"
 MIN_HOME_FREE_MB="${AURORA_MIN_HOME_FREE_MB:-5120}"
 
 error_handler() {
@@ -1360,9 +1361,23 @@ create_directories() {
 
 apply_default_theme() {
   next_step "Applying default theme"
-  log_info "Trying to apply Aurora Default"
-  aurora apply-theme "Aurora Default"
+  local aurora_bin
 
+  aurora_bin="$(command -v aurora || true)"
+  if [ -z "$aurora_bin" ] && [ -x "$HOME/.cargo/bin/aurora" ]; then
+    aurora_bin="$HOME/.cargo/bin/aurora"
+  fi
+
+  if [ -z "$aurora_bin" ]; then
+    DEFAULT_THEME_STATUS="failed: aurora binary not found"
+    print_error "Cannot apply default theme because the aurora binary was not found"
+    return 1
+  fi
+
+  log_info "Trying to apply Aurora Default using $aurora_bin"
+  "$aurora_bin" apply-theme "Aurora Default"
+
+  DEFAULT_THEME_STATUS="applied: Aurora Default"
   print_success "Applied default theme"
   log_info "Applied default theme - Aurora Default"
 }
@@ -1478,6 +1493,7 @@ final_setup() {
   print_rule
   echo -e "  ${GREEN}✓${NC} ${WHITE}System dependencies verified${NC}"
   echo -e "  ${CYAN}•${NC} ${WHITE}SDDM theme setup:${NC} ${YELLOW}${SDDM_THEME_STATUS}${NC}"
+  echo -e "  ${CYAN}•${NC} ${WHITE}Default theme setup:${NC} ${YELLOW}${DEFAULT_THEME_STATUS}${NC}"
   echo -e "  ${GREEN}✓${NC} ${WHITE}Rust scripts installed to ~/.cargo/bin${NC}"
   echo -e "  ${GREEN}✓${NC} ${WHITE}LazyVim starter installed to ~/.config/nvim${NC}"
   echo -e "  ${GREEN}✓${NC} ${WHITE}Configuration files installed${NC}"
@@ -1675,6 +1691,7 @@ main() {
     print_warning "[DRY RUN] Would switch /usr/bin/sudo to /usr/bin/sudo-rs"
 
     next_step "Applying default theme"
+    DEFAULT_THEME_STATUS="dry-run: would apply Aurora Default"
     print_warning "[DRY RUN] Would apply default theme - Aurora Default"
 
   fi

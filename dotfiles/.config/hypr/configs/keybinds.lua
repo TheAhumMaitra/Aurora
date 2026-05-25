@@ -98,8 +98,15 @@ hl.bind(mainMod .. " + SHIFT + DOWN", hl.dsp.window.resize({ x = 0, y = 20, rela
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
+-- Move the current window
+hl.bind(mainMod .. " + ALT + RIGHT", hl.dsp.window.move({ direction = "right" }))
+hl.bind(mainMod .. " + ALT + LEFT", hl.dsp.window.move({ direction = "left" }))
+hl.bind(mainMod .. " + ALT + UP", hl.dsp.window.move({ direction = "up" }))
+hl.bind(mainMod .. " + ALT + DOWN", hl.dsp.window.move({ direction = "down" }))
+
 -- fullscreen a window
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
+
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))

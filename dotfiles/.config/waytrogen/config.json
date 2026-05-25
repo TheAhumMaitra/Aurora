@@ -2,7 +2,7 @@
   "executable_script_doc": "The path to executable script used after a wallpaper is set. The script is sent the monitor identifier, wallpaper path and the serialized saved_wallpapers state.",
   "executable_script": "",
   "wallpaper_folder_doc": "The path to the currently selected wallpaper folder. Note: The path cannot have a trailing forward slash.",
-  "wallpaper_folder": "/home/ahummaitra/.config/themes/Osaka-Jade-For-Aurora/backgrounds",
+  "wallpaper_folder": "/home/ahummaitra/.config/themes/Catppuccin Mocha/backgrounds",
   "saved_wallpapers_doc": "The collection of the currently saved wallpapers with their corresponding monitor, path and changer.",
   "saved_wallpapers": [
     {
@@ -38,7 +38,7 @@
     },
     {
       "monitor": "All",
-      "path": "/home/ahummaitra/.config/themes/Osaka-Jade-For-Aurora/backgrounds/rain-futuristic-city.jpg",
+      "path": "/home/ahummaitra/.config/themes/Catppuccin Mocha/backgrounds/house_and_van_sunset.jpg",
       "changer": [
         "No",
         {

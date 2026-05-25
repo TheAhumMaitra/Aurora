@@ -16,28 +16,23 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::path::PathBuf;
 use std::process::Command;
 
-fn run(exe: &PathBuf) {
-    println!("Running: {:?}", exe);
-
-    match Command::new(exe).status() {
-        Ok(status) => println!("Exited: {:?}", status),
-        Err(e) => eprintln!("Failed: {}", e),
-    }
-}
-
 fn main() {
-    let base = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/release");
+    // Try running waybar_refresh from PATH
+    match Command::new("waybar_refresh").status() {
+        Ok(status) => {
+            println!("waybar_refresh exited with: {:?}", status);
+        }
 
-    let scripts = vec![base.join("waybar_refresh")];
-
-    for script in &scripts {
-        run(script);
+        Err(_) => {
+            println!("waybar_refresh not found in PATH, skipping...");
+        }
     }
+
+    // Reload Hyprland
     Command::new("hyprctl")
-        .args(["reload"])
-        .output()
-        .expect("failed to execute process");
+        .arg("reload")
+        .status()
+        .expect("failed to execute hyprctl");
 }

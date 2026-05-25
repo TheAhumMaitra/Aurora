@@ -348,6 +348,52 @@ detect_installation_type() {
   fi
 }
 
+self_update_from_github() {
+  if [ "${AURORA_SELF_UPDATE_DONE:-false}" = true ]; then
+    log_debug "Skipping Aurora self-update because it already ran in this process tree"
+    return 0
+  fi
+
+  next_step "Updating Aurora installer"
+
+  if [ ! -d "$SCRIPT_DIR/.git" ]; then
+    print_warning "Aurora installer is not running from a git checkout; skipping self-update"
+    return 0
+  fi
+
+  if ! command -v git &>/dev/null; then
+    print_warning "git is not available; skipping Aurora self-update"
+    return 0
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    print_warning "[DRY RUN] Would pull the latest Aurora changes in $SCRIPT_DIR"
+    return 0
+  fi
+
+  local old_head
+  local new_head
+
+  old_head="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || true)"
+
+  log_info "Pulling latest Aurora changes in $SCRIPT_DIR"
+  if ! git -C "$SCRIPT_DIR" pull --ff-only; then
+    print_error "Failed to pull latest Aurora changes from GitHub"
+    echo "  Resolve any git errors above, then rerun the installer."
+    exit 1
+  fi
+
+  new_head="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || true)"
+
+  if [ -n "$old_head" ] && [ -n "$new_head" ] && [ "$old_head" != "$new_head" ]; then
+    print_success "Aurora checkout updated; restarting installer with the latest script"
+    export AURORA_SELF_UPDATE_DONE=true
+    exec "$SCRIPT_DIR/install.sh" "$@"
+  fi
+
+  print_success "Aurora checkout is already up to date"
+}
+
 # Check if running on Arch Linux
 check_arch() {
   print_header "Checking system compatibility"
@@ -1645,6 +1691,7 @@ main() {
   fi
 
   # Run installation steps
+  self_update_from_github "$@"
   check_arch
   check_root
   check_home_disk_space

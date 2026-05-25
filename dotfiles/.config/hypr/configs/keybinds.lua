@@ -45,7 +45,7 @@ hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("keybinds_help"))
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 
 -- launch waybar position switcher
-hl.bind(mainMod.." + ALT + W", hl.dsp.exec_cmd("waybar_position_switcher"))
+hl.bind(mainMod .. " + ALT + W", hl.dsp.exec_cmd("waybar_position_switcher"))
 -- launch custom settings
 hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 
@@ -59,10 +59,10 @@ hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("layout_switcher"))
 -- on/off (toggle) waybar
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))
 
--- open wallpaper switcher for theme's wallaper 
+-- open wallpaper switcher for theme's wallaper
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("waytrogen_line_change_for_theme && waytrogen"))
 
--- open wallpaper switcher for showing global wallpapers 
+-- open wallpaper switcher for showing global wallpapers
 hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd(" waytrogen_line_change_for_global_wallpapers  && waytrogen"))
 
 -- refresh waybar
@@ -98,6 +98,8 @@ hl.bind(mainMod .. " + SHIFT + DOWN", hl.dsp.window.resize({ x = 0, y = 20, rela
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
+-- fullscreen a window
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
@@ -109,7 +111,7 @@ local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 closeWindowBind:set_enabled(true)
 
 -- start screenrecorder
-hl.bind(mainMod.." + ALT + R", hl.dsp.exec_cmd("screenrecorder"))
+hl.bind(mainMod .. " + ALT + R", hl.dsp.exec_cmd("screenrecorder"))
 
 -- exit Hyprland
 hl.bind(

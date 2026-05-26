@@ -1,0 +1,165 @@
+## [unreleased]
+
+### 🚀 Features
+
+- Add theme switcher (preview, test) and Dracula theme
+- Add escape key exit on theme switcher
+- Add Catpuccin Mocha theme*
+- Add basic CLI and add wlogout for captuccin mocha and also added colors.conf support
+- Add settings app
+- Mostly all lua conversion completed for yet
+- Add some keybinds
+- Add up and down resizing support
+- Add proper license metadata and much more
+- Add `load_css` function in `lib.s` for DRY. Add waybar related keybinds, also added small aurora logo in waybar
+- Add trademark in Aurora name
+- Add CODE OF CONDUCT
+- Add installation tutorial in README
+- Add basic ghostty config
+- Now themes can have custom scripts
+- Add `ThemeInfo` command to view current theme's name (for yet, it justs prints name)
+- Add user config feature and add basic gtk theming support for Dracula theme
+- Added some crucial keybinds
+- Make papirus icon theme default for rofi and added `sudo-rs` recomandation in README
+- Add docs template (docs are not fully ready yet)
+- Add public
+- Add `Creating themes` tutorial in docs
+- Add preview video in README on this branch also
+- Add waybar window title max length for fixing overlapping and added tooltip for showing the full title on waybar's window title module
+- Add catagories in README
+- Add main website
+- Add `Aurora Glassy` theme
+- Add layer rule for rofi and waybar for `Aurora Glass` theme. It will not affect other themes
+- Add theme configuration support for Hyprland. Improve website a bit and added a recomanded package in README
+- Add navbar itemes
+- Make navigation item's text size little bit large
+- It's better to empty previous theme configs
+- Add gtk settings reset support before switching any theme
+- Add default cursor theme
+- Add wallaper switcher support
+- Add download-theme sub-command in cli and add some more options in theme config
+- Add refresh subcommand for refreshing the whole system
+- Improve installation script by adding safety checks. Also added aur extras group for adding external aur pacakges and also added yay installation if not avilable
+- Customized the installation script
+- Add some more packages in aur extras
+- Add search bar on theme switcher
+- Improved colorscheme of the theme switcher and added some padding in search bar
+- Added searh bar, catgorized listing in keybinds app and added safety hook not to delete user configs
+- Added a Hyprland layout switcher gui app
+- Remove Hyprsettings support
+- Add grid layout
+- Add new tui's for wifi and bluetooth and created custom wifi and bluetooth module for waybar
+- Add support for new tuis
+- Added custom weather module which will open a tui for showing weather details
+- Add support for the new tui for weather module in waybar on installation script
+- Add bluetooth manager and fixed wrong tui name
+- Added one package required by Aurora in installation script, docs: Updated docs about required pcakges, readme: Removed not rquired packages
+- Add resources monitor module for waybar and updated docs and installation script about it
+- Added battery monitor for Aurora, removed winow title feature for Aurora
+- Add jolt configuration
+- Add Rose Pine theme
+- Add Nord theme
+- Add waybar position switcher
+- Support `sudo-rs` by default for installation script
+- Added some existing keybinds
+- Add Macchina - neofetch like system information provider
+- Replecae macchina with leenfetch
+- Add new settings app (beta)
+- Add Gruvbox theme
+- Add Everforest theme
+- Add theme configuration file of Gruvbox
+- Add theme based foreground support for Waybar and improved Tokyo Night's color for foreground (rofi)
+- Add all themes preview
+- Add offical themes libary/ gallrey
+- Add search bar
+- Add support for copying all subdirectories and their files for the theme switcher and now Aurora supports neovim
+- Add Neovim themes for most themes
+- Add Neovim themes for Aurora's default theme
+- Switched to btop
+- Add Lazyvim setup during installation
+- Switch to Zen
+- Set theme scheme as dark always when theme changes via theme switcher for gtk
+- Add sddm support for Installation script
+- Improve the installer
+- Add default gtk theming support for theme switcher, removed main script from Dracula theme
+- Apply default theme after installation
+- Add Dracula theme's new background
+- Add external themes updatation feature
+- Add screenrecorder, it is visble in waybar
+- Enhanced the screenrecorder
+- Added new wallpapers, fix: Fixed the configuration, enhancement: Changed default wallpaper OF Tokto Night
+- Set default theme as Aurora Default
+- Add fullscreen keybinds
+- Users now can move the window
+- Add DeepWiki's wiki page's badge
+- Add new badges
+- Add devin wiki
+- Now theme switcher does suppport VS Code and optimized it, so it's fast :D
+- Add wallpaper preview on selecting current theme on theme switcher
+
+### 🐛 Bug Fixes
+
+- Remove wrong license on `.vscode` folder and fix gtk issues
+- Added some comments
+- Set default theme as `Aurora Default`
+- Exclude user configs
+- Add git keep to keep the user related folders
+- Fix i88n production error
+- Remove contents of i88n/en.yaml for vercel production
+- Remove prod errors for video shortcode
+- Set default theme
+- Fix vercel prod error
+- Remove unesseary shellbang and `Installation script` text from some files, fault of copy pasting copyright notices lol
+- Typos are fixed, added favicon and removed not required files
+- Rename duplicate button
+- Remove unesseary shellbangs
+- Remove nwg dock configs for yet
+- The theme switcher's config.tom;'s fields validation was wrong, feat: Add license field for theme's config and made wallpaper sources filds better
+- Add some copyright notices in some scripts
+- Fixed the bug which was ending the installation without even starting
+- Fixed some bugs for installation script and added more better features
+- Fixed some crtical bugs for installation script
+- Fixed one critical bug which was not copying contents of the config
+- Fixed the bug which was not installing the theme switcher
+- Fixed gtk theme reset command
+- Fixed the structure of custom alyouts file and rmeoved it from the `custom_layout` directory, now it's easier to add more layouts and also I was facing a error which was saying `hl.layout` is already registerd
+- Improved layout switcher
+- Add README files
+- FIxed critical error about installation script's sudo-rs implmentation
+- Fix sudo-rs moving issue
+- Fixed the file name
+- Fix file name conventions
+- Fized qt broken dependency error for SDDM
+- Fixed warning, gtk doesn't allow percent for there
+- Forget to update the old refresh script bruh. NOW it is good
+- Mark last step as step
+- Remove external thmes, I downloaded
+
+### 💼 Other
+
+- Add default cursor theme name and some helpful instructions
+- Improved margin and padding on notification
+- Fixed icon issues
+- Add spdx header
+- Show theme name from the config file not directory
+- Make btop floating window little bit larger
+- Fixed ASCII art
+- Changed icons
+- Mark default theme as step
+- Remove docs and website from main repo
+- Improved pulseaudio (aka audio) module
+- Remove some texts from README (not required)
+- The installation script now pulls changes before updating
+
+### 📚 Documentation
+
+- Add tutorial to install external themes
+- Update installation setps
+- Add keybinds page
+- Updated the way of creating themes, added more information about theme's configuration file's structure
+- Updated new packages requirement, added 2 new packges (which are tuis required for wifi and bluetooth)
+- Added one required package
+- Update docs
+- Add sub-commands of Aurora's CLI
+- Update mannual installation steps
+- Add required pacakges, fix: updated installation script to install required pacakges

@@ -55,6 +55,7 @@ pub fn aurora_paths() -> AuroraPaths {
 pub struct ThemeEntry {
     pub directory_name: String,
     pub display_name: String,
+    pub preview_path: PathBuf,
 }
 
 fn read_theme_config(theme_dir: &Path) -> Option<Config> {
@@ -84,6 +85,7 @@ pub fn theme_entries() -> Vec<ThemeEntry> {
             themes.push(ThemeEntry {
                 directory_name,
                 display_name,
+                preview_path: path.join("preview.png"),
             });
         }
     }

@@ -16,22 +16,22 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use aurora::apply_theme;
 use aurora::load_css;
 use aurora::theme_entries;
 use gtk4::prelude::*;
 use gtk4::{
     Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, ListBox, ListBoxRow,
-    Orientation, ScrolledWindow, SearchEntry,
+    Orientation, Picture, ScrolledWindow, SearchEntry,
 };
-
-use aurora::apply_theme;
+use std::collections::HashMap;
 
 fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Theme Switcher")
-        .default_width(340)
-        .default_height(500)
+        .default_width(860)
+        .default_height(520)
         .decorated(false)
         .build();
 
@@ -79,7 +79,26 @@ fn build_ui(app: &Application) {
         .child(&list_box)
         .build();
 
-    for theme in theme_entries() {
+    let preview_name = Label::new(None);
+    preview_name.add_css_class("theme-preview-title");
+    preview_name.set_xalign(0.0);
+
+    let preview_picture = Picture::new();
+    preview_picture.add_css_class("theme-preview-image");
+    preview_picture.set_alternative_text(Some("Theme preview"));
+    preview_picture.set_can_shrink(true);
+    preview_picture.set_keep_aspect_ratio(true);
+    preview_picture.set_hexpand(true);
+    preview_picture.set_vexpand(true);
+    preview_picture.set_size_request(520, 320);
+
+    let themes = theme_entries();
+    let preview_paths: HashMap<_, _> = themes
+        .iter()
+        .map(|theme| (theme.directory_name.clone(), theme.preview_path.clone()))
+        .collect();
+
+    for theme in &themes {
         let row = ListBoxRow::new();
         row.add_css_class("section-row-theme");
         row.set_widget_name(&theme.directory_name);
@@ -90,6 +109,28 @@ fn build_ui(app: &Application) {
         row.set_child(Some(&label));
         list_box.append(&row);
     }
+
+    list_box.connect_row_selected({
+        let preview_name = preview_name.clone();
+        let preview_picture = preview_picture.clone();
+        let preview_paths = preview_paths.clone();
+
+        move |_, row| {
+            let Some(row) = row else {
+                return;
+            };
+
+            let Some(label) = row.child().and_then(|child| child.downcast::<Label>().ok()) else {
+                return;
+            };
+
+            preview_name.set_text(&label.text());
+
+            if let Some(preview_path) = preview_paths.get(&row.widget_name().to_string()) {
+                preview_picture.set_filename(Some(preview_path));
+            }
+        }
+    });
 
     list_box.connect_row_activated(move |_, row| {
         apply_theme(&row.widget_name());
@@ -108,11 +149,30 @@ fn build_ui(app: &Application) {
     });
 
     window.add_controller(controller);
-    let vbox = GtkBox::new(Orientation::Vertical, 0);
-    vbox.append(&search_bar);
-    vbox.append(&scroll);
+    let list_panel = GtkBox::new(Orientation::Vertical, 0);
+    list_panel.add_css_class("theme-list-panel");
+    list_panel.set_size_request(280, -1);
+    list_panel.set_vexpand(true);
+    list_panel.append(&search_bar);
+    list_panel.append(&scroll);
 
-    window.set_child(Some(&vbox));
+    let preview_panel = GtkBox::new(Orientation::Vertical, 0);
+    preview_panel.add_css_class("theme-preview-panel");
+    preview_panel.set_hexpand(true);
+    preview_panel.set_vexpand(true);
+    preview_panel.append(&preview_name);
+    preview_panel.append(&preview_picture);
+
+    let hbox = GtkBox::new(Orientation::Horizontal, 0);
+    hbox.add_css_class("theme-switcher-content");
+    hbox.append(&list_panel);
+    hbox.append(&preview_panel);
+
+    if let Some(first_row) = list_box.row_at_index(0) {
+        list_box.select_row(Some(&first_row));
+    }
+
+    window.set_child(Some(&hbox));
     window.show();
 }
 

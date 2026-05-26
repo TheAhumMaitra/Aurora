@@ -1,0 +1,290 @@
+{
+  "repo_notes": [
+    {
+      "content": "This wiki is for people who want to understand the core of Aurora. For normal users, you can see aurorawiki.vercel.app"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Aurora: Overview",
+      "purpose": "High-level introduction to Aurora — what it is, its goals, architecture philosophy, and how the major subsystems relate. Links to all child sections for deeper exploration.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started & Installation",
+      "purpose": "Step-by-step guide to installing Aurora on Arch Linux: prerequisites, running install.sh, CLI flags (--dry-run, --non-interactive, --debug, --uninstall), AUR helper fallback logic, and post-install state file.",
+      "parent": "Aurora: Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Project Structure & Repository Layout",
+      "purpose": "Explains the top-level directory layout: dotfiles/, assests/, .vscode/, install.sh, and how the Rust crate inside dotfiles/.config/hypr/scripts/ relates to the rest of the repo.",
+      "parent": "Aurora: Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Hyprland Compositor Configuration",
+      "purpose": "Overview of how Hyprland is configured in Aurora via the Lua-based hl abstraction layer. Introduces the modular config file system and links to child pages covering each configuration domain.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Compositor Settings",
+      "purpose": "Covers hyprland.lua (the main entrypoint), monitor.lua, look_and_feel.lua (gaps, borders, blur, shadows, rounding), input.lua (keyboard layout, touchpad), env_vars.lua, and animations.lua.",
+      "parent": "Hyprland Compositor Configuration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Keybindings, Window Rules & Layer Rules",
+      "purpose": "Documents the full keybinding system (mainMod/SUPER key, workspace loops, layout-specific binds), window rules for Aurora utilities and TUI tools, and layer rules for blur effects on Rofi/Waybar/SwayNC.",
+      "parent": "Hyprland Compositor Configuration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Layout System",
+      "purpose": "Explains the supported tiling layouts (dwindle, master, grid, scrolling, monocle), the custom Lua grid algorithm in custom_layouts.lua, layout_configs.lua parameters, and the layout_switcher GTK4 utility.",
+      "parent": "Hyprland Compositor Configuration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Autostart, Idle Management & Lock Screen",
+      "purpose": "Covers autostart.lua (services launched at hyprland.start: awww-daemon, waybar, swaync, cliphist, hypridle, welcome_app), hypridle.conf (DPMS timeout/resume), and hyprlock.conf (lock screen widgets, animations, input field).",
+      "parent": "Hyprland Compositor Configuration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Aurora Rust Crate & CLI",
+      "purpose": "Overview of the aurora Rust crate (dotfiles/.config/hypr/scripts/), its Cargo.toml, the binary suite, and the shared library. Links to child pages for the CLI and individual utility binaries.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "aurora CLI (main.rs)",
+      "purpose": "Documents the aurora command-line interface: subcommands (apply-theme, list-themes, download-theme, update-themes, refresh, version, theme-info), the LOGO constant, state persistence in ~/.local/share/Aurora/theme.log, and git-based theme update logic.",
+      "parent": "Aurora Rust Crate & CLI",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Library (lib.rs) — Theme Application Engine",
+      "purpose": "Deep dive into lib.rs: AuroraPaths, theme_entries(), apply_theme() lifecycle (cleanup → metadata → GTK update → script execution → file sync → refresh → wallpaper), copy_theme_path/should_copy/files_match, waybar_position_change(), load_css(), download_theme().",
+      "parent": "Aurora Rust Crate & CLI",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "GTK4 GUI Utilities",
+      "purpose": "Covers the suite of GTK4 overlay applications: theme_switcher, layout_switcher, waybar_position_switcher, keybinds_help, settings, welcome_app, and search. Explains shared style.css, the com.aurora.* app-id namespace, and common UI patterns (no decorations, opacity 0.8, Escape-to-close).",
+      "parent": "Aurora Rust Crate & CLI",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "System Utility Binaries",
+      "purpose": "Documents the remaining compiled binaries: refresh_system (waybar_refresh + hyprctl reload), waybar_refresh (SIGTERM + restart), waybar_toggle (process check), screenrecorder (wf-recorder lifecycle, /tmp/screenrecorder PID file, status JSON), and waytrogen_line_change_for_theme / waytrogen_line_change_for_global_wallpapers.",
+      "parent": "Aurora Rust Crate & CLI",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Theme System",
+      "purpose": "Overview of how Aurora's theme system works end-to-end: directory layout, config.toml schema, the managed folders list, and how themes are applied. Links to child pages for bundled themes and per-component color files.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Theme Directory Structure & config.toml Schema",
+      "purpose": "Explains the per-theme directory layout (config.toml, default.png, default.lua/activate.sh, backgrounds/, waybar/, wlogout/, hypr/, rofi/, nvim/, btop/, preview.png), the TOML manifest fields (name, version, authors, license, [gtk], [settings], wallpapers_sources), and the static vs. dynamic theme distinction.",
+      "parent": "Theme System",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Bundled Themes Reference",
+      "purpose": "Catalog of all nine bundled themes (Aurora Default, Aurora glassy, Catppuccin Mocha, Dracula, Everforest, Gruvbox, Nord, Rose Pine, Tokyo Night): GTK theme/icon mappings, activation scripts, wallpaper sources, and Neovim colorscheme plugins.",
+      "parent": "Theme System",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Per-Component Color Files",
+      "purpose": "Explains how each theme ships color override files for Waybar (colors.css), Wlogout (colors.css), Rofi (colors.rasi), Hyprland (hypr/colors.lua), and btop (btop/themes/current.theme), and how the theme engine copies them into ~/.config at apply time.",
+      "parent": "Theme System",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Wallpaper Management",
+      "purpose": "Covers waytrogen config.json (monitor mapping, changer backends: swaybg, mpvpaper, awww, gslapper, transition parameters), the waytrogen_line_change_for_theme / waytrogen_line_change_for_global_wallpapers binaries, and the awww-daemon integration for default.png application.",
+      "parent": "Theme System",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Status Bar (Waybar)",
+      "purpose": "Overview of the Waybar setup in Aurora: bar position, module layout, and how it integrates with the theme system. Links to child pages for configuration details and the screen recorder.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Waybar Configuration & Styling",
+      "purpose": "Documents config.jsonc (modules-left/right, persistent-workspaces, format-icons, external TUI integrations via kitty), style.css (JetBrainsMono Nerd Font, border, workspace feedback, custom-logo asset), and colors.css CSS variables.",
+      "parent": "Status Bar (Waybar)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Screen Recorder Integration",
+      "purpose": "Documents the screenrecorder Rust binary: start/stop/region/status subcommands, /tmp/screenrecorder PID file format, wf-recorder + libx264 backend, Waybar polling integration (interval: 1), and ~/Videos/Screencasts output directory.",
+      "parent": "Status Bar (Waybar)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Notification Center & Session Management",
+      "purpose": "Overview of SwayNC and wlogout as the notification and session management layer. Links to child pages for each component.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "SwayNC Notification Center",
+      "purpose": "Covers swaync/config.json (layer overlay, urgency levels, MPRIS widget, DND switch, inhibitors, buttons-grid Wi-Fi toggle via nmcli, notification scripts), and swaync/style.css (CSS variable root, notification hierarchy, control-center styling, blur effects).",
+      "parent": "Notification Center & Session Management",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Wlogout Session Menu",
+      "purpose": "Documents wlogout/layout (button definitions), wlogout/style.css, wlogout/assets/ SVG icons (logout, restart, shutdown, lock, suspend, hibernate), and wlogout/colors.css theming variables.",
+      "parent": "Notification Center & Session Management",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Terminal & Shell Environment",
+      "purpose": "Overview of the terminal emulators and shell configuration in Aurora. Links to child pages for each component.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Terminal Emulators (Kitty & Ghostty)",
+      "purpose": "Documents kitty.conf (JetBrainsMono Nerd Font, background opacity 0.3, dynamic_background_opacity) and ghostty/config.ghostty (background opacity 0.2, keybinds ctrl+z/ctrl+d, font family).",
+      "parent": "Terminal & Shell Environment",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Fish Shell & Leenfetch",
+      "purpose": "Covers config.fish (starship prompt, mise runtime manager, leenfetch invocation), fish_variables, fish_prompt.fish, and the leenfetch configuration system (flags, modules pipeline, minimal vs. full profiles, Aurora.ascii custom art).",
+      "parent": "Terminal & Shell Environment",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "GTK & Application Theming",
+      "purpose": "Covers the GTK 3.0/4.0 settings.ini files (Yaru-dark theme, Yaru-grey icons, JetBrainsMono font, dark-mode preference, Xft rendering), Rofi launcher configuration (config.rasi, colors.rasi), and btop system monitor theming.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Glossary",
+      "purpose": "Definitions of all codebase-specific terms, jargon, abbreviations, and domain concepts used throughout Aurora, with code pointers for onboarding engineers.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}

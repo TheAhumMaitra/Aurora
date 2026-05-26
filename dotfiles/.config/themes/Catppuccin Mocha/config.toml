@@ -12,3 +12,8 @@ wallpapers_sources = ["https://github.com/VipinVIP/wallpapers", "https://github.
 [gtk]
 theme_name = "Yaru-purple-dark"
 icon_theme = "Yaru-purple"
+
+[vscode]
+publisher = "Catppuccin"
+extension_name = "catppuccin-vsc"
+theme_name = "Catppuccin Mocha"

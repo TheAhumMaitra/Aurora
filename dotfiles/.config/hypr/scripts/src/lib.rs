@@ -21,11 +21,12 @@ use std::fs;
 use std::io::Read;
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::thread;
 
 use gtk4 as gtk;
-use gtk4::CssProvider;
 use gtk4::gdk::Display;
+use gtk4::CssProvider;
 
 pub struct AuroraPaths {
     pub home: PathBuf,
@@ -56,7 +57,7 @@ pub struct ThemeEntry {
     pub display_name: String,
 }
 
-fn read_theme_config(theme_dir: &std::path::Path) -> Option<Config> {
+fn read_theme_config(theme_dir: &Path) -> Option<Config> {
     let config_path = theme_dir.join("config.toml");
     fs::read_to_string(config_path)
         .ok()
@@ -115,6 +116,7 @@ struct Config {
     license: Option<String>,
     settings: Option<Settings>,
     gtk: Option<GtkOptions>,
+    vscode: Option<VsCodeOptions>,
 }
 
 // get options inside of the theme configuration file's settings category (we only need required options)
@@ -129,6 +131,13 @@ struct Settings {
 struct GtkOptions {
     theme_name: Option<String>,
     icon_theme: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+struct VsCodeOptions {
+    publisher: String,
+    extension_name: String,
+    theme_name: String,
 }
 
 // apply the selected theme
@@ -172,6 +181,7 @@ pub fn apply_theme(theme_name: &str) {
 
     if let Some(config) = &config {
         apply_gtk_options(&paths, config);
+        apply_vscode_options(&paths, config);
     }
 
     // write selected theme name into the theme name log file
@@ -385,6 +395,161 @@ fn write_gtk_settings(
     fs::write(settings_path, lines.join("\n") + "\n").expect("Failed to write gtk settings.ini");
 }
 
+fn apply_vscode_options(paths: &AuroraPaths, config: &Config) {
+    let Some(vscode) = &config.vscode else {
+        return;
+    };
+
+    let publisher = vscode.publisher.trim();
+    let extension_name = vscode.extension_name.trim();
+    let theme_name = vscode.theme_name.trim();
+
+    if publisher.is_empty() || extension_name.is_empty() || theme_name.is_empty() {
+        eprintln!(
+            "Skipping VS Code theme setup: [vscode] requires publisher, extension_name, and theme_name"
+        );
+        return;
+    }
+
+    install_vscode_extension(&paths.home, publisher, extension_name);
+
+    let settings_path = paths.config.join("Code/User/settings.json");
+    if let Err(error) = write_vscode_settings(&settings_path, theme_name) {
+        eprintln!("Failed to update VS Code settings: {error}");
+    }
+}
+
+fn install_vscode_extension(home: &Path, publisher: &str, extension_name: &str) {
+    let extension_id = format!("{publisher}.{extension_name}");
+
+    if vscode_extension_is_installed(home, &extension_id) {
+        println!("VS Code extension already installed: {extension_id}");
+        return;
+    }
+
+    match Command::new("code")
+        .args(["--install-extension", extension_id.as_str()])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+    {
+        Ok(mut child) => {
+            println!("Installing VS Code extension in background: {extension_id}");
+            thread::spawn(move || match child.wait() {
+                Ok(status) if status.success() => {
+                    println!("Installed VS Code extension: {extension_id}");
+                }
+                Ok(status) => {
+                    eprintln!("VS Code extension install failed for {extension_id}: {status}");
+                }
+                Err(error) => {
+                    eprintln!(
+                        "Failed to wait for VS Code extension install {extension_id}: {error}"
+                    );
+                }
+            });
+        }
+        Err(error) => {
+            eprintln!("Failed to run VS Code CLI for {extension_id}: {error}");
+        }
+    }
+}
+
+fn vscode_extension_is_installed(home: &Path, extension_id: &str) -> bool {
+    let extension_id = extension_id.to_lowercase();
+    let extension_prefix = format!("{extension_id}-");
+
+    [
+        home.join(".vscode/extensions"),
+        home.join(".vscode-insiders/extensions"),
+        home.join(".vscode-oss/extensions"),
+    ]
+    .into_iter()
+    .filter_map(|path| fs::read_dir(path).ok())
+    .flat_map(|entries| entries.flatten())
+    .any(|entry| {
+        let name = entry.file_name().to_string_lossy().to_lowercase();
+        name == extension_id || name.starts_with(&extension_prefix)
+    })
+}
+
+const VSCODE_THEME_SETTING_PREFIXES: [&str; 3] = [
+    "\"workbench.colorTheme\":",
+    "\"workbench.preferredDarkColorTheme\":",
+    "\"workbench.preferredLightColorTheme\":",
+];
+
+fn write_vscode_settings(settings_path: &Path, theme_name: &str) -> std::io::Result<()> {
+    let content = fs::read_to_string(settings_path).unwrap_or_else(|_| "{\n}\n".to_string());
+    let escaped_theme_name = escape_json_string(theme_name);
+    let mut lines: Vec<String> = if content.trim().is_empty() || content.trim() == "{}" {
+        vec!["{".to_string(), "}".to_string()]
+    } else {
+        content.lines().map(String::from).collect()
+    };
+
+    lines.retain(|line| !is_vscode_theme_setting(line));
+
+    let insert_index = match lines.iter().position(|line| line.trim() == "{") {
+        Some(index) => index + 1,
+        None => {
+            lines = vec!["{".to_string(), "}".to_string()];
+            1
+        }
+    };
+
+    for (offset, line) in vscode_theme_setting_lines(&escaped_theme_name)
+        .into_iter()
+        .enumerate()
+    {
+        lines.insert(insert_index + offset, line);
+    }
+
+    if let Some(parent) = settings_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    fs::write(settings_path, lines.join("\n") + "\n")
+}
+
+fn is_vscode_theme_setting(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    VSCODE_THEME_SETTING_PREFIXES
+        .iter()
+        .any(|prefix| trimmed.starts_with(prefix))
+}
+
+fn vscode_theme_setting_lines(escaped_theme_name: &str) -> [String; 3] {
+    [
+        format!("  \"workbench.colorTheme\": \"{escaped_theme_name}\","),
+        format!("  \"workbench.preferredDarkColorTheme\": \"{escaped_theme_name}\","),
+        format!("  \"workbench.preferredLightColorTheme\": \"{escaped_theme_name}\","),
+    ]
+}
+
+fn escape_json_string(value: &str) -> String {
+    let mut escaped = String::new();
+
+    for character in value.chars() {
+        match character {
+            '"' => escaped.push_str("\\\""),
+            '\\' => escaped.push_str("\\\\"),
+            '\n' => escaped.push_str("\\n"),
+            '\r' => escaped.push_str("\\r"),
+            '\t' => escaped.push_str("\\t"),
+            '\u{08}' => escaped.push_str("\\b"),
+            '\u{0C}' => escaped.push_str("\\f"),
+            character if character.is_control() => {
+                escaped.push_str(&format!("\\u{:04x}", character as u32));
+            }
+            character => escaped.push(character),
+        }
+    }
+
+    escaped
+}
+
 fn copy_theme_path(source: &Path, target: &Path) -> std::io::Result<()> {
     if source.is_file() {
         if should_copy(source, target)? {
@@ -524,7 +689,9 @@ pub fn download_theme(repo_url: String) {
 
 #[cfg(test)]
 mod tests {
-    use super::{copy_theme_path, should_copy};
+    use super::{
+        copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings, Config,
+    };
     use std::fs;
     use std::path::PathBuf;
     use std::thread;
@@ -572,5 +739,84 @@ mod tests {
         );
 
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn write_vscode_settings_updates_all_theme_settings() {
+        let root = test_dir("vscode-settings-update");
+        let settings_path = root.join("Code/User/settings.json");
+        let theme_name = "Theme Name From Config";
+
+        fs::create_dir_all(settings_path.parent().unwrap()).unwrap();
+        fs::write(
+            &settings_path,
+            "{\n  \"workbench.colorTheme\": \"Old Theme\",\n  \"workbench.preferredDarkColorTheme\": \"Dracula Theme\",\n  \"workbench.preferredLightColorTheme\": \"Light Theme\",\n  \"editor.fontSize\": 12\n}\n",
+        )
+        .unwrap();
+
+        write_vscode_settings(&settings_path, theme_name).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(&settings_path).unwrap(),
+            "{\n  \"workbench.colorTheme\": \"Theme Name From Config\",\n  \"workbench.preferredDarkColorTheme\": \"Theme Name From Config\",\n  \"workbench.preferredLightColorTheme\": \"Theme Name From Config\",\n  \"editor.fontSize\": 12\n}\n"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn write_vscode_settings_creates_theme_settings() {
+        let root = test_dir("vscode-settings-empty");
+        let settings_path = root.join("Code/User/settings.json");
+        let theme_name_from_config = "Theme Name From Config";
+
+        write_vscode_settings(&settings_path, theme_name_from_config).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(&settings_path).unwrap(),
+            "{\n  \"workbench.colorTheme\": \"Theme Name From Config\",\n  \"workbench.preferredDarkColorTheme\": \"Theme Name From Config\",\n  \"workbench.preferredLightColorTheme\": \"Theme Name From Config\",\n}\n"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn vscode_extension_is_installed_checks_local_extension_dirs() {
+        let root = test_dir("vscode-extension-installed");
+        let extension_dir = root.join(".vscode/extensions/publisher.theme-name-1.0.0");
+
+        fs::create_dir_all(&extension_dir).unwrap();
+
+        assert!(vscode_extension_is_installed(&root, "publisher.theme-name"));
+        assert!(!vscode_extension_is_installed(
+            &root,
+            "publisher.other-theme"
+        ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn bundled_theme_configs_include_vscode_options() {
+        let themes_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../themes");
+
+        for entry in fs::read_dir(themes_dir).unwrap() {
+            let entry = entry.unwrap();
+            let config_path = entry.path().join("config.toml");
+
+            if !config_path.exists() {
+                continue;
+            }
+
+            let config: Config = toml::from_str(&fs::read_to_string(&config_path).unwrap())
+                .unwrap_or_else(|error| panic!("{}: {error}", config_path.display()));
+            let vscode = config
+                .vscode
+                .unwrap_or_else(|| panic!("{} is missing [vscode]", config_path.display()));
+
+            assert!(!vscode.publisher.trim().is_empty());
+            assert!(!vscode.extension_name.trim().is_empty());
+            assert!(!vscode.theme_name.trim().is_empty());
+        }
     }
 }

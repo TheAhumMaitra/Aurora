@@ -11,3 +11,8 @@ wallpapers_sources = ["https://github.com/Apeiros-46B/everforest-walls"]
 [gtk]
 theme_name = "Yaru-sage-dark"
 icon_theme = "Yaru-sage"
+
+[vscode]
+publisher = "sainnhe"
+extension_name = "everforest"
+theme_name = "Everforest Dark"

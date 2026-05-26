@@ -12,3 +12,8 @@ wallpapers_sources = ["https://github.com/rose-pine/wallpapers"]
 [gtk]
 theme_name = "Yaru-blue-dark"
 icon_theme = "Yaru-blue-dark"
+
+[vscode]
+publisher = "mvllow"
+extension_name = "rose-pine"
+theme_name = "Rosé Pine"

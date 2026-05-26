@@ -15,3 +15,8 @@ interpreter = "bash"
 [gtk]
 theme_name = "Yaru-purple-dark"
 icon_theme = "Yaru-purple"
+
+[vscode]
+publisher = "dracula-theme"
+extension_name = "theme-dracula"
+theme_name = "Dracula Theme"

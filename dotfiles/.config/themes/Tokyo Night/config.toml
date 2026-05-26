@@ -10,3 +10,8 @@ wallpapers_source = ["https://github.com/tokyo-night/wallpapers","https://github
 [gtk]
 theme_name = "Yaru-blue-dark"
 icon_theme = "Yaru-blue"
+
+[vscode]
+publisher = "enkia"
+extension_name = "tokyo-night"
+theme_name = "Tokyo Night"

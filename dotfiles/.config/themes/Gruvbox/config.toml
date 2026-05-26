@@ -11,3 +11,8 @@ wallpapers_sources = ["https://github.com/AngelJumbo/gruvbox-wallpapers"]
 [gtk]
 theme_name = "Yaru-olive-dark"
 icon_theme = "Yaru-wartybrown-dark"
+
+[vscode]
+publisher = "jdinhlife"
+extension_name = "gruvbox"
+theme_name = "Gruvbox Dark Soft"

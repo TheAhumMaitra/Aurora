@@ -14,3 +14,8 @@ interpreter = "lua"
 [gtk]
 theme_name = "Yaru-dark"
 icon_theme = "Yaru-grey"
+
+[vscode]
+publisher = "Aliqyan-21"
+extension_name = "darkvoid"
+theme_name = "darkvoid"

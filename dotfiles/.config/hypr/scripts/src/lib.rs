@@ -148,18 +148,19 @@ pub fn apply_theme(theme_name: &str) {
     let aurora_data = paths.home.join(".local/share/Aurora");
     let hypr_theme_file = paths.config.join("hypr/Theme/theme.lua");
 
-    // get the `config.toml` from the selected theme
-    let mut config_path = paths.themes.clone();
-    config_path.push(theme_name);
-    config_path.push("config.toml");
+    // resolve theme directory and load its `config.toml` (if present)
+    let theme_dir = paths.themes.join(theme_name);
+    let config: Option<Config> = read_theme_config(&theme_dir);
 
-    let config: Option<Config> = fs::read_to_string(&config_path)
-        .ok()
-        .and_then(|content| toml::from_str(&content).ok());
+    // prefer the theme's declared name from config when available
+    let display_name = config
+        .as_ref()
+        .map(|c| c.name.clone())
+        .unwrap_or_else(|| theme_name.to_string());
 
     let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop"]; //directories want to be copied
 
-    let message = format!("{theme_name} is applied!");
+    let message = format!("{display_name} is applied!");
 
     // Empty the current theme configuration for Hyprland
     fs::write(&hypr_theme_file, "").expect("Failed to empty theme configuration");
@@ -193,7 +194,7 @@ pub fn apply_theme(theme_name: &str) {
     // Now write the file
     let theme_name_log_file = aurora_data.join("theme_name.log");
 
-    fs::write(&theme_name_log_file, theme_name)
+    fs::write(&theme_name_log_file, &display_name)
         .expect("Failed to write theme name into the theme logs file.");
     // write theme logs
     let theme_log_file = aurora_data.join("theme.log");
@@ -218,7 +219,7 @@ pub fn apply_theme(theme_name: &str) {
         fs::write(&theme_log_file, information_about_theme).expect("Failed to write theme info");
     }
 
-    println!("Applying theme : {}", theme_name);
+    println!("Applying theme : {}", display_name);
 
     // Get the options from valid categories and do the job
     if let Some(config) = &config {
@@ -226,12 +227,10 @@ pub fn apply_theme(theme_name: &str) {
             if let Some(script) = &settings.script {
                 let interpreter = settings.interpreter.as_deref().unwrap_or("bash"); //get the parsed interpreter or simply set it to bash
 
-                let mut path = paths.themes.clone();
-                path.push(theme_name);
-                path.push(script);
+                let script_path = theme_dir.join(script);
 
                 Command::new(interpreter)
-                    .arg(path)
+                    .arg(script_path)
                     .spawn()
                     .expect("Failed to run script"); //if it is failed
             } else {

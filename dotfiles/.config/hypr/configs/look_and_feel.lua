@@ -34,7 +34,7 @@ hl.config({
 			inactive_border = colors_file.accent,
 		},
 
-		resize_on_border = false,
+		resize_on_border = true,
 		allow_tearing = false,
 		layout = "master",
 	},

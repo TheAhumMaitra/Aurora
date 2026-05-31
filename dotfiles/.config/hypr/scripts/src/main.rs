@@ -24,7 +24,9 @@ use aurora::download_theme;
 use aurora::list_themes;
 
 use clap::{Parser, Subcommand};
+
 use std::process::{Command, Stdio};
+use which::which;
 
 use std::fs;
 const LOGO: &str = r#"
@@ -61,6 +63,8 @@ enum Commands {
     UpdateThemes,
     ///Refresh the system
     Refresh,
+    ///Run specified script
+    Runscript { binary_name: String },
 }
 
 fn main() {
@@ -123,6 +127,16 @@ fn main() {
                         .arg("pull")
                         .status();
                 }
+            }
+        }
+        Commands::Runscript { binary_name } => {
+            if which(binary_name).is_ok() {
+                println!("Processing your request to run {binary_name}");
+                Command::new(binary_name)
+                    .spawn()
+                    .expect("Failed to run the binary");
+            } else {
+                println!("Requested executable binary not found in PATH. Try to install the scripts again in PATH!");
             }
         }
     }

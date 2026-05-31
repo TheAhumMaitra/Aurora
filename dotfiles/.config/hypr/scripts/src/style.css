@@ -114,6 +114,32 @@ row:selected {
   border: 2px solid;
 }
 
+.theme-switcher-content {
+  background: #111;
+}
+
+.theme-list-panel {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.theme-preview-panel {
+  padding: 10px;
+  background: #151515;
+}
+
+.theme-preview-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.theme-preview-image {
+  border-radius: 8px;
+  background: #080808;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .settings-list {
   padding: 14px;
 }

@@ -25,6 +25,10 @@ local colors_file = dofile(home .. "/.config/hypr/colors.lua")
 
 hl.config({
 	general = {
+		snap = {
+			enabled = true,
+		},
+
 		gaps_in = 8,
 		gaps_out = 7,
 		border_size = 2,
@@ -47,7 +51,7 @@ hl.config({
 
 		shadow = {
 			enabled = true,
-			range = 4,
+			range = 3,
 			render_power = 3,
 			color = colors_file.shadow,
 		},

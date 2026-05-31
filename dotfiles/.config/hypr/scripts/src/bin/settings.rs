@@ -213,6 +213,19 @@ fn build_ui(app: &Application) {
         .build();
     search_entry.add_css_class("search-entry");
 
+    let search_controller = EventControllerKey::new();
+    let win_ref = window.clone();
+
+    search_controller.connect_key_pressed(move |_, key, _, _| {
+        if key == gdk::Key::Escape {
+            win_ref.close();
+            return true.into();
+        }
+        false.into()
+    });
+
+    search_entry.add_controller(search_controller);
+
     search_entry.connect_search_changed({
         let list_box = list_box.clone();
         move |entry| append_settings(&list_box, &entry.text())

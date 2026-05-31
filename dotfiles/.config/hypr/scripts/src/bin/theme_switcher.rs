@@ -52,6 +52,19 @@ fn build_ui(app: &Application) {
 
     search_entry.add_css_class("search-entry");
 
+    let search_controller = EventControllerKey::new();
+    let win_ref = window.clone();
+
+    search_controller.connect_key_pressed(move |_, key, _, _| {
+        if key == gtk4::gdk::Key::Escape {
+            win_ref.close();
+            return true.into();
+        }
+        false.into()
+    });
+
+    search_entry.add_controller(search_controller);
+
     list_box.set_filter_func({
         let search_entry = search_entry.clone();
         move |row| {

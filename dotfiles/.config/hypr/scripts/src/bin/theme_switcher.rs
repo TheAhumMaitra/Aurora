@@ -30,7 +30,7 @@ fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Theme Switcher")
-        .default_width(860)
+        .default_width(960)
         .default_height(520)
         .decorated(false)
         .build();
@@ -87,10 +87,9 @@ fn build_ui(app: &Application) {
     preview_picture.add_css_class("theme-preview-image");
     preview_picture.set_alternative_text(Some("Theme preview"));
     preview_picture.set_can_shrink(true);
-    preview_picture.set_keep_aspect_ratio(true);
+    preview_picture.set_keep_aspect_ratio(false);
     preview_picture.set_hexpand(true);
     preview_picture.set_vexpand(true);
-    preview_picture.set_size_request(520, 320);
 
     let themes = theme_entries();
     let preview_paths: HashMap<_, _> = themes

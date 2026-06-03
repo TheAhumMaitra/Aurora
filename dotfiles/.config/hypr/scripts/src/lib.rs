@@ -187,14 +187,14 @@ pub fn apply_theme(theme_name: &str) {
         apply_vscode_options(&paths, config);
     }
 
-    // write selected theme name into the theme name log file
+    // write selected theme directory into the theme name log file
     // Ensure the directory exists
     fs::create_dir_all(&aurora_data).expect("Failed to create logs directory");
 
     // Now write the file
     let theme_name_log_file = aurora_data.join("theme_name.log");
 
-    fs::write(&theme_name_log_file, &display_name)
+    fs::write(&theme_name_log_file, theme_name)
         .expect("Failed to write theme name into the theme logs file.");
     // write theme logs
     let theme_log_file = aurora_data.join("theme.log");
@@ -264,6 +264,15 @@ pub fn apply_theme(theme_name: &str) {
             }
         } else {
             println!("No theme directory found for {}", folder);
+        }
+    }
+
+    let custom_css_source = theme_dir.join("custom.css");
+    let custom_css_target = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/custom.css");
+    if custom_css_source.exists() {
+        match copy_theme_path(&custom_css_source, &custom_css_target) {
+            Ok(_) => println!("Copied custom.css"),
+            Err(e) => eprintln!("Copy error in custom.css: {}", e),
         }
     }
 
@@ -665,7 +674,8 @@ pub fn waybar_position_change(position: String) -> std::io::Result<()> {
 pub fn load_css() {
     let provider = CssProvider::new();
 
-    provider.load_from_data(include_str!("./style.css"));
+    let style_css = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/style.css");
+    provider.load_from_path(style_css);
 
     if let Some(display) = Display::default() {
         gtk::style_context_add_provider_for_display(

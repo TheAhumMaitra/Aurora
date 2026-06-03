@@ -16,8 +16,7 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::{
-    env,
-    fs,
+    env, fs,
     process::{Command, Stdio},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -40,8 +39,7 @@ fn status() {
         let v: Vec<&str> = data.lines().collect();
 
         if v.len() >= 3 {
-            let secs =
-                now() - v[2].parse::<u64>().unwrap_or(0);
+            let secs = now() - v[2].parse::<u64>().unwrap_or(0);
 
             println!(
                 r#"{{"text":"<span color='#ff0000'> </span> {:02}:{:02}  ","tooltip":"{}"}}"#,
@@ -64,8 +62,7 @@ fn start(region: bool) {
 
     let home = env::var("HOME").unwrap();
 
-    let dir =
-        format!("{home}/Videos/Screencasts");
+    let dir = format!("{home}/Videos/Screencasts");
 
     let _ = fs::create_dir_all(&dir);
 
@@ -83,22 +80,12 @@ fn start(region: bool) {
 
     let mut cmd = Command::new("wf-recorder");
 
-    cmd.args([
-        "--codec",
-        "libx264",
-        "--file",
-        &file,
-    ]);
+    cmd.args(["--codec", "libx264", "--file", &file]);
 
     if region {
-        let geo = String::from_utf8_lossy(
-            &Command::new("slurp")
-                .output()
-                .unwrap()
-                .stdout,
-        )
-        .trim()
-        .to_string();
+        let geo = String::from_utf8_lossy(&Command::new("slurp").output().unwrap().stdout)
+            .trim()
+            .to_string();
 
         cmd.args(["--geometry", &geo]);
     }
@@ -109,16 +96,7 @@ fn start(region: bool) {
         .spawn()
         .unwrap();
 
-    fs::write(
-        PID,
-        format!(
-            "{}\n{}\n{}",
-            child.id(),
-            file,
-            now()
-        ),
-    )
-    .unwrap();
+    fs::write(PID, format!("{}\n{}\n{}", child.id(), file, now())).unwrap();
 }
 
 fn stop() {
@@ -126,15 +104,10 @@ fn stop() {
         let v: Vec<&str> = data.lines().collect();
 
         if v.len() >= 2 {
-            let _ = Command::new("kill")
-                .arg(v[0])
-                .status();
+            let _ = Command::new("kill").arg(v[0]).status();
 
             let _ = Command::new("notify-send")
-                .args([
-                    "Recording Saved",
-                    v[1],
-                ])
+                .args(["Recording Saved", v[1]])
                 .status();
         }
     }

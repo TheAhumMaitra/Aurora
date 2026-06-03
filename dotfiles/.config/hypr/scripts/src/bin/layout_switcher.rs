@@ -36,14 +36,14 @@ fn run_layout_command(layout: &str) {
     {
         Ok(_) => {
             println!("Layout `{layout}` applied");
-            Command::new("notify-send")
+            let _ = Command::new("notify-send")
                 .arg(format!("{} layout is applied!", layout))
                 .spawn();
         }
 
         Err(err) => {
             eprintln!("Failed to run layout command `{layout}`: {err}");
-            Command::new("notify-send")
+            let _ = Command::new("notify-send")
                 .arg(format!("Failed to apply {} layout!", layout))
                 .spawn();
         }

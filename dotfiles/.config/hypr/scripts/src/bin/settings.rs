@@ -40,6 +40,7 @@ struct SettingsItem {
 
 #[derive(Clone, Copy)]
 enum SettingsAction {
+    #[allow(dead_code)]
     Edit(&'static str),
     Launch(&'static str),
     Run(&'static str, &'static [&'static str]),

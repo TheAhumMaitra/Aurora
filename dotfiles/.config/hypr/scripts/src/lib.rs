@@ -25,8 +25,8 @@ use std::process::{Command, Stdio};
 use std::thread;
 
 use gtk4 as gtk;
-use gtk4::gdk::Display;
 use gtk4::CssProvider;
+use gtk4::gdk::Display;
 
 pub struct AuroraPaths {
     pub home: PathBuf,
@@ -691,7 +691,7 @@ pub fn download_theme(repo_url: String) {
 #[cfg(test)]
 mod tests {
     use super::{
-        copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings, Config,
+        Config, copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings,
     };
     use std::fs;
     use std::path::PathBuf;

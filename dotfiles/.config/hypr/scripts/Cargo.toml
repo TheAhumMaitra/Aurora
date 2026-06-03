@@ -5,13 +5,15 @@ version = "0.1.0"
 license = "GPL-3.0-or-later"
 authors = ["Ahum Maitra", "Ahum Maitra <theahummaitra@gmail.com>"]
 edition = "2024"
-
+homepage = "https://hypraurora.vercel.app/"
+repository = "https://github.com/TheAhumMaitra/Aurora"
+documentation = "https://aurorawiki.vercel.app"
 
 [dependencies]
-sysinfo = "0.30"
+sysinfo = "0.39.3"
 gtk4 = "0.11.3"
 urlencoding = "2.1"
-whoami = "2.1.1"
+whoami = "2.1.2"
 dirs = "6.0.0"
 clap = { version = "4.6.1", features = ["derive"] }
 toml = "1.1.2"

@@ -1,0 +1,15 @@
+@define-color background #2e3440;
+@define-color foreground #d8dee9;
+@define-color accent #3b4252;
+@define-color active-background #434c5e;
+@define-color active-accent #5e81ac;
+@define-color urgent-background #bf616a;
+@define-color border #4c566a;
+@define-color surface #3b4252;
+@define-color surface-alt #434c5e;
+@define-color muted #4c566a;
+@define-color theme_bg_color #2e3440;
+@define-color theme_fg_color #d8dee9;
+@define-color accent_bg_color #3b4252;
+@define-color success_color #a3be8c;
+@define-color warning_color #ebcb8b;

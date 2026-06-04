@@ -19,7 +19,7 @@
 use aurora::load_css;
 use gtk::gdk;
 use gtk::prelude::*;
-use gtk::{Align, Application, ApplicationWindow, EventControllerKey, Label};
+use gtk::{Align, Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, Orientation};
 use gtk4 as gtk;
 use whoami;
 
@@ -47,40 +47,72 @@ fn main() {
         vbox.set_halign(Align::Center);
         vbox.set_valign(Align::Center);
 
-        let wish = format!(
-            "Hello <span weight='bold' foreground='violet'>{}</span>",
-            username
-        );
-        let hello: Label = Label::builder()
-            .label(&wish)
+        // Welcome label with separate Aurora text
+        let welcome_box = GtkBox::new(Orientation::Horizontal, 0);
+        welcome_box.set_halign(Align::Center);
+        
+        let welcome_text = Label::builder()
+            .label("Welcome to ")
             .halign(Align::Center)
-            .use_markup(true)
-            .valign(Align::Center)
             .build();
-
-        hello.add_css_class("hello");
-
-        let welcome_label = Label::builder()
-            .label("Welcome to <span weight='bold' foreground='purple'>Aurora</span>")
+        welcome_text.add_css_class("welcome-label");
+        
+        let aurora_text = Label::builder()
+            .label("Aurora")
             .halign(Align::Center)
-            .use_markup(true)
-            .valign(Align::Center)
             .build();
-        welcome_label.add_css_class("welcome-label"); // CSS class
+        aurora_text.add_css_class("aurora-text");
+        
+        welcome_box.append(&welcome_text);
+        welcome_box.append(&aurora_text);
 
-        let keybind_label = Label::builder()
-            .label(
-                "Press <span foreground='grey'  weight='bold'>SUPER + H</span> to see all keybinds",
-            )
+        // Hello username with separate colored username
+        let hello_box = GtkBox::new(Orientation::Horizontal, 0);
+        hello_box.set_halign(Align::Center);
+        
+        let hello_text = Label::builder()
+            .label("Hello ")
             .halign(Align::Center)
-            .valign(Align::Center)
-            .use_markup(true)
             .build();
-        keybind_label.add_css_class("keybind-label"); // CSS class
+        hello_text.add_css_class("hello");
+        
+        let username_text = Label::builder()
+            .label(&username)
+            .halign(Align::Center)
+            .build();
+        username_text.add_css_class("username");
+        
+        hello_box.append(&hello_text);
+        hello_box.append(&username_text);
 
-        vbox.append(&welcome_label);
-        vbox.append(&keybind_label);
-        vbox.append(&hello);
+        let keybind_box = GtkBox::new(Orientation::Horizontal, 0);
+        keybind_box.set_halign(Align::Center);
+        
+        let keybind_prefix = Label::builder()
+            .label("Press ")
+            .halign(Align::Center)
+            .build();
+        keybind_prefix.add_css_class("keybind-label");
+        
+        let keybind_key = Label::builder()
+            .label("SUPER + H")
+            .halign(Align::Center)
+            .build();
+        keybind_key.add_css_class("keybinds-help-warn");
+        
+        let keybind_suffix = Label::builder()
+            .label(" to see all keybinds")
+            .halign(Align::Center)
+            .build();
+        keybind_suffix.add_css_class("keybind-label");
+        
+        keybind_box.append(&keybind_prefix);
+        keybind_box.append(&keybind_key);
+        keybind_box.append(&keybind_suffix);
+
+        vbox.append(&welcome_box);
+        vbox.append(&keybind_box);
+        vbox.append(&hello_box);
 
         let win = window.clone();
 

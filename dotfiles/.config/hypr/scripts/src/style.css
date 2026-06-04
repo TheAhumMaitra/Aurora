@@ -39,6 +39,19 @@ window{
 .welcome-label {
   font-size: 25px;
   font-weight: bold;
+  color: @theme_fg_color;
+  margin: 10px 0;
+}
+
+.username {
+  color: @accent;
+  font-weight: bold;
+}
+
+.aurora-text {
+  color: @active-accent;
+  font-weight: bold;
+  font-size: 25px;
 }
 
 .header {
@@ -55,6 +68,16 @@ window{
   font-weight: 500;
   font-style: italic;
 }
+
+.keybinds-help-warn {
+  color: @foreground;
+  font-weight: bold;
+  border: 2px solid @surface;
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: alpha(@accent, 0.15);
+}
+
 .actions {
   color: @success_color;
   font-weight: bold;
@@ -66,17 +89,14 @@ window{
 }
 
 .hello {
-  font-weight: bolder;
-  font-style: italic;
+  font-weight: bold;
   font-size: medium;
-  border: 2px solid rgb(144, 0, 255);
-  border-radius: 40px;
-  padding: 8px;
+  color: @theme_fg_color;
 }
 
 .settings-header {
   padding: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid alpha(@theme_fg_color, 0.08);
   background: @theme_bg_color;
 }
 
@@ -90,7 +110,7 @@ window{
 .settings-category-description,
 .setting-description,
 .settings-empty {
-  color: rgba(255, 255, 255, 0.68);
+  color: alpha(@theme_fg_color, 0.68);
 }
 row {
     border: 1px solid alpha(@border, 0.55);

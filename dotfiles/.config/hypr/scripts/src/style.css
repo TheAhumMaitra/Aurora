@@ -70,7 +70,7 @@ window{
 }
 
 .keybinds-help-warn {
-  color: @foreground;
+  color: @theme_fg_color;
   font-weight: bold;
   border: 2px solid @surface;
   border-radius: 8px;

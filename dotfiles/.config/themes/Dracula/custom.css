@@ -1,6 +1,6 @@
-@define-color accent #bd93f9;
+@define-color accent #21222C;
 @define-color active-background #44475a;
-@define-color active-accent #8be9fd;
+@define-color active-accent #644AC9;
 @define-color urgent-background #ff5555;
 @define-color border #6272a4;
 @define-color surface #44475a;
@@ -8,6 +8,5 @@
 @define-color muted #6272a4;
 @define-color theme_bg_color #282a36;
 @define-color theme_fg_color #f8f8f2;
-@define-color accent_bg_color #bd93f9;
 @define-color success_color #50fa7b;
 @define-color warning_color #f1fa8c;

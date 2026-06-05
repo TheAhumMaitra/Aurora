@@ -1,6 +1,6 @@
 @define-color accent rgba(168, 216, 255, 0.12);
 @define-color active-background #1f1e1e;
-@define-color active-accent #414540;
+@define-color active-accent #a5a5a5;
 @define-color urgent-background rgba(255, 100, 100, 0.08);
 @define-color border rgba(168, 216, 255, 0.12);
 @define-color surface rgba(17, 17, 17, 0.72);

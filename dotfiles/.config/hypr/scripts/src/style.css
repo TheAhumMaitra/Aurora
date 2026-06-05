@@ -128,8 +128,8 @@ row:hover {
 }
 
 row:selected {
-    background: @accent_bg_color;
-    color: @theme_bg_color;
+    background: @accent;
+    color: @active-accent;
     border: 2px solid @active-accent;
 }
 
@@ -218,7 +218,7 @@ row:selected {
 }
 
 .setting-button:hover {
-  background: @accent_bg_color;
+  background: @accent;
   color: @theme_bg_color;
 }
 

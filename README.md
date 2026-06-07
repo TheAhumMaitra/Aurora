@@ -40,7 +40,7 @@
 <br>
 
 # Preview
-https://github.com/user-attachments/assets/b9e6f020-b497-4b1e-be0a-fd5f6abb959f
+https://github.com/user-attachments/assets/e83a9d95-ab42-4abc-a9d7-747c86e72a9c
 
 # Installation
 
@@ -58,10 +58,14 @@ __**To install Aurora using installation script follow these steps**__
 ### Step 1
 Clone this repo into your home directory
 
-`cd ~ && git clone https://github.com/TheAhumMaitra/Aurora.git`
+```
+cd ~ && git clone https://github.com/TheAhumMaitra/Aurora.git
+```
 
 ### Step 2 - Make the installation script executable and run it
-`chmod +x install.sh && ./install.sh`
+```
+chmod +x install.sh && ./install.sh
+```
 
 ## Manually
 
@@ -121,19 +125,29 @@ hyprshutdown
 ### Step 2. Clone this repository
 
 #### Clone this repo using `git`
-`git clone https://github.com/TheAhumMaitra/Aurora.git`
+```
+git clone https://github.com/TheAhumMaitra/Aurora.git
+```
 
 #### Copy all contents of `Aurora/dotfiles/.config`
-`cp -r ./Aurora/dotfiles/.config/* ~/.config/ `
+```
+cp -r ./Aurora/dotfiles/.config/* ~/.config/ 
+```
 
 ### Step 3. Compile and install scripts of Aurora
 
 #### Go to `.config/hypr/scripts`
-`cd ~/.config/hypr/scripts`
+```
+cd ~/.config/hypr/scripts
+```
 
 #### Install them 
 
-Run - `cargo install --path .`
+Please run :- 
+
+```
+cargo install --path .
+```
 
 **Note : You need to install compiler of Rust to do that**
 

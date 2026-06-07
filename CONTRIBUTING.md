@@ -161,7 +161,16 @@ Please follow [`Rust styleguide`](https://doc.rust-lang.org/style-guide/)
 
 ## Additional Notes
 
-## Issue and Pull Request Labels
+### AI Tool Policy
+
+Reviewing a pull request takes a lot of time, but utilizing AI techniques to create an illogical but convincing-looking one is quite simple. These guidelines are in place because it is unjust for other contributors and reviewers to have to spend so much time on this:
+
+1. You, not the AI, are in charge of reviewing and testing all LLM-generated content before submitting it.
+2. Except for translations, avoid using AI to react to review comments.
+
+If you don't, we'll close the Pull Request with an `ai-slop` label.
+
+### Issue and Pull Request Labels
 
 Aurora uses labels to organize issues, feature requests, and pull requests. These labels help contributors quickly understand the status, priority, and purpose of an issue or PR.
 
@@ -194,6 +203,7 @@ Aurora uses labels to organize issues, feature requests, and pull requests. Thes
 | `duplicate` | Already reported elsewhere. |
 | `invalid` | Not considered a valid issue. |
 | `wontfix` | Will not be addressed at this time. |
+| `ai-slop` | AI-generated content without testing, not followed [`AI Tool Policy`](#ai-tool-policy) |
 
 ### Area Labels
 

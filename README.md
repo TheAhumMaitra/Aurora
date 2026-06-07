@@ -143,7 +143,7 @@ cd ~/.config/hypr/scripts
 
 #### Install them 
 
-Please run :- 
+**Please run** :- 
 
 ```
 cargo install --path .
@@ -184,6 +184,7 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 rm -rf ~/.config/nvim/.git
 ```
 # Support
+
 ## Discord Server
 We have a [`Discord server`](https://discord.gg/7PCYXWQjKP), where you can get help by the community
 
@@ -191,6 +192,12 @@ We have a [`Discord server`](https://discord.gg/7PCYXWQjKP), where you can get h
 You can also ask your question in [`Github discussion's Q&A Category`](https://github.com/TheAhumMaitra/Aurora/discussions) also.
 
 **Any issues regarding Aurora can be reported in Github's issues**
+
+# Code of Conduct
+Please read [`Code of Conduct for Aurora before communication`](CODE_OF_CONDUCT.md)
+
+# Contributing
+We wholeheartedly endorse your approach to support! Please kindly read [`Contribution Guidelines of Aurora and it's related projects`](CONTRIBUTING.md)
 
 # License
 GNU Public License V3 or later

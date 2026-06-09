@@ -1060,6 +1060,63 @@ build_rust_scripts() {
   return 0
 }
 
+install_rust_packages() {
+  next_step "Installing Rust packages"
+
+  if ! command -v cargo &>/dev/null; then
+    print_error "cargo is required to install Rust packages"
+    echo "  Install Rust/Cargo first, then rerun the installer."
+    return 1
+  fi
+
+  local -A rust_package_groups=(
+    [cargo_tools]="
+            tarts
+        "
+  )
+
+  if [ "$DRY_RUN" = true ]; then
+    print_warning "[DRY RUN] Would install Rust packages with cargo:"
+    for category in cargo_tools; do
+      for package in ${rust_package_groups[$category]}; do
+        echo "  - cargo install $package"
+      done
+    done
+    return 0
+  fi
+
+  local failed_packages=()
+  local installed_count=0
+  local total_packages=0
+
+  for category in cargo_tools; do
+    for package in ${rust_package_groups[$category]}; do
+      ((++total_packages))
+
+      if command -v "$package" &>/dev/null || [ -x "$HOME/.cargo/bin/$package" ]; then
+        print_success "Rust package '$package' already installed"
+      else
+        log_info "Installing Rust package via cargo: $package"
+        if cargo install "$package"; then
+          ((++installed_count))
+          log_command "Installed Rust package: $package"
+        else
+          failed_packages+=("$package")
+          log_command "Failed to install Rust package: $package"
+        fi
+      fi
+    done
+  done
+
+  if [ ${#failed_packages[@]} -gt 0 ]; then
+    print_error "Some Rust packages failed (${#failed_packages[@]}/$total_packages):"
+    printf '%s\n' "${failed_packages[@]}" | sed 's/^/  - /'
+    return 1
+  fi
+
+  print_success "Rust package installation completed ($installed_count/$total_packages packages installed/updated)"
+}
+
 install_waytrogen_aurora() {
   next_step "Installing waytrogen-aurora"
 
@@ -1706,6 +1763,7 @@ main() {
   if [ "$DRY_RUN" = false ]; then
     install_sddm_theme
     build_rust_scripts
+    install_rust_packages
     install_waytrogen_aurora
     setup_lazyvim
     copy_dotfiles
@@ -1718,6 +1776,8 @@ main() {
 
     next_step "Building and installing Rust scripts"
     print_warning "[DRY RUN] Would build and install Rust scripts"
+
+    install_rust_packages
 
     next_step "Installing waytrogen-aurora"
     print_warning "[DRY RUN] Would clone/build/install waytrogen-aurora and compile schemas"

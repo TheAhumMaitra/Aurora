@@ -99,35 +99,41 @@ hl.window_rule({
 	name = "Weather tui used by Aurora",
 	match = { class = "weathr" },
 	float = true,
-	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
 hl.window_rule({
 	name = "Bluetooth manager used by Aurora",
 	match = { class = "bluetui" },
 	float = true,
-	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
 hl.window_rule({
 	name = "Playback manager used by Aurora",
 	match = { class = "wiremix" },
 	float = true,
-	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
 hl.window_rule({
 	name = "Wifi manager used by Aurora",
 	match = { class = "wifitui" },
 	float = true,
-	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
 hl.window_rule({
 	name = "Graphical system resources monitor used by Aurora",
 	match = { class = "btop" },
 	float = true,
-	size = {"monitor_w * 0.8", "monitor_h * 0.8"}
+	size = { "monitor_w * 0.8", "monitor_h * 0.8" },
 })
 hl.window_rule({
 	name = "Battery monitor used by Aurora",
 	match = { class = "jolt" },
 	float = true,
-	size = {"monitor_w * 0.7", "monitor_h * 0.7"}
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
+})
+-- screensaver
+hl.window_rule({
+	name = "Aurora screensaver",
+	match = { class = "org.aurora.screensaver" },
+	fullscreen = true,
 })

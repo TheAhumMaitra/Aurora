@@ -25,5 +25,10 @@
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 
--- default hyprcursor theme 
+-- default hyprcursor theme
 hl.env("HYPRCURSOR_THEME", "Nordzy-cursors-white")
+
+-- set default softwares
+hl.env("EDITOR", "nvim")
+hl.env("BROWSER", "zen-browser")
+hl.env("FILE_MANAGER", "nautilus")

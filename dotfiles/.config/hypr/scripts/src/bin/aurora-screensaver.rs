@@ -37,18 +37,15 @@ fn input_listener(exit_flag: Arc<AtomicBool>) {
     let mut buf = [0u8; 1];
 
     loop {
-        if handle.read(&mut buf).is_ok() {
-            match buf[0] {
-                27 | b'q' | b'Q' => {
-                    // ESC = 27
-                    exit_flag.store(true, Ordering::SeqCst);
-                    break;
-                }
-                _ => {}
+        match handle.read(&mut buf) {
+            Ok(1) => {
+                exit_flag.store(true, Ordering::SeqCst);
+                break;
             }
+            Ok(0) => break,
+            Err(_) => break,
+            _ => {}
         }
-
-        thread::sleep(Duration::from_millis(50));
     }
 }
 

@@ -16,106 +16,51 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crossterm::event::{self, Event, KeyCode};
 use std::{
-    io::{self, Read},
-    process::{Child, Command},
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
-    thread,
+    process::Command,
     time::{Duration, Instant},
 };
 
-const EFFECTS: &[&str] = &[
-    "matrix",
-    "life",
-    "maze",
-    "boids",
-    "cube",
-    "crab",
-    "donut",
-    "pipes",
-    "plasma",
-    "fire",
-    "terrain",
-    "constellation",
-];
-
-fn spawn_tarts(effect: &str) -> Child {
-    Command::new("tarts")
-        .arg(effect)
-        .spawn()
-        .expect("failed to start tarts")
-}
-
-fn input_listener(exit_flag: Arc<AtomicBool>) {
-    let stdin = io::stdin();
-    let mut handle = stdin.lock();
-    let mut buf = [0u8; 1];
-
-    loop {
-        match handle.read(&mut buf) {
-            Ok(1) => {
-                exit_flag.store(true, Ordering::SeqCst);
-                break;
-            }
-            Ok(0) => break,
-            Err(_) => break,
-            _ => {}
-        }
-    }
-}
-
-fn main() {
-    // hide cursor
-    print!("\x1b[?25l");
-
-    let exit_flag = Arc::new(AtomicBool::new(false));
-    let flag_clone = exit_flag.clone();
-
-    thread::spawn(move || {
-        input_listener(flag_clone);
-    });
+fn main() -> std::io::Result<()> {
+    let mut child = Command::new("termflix")
+        .args(["--clean", "--cycle", "15"])
+        .spawn()?;
 
     let start = Instant::now();
 
-    for effect in EFFECTS.iter().cycle() {
-        let mut child = spawn_tarts(effect);
+    loop {
+        if start.elapsed() >= Duration::from_secs(450) {
+            let _ = child.kill();
+            break;
+        }
 
-        let mut elapsed = 0;
+        if event::poll(Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
+                match key.code {
+                    KeyCode::Esc
+                    | KeyCode::Left
+                    | KeyCode::Right
+                    | KeyCode::Char('q')
+                    | KeyCode::Char('r')
+                    | KeyCode::Char('b')
+                    | KeyCode::Char('c')
+                    | KeyCode::Char('h') => {
+                        // allow termflix keybinds
+                    }
 
-        loop {
-            // Exit after 2 minutes
-            if start.elapsed() >= Duration::from_secs(450) {
-                let _ = child.kill();
-                let _ = child.wait();
-                print!("\x1b[?25h");
-                return;
-            }
-
-            if exit_flag.load(Ordering::SeqCst) {
-                let _ = child.kill();
-                let _ = child.wait();
-                print!("\x1b[?25h");
-                return;
-            }
-
-            thread::sleep(Duration::from_millis(100));
-            elapsed += 100;
-
-            if elapsed >= 15_000 {
-                break;
-            }
-
-            if let Ok(Some(_)) = child.try_wait() {
-                break;
+                    _ => {
+                        let _ = child.kill();
+                        break;
+                    }
+                }
             }
         }
 
-        let _ = child.kill();
-        let _ = child.wait();
+        if child.try_wait()?.is_some() {
+            break;
+        }
     }
 
-    print!("\x1b[?25h");
+    Ok(())
 }

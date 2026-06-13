@@ -24,7 +24,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 const EFFECTS: &[&str] = &[
@@ -78,17 +78,25 @@ fn main() {
         input_listener(flag_clone);
     });
 
+    let start = Instant::now();
+
     for effect in EFFECTS.iter().cycle() {
         let mut child = spawn_tarts(effect);
 
         let mut elapsed = 0;
 
         loop {
+            // Exit after 2 minutes
+            if start.elapsed() >= Duration::from_secs(450) {
+                let _ = child.kill();
+                let _ = child.wait();
+                print!("\x1b[?25h");
+                return;
+            }
+
             if exit_flag.load(Ordering::SeqCst) {
                 let _ = child.kill();
                 let _ = child.wait();
-
-                // restore cursor
                 print!("\x1b[?25h");
                 return;
             }
@@ -96,7 +104,7 @@ fn main() {
             thread::sleep(Duration::from_millis(100));
             elapsed += 100;
 
-            if elapsed >= 30_000 {
+            if elapsed >= 15_000 {
                 break;
             }
 

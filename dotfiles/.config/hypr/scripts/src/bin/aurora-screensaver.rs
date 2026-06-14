@@ -17,21 +17,15 @@
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crossterm::event::{self, Event, KeyCode};
-use std::{
-    process::Command,
-    time::{Duration, Instant},
-};
+use std::{process::Command, time::Duration};
 
 fn main() -> std::io::Result<()> {
     let mut child = Command::new("termflix")
         .args(["--clean", "--cycle", "15"])
         .spawn()?;
 
-    let start = Instant::now();
-
     loop {
-        if start.elapsed() >= Duration::from_secs(450) {
-            let _ = child.kill();
+        if child.try_wait()?.is_some() {
             break;
         }
 
@@ -46,19 +40,16 @@ fn main() -> std::io::Result<()> {
                     | KeyCode::Char('b')
                     | KeyCode::Char('c')
                     | KeyCode::Char('h') => {
-                        // allow termflix keybinds
+                        // Let termflix handle these
                     }
 
                     _ => {
                         let _ = child.kill();
+                        let _ = child.wait();
                         break;
                     }
                 }
             }
-        }
-
-        if child.try_wait()?.is_some() {
-            break;
         }
     }
 

@@ -16,21 +16,47 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::{fs, process::Command};
+use std::{
+    fs::{self, OpenOptions},
+    path::Path,
+    process::Command,
+};
+
+const LOCK_FILE: &str = "/tmp/aurora-screensaver.lock";
+
+fn aurora_running() -> bool {
+    Command::new("pgrep")
+        .args(["-f", "org.aurora.screensaver"])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
 
 fn main() {
-    let lock = "/tmp/aurora-screensaver.lock";
+    // If a lock exists but Aurora is not running,
+    // the lock is stale. Remove it.
+    if Path::new(LOCK_FILE).exists() && !aurora_running() {
+        let _ = fs::remove_file(LOCK_FILE);
+    }
 
-    // HARD GUARD: exit immediately if already running
-    if fs::metadata(lock).is_ok() {
+    // Prevent duplicate launches
+    let lock = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(LOCK_FILE);
+
+    if lock.is_err() {
         return;
     }
 
-    // create lock BEFORE anything else
-    let _ = fs::write(lock, "running");
+    // If Aurora somehow started between the stale-lock check
+    // and lock acquisition, don't launch another copy.
+    if aurora_running() {
+        let _ = fs::remove_file(LOCK_FILE);
+        return;
+    }
 
-    // spawn screensaver (BLOCKING)
-    let status = Command::new("kitty")
+    let result = Command::new("kitty")
         .args([
             "--config",
             "NONE",
@@ -47,8 +73,10 @@ fn main() {
         ])
         .status();
 
-    // cleanup ALWAYS (even crash)
-    let _ = fs::remove_file(lock);
+    // Always remove the lock when Kitty exits
+    let _ = fs::remove_file(LOCK_FILE);
 
-    let _ = status;
+    if let Err(err) = result {
+        eprintln!("Failed to launch Aurora screensaver: {err}");
+    }
 }

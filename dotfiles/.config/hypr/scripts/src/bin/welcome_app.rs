@@ -19,7 +19,9 @@
 use aurora::load_css;
 use gtk::gdk;
 use gtk::prelude::*;
-use gtk::{Align, Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, Orientation};
+use gtk::{
+    Align, Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, Orientation,
+};
 use gtk4 as gtk;
 use whoami;
 
@@ -50,62 +52,62 @@ fn main() {
         // Welcome label with separate Aurora text
         let welcome_box = GtkBox::new(Orientation::Horizontal, 0);
         welcome_box.set_halign(Align::Center);
-        
+
         let welcome_text = Label::builder()
             .label("Welcome to ")
             .halign(Align::Center)
             .build();
         welcome_text.add_css_class("welcome-label");
-        
+
         let aurora_text = Label::builder()
             .label("Aurora")
             .halign(Align::Center)
             .build();
         aurora_text.add_css_class("aurora-text");
-        
+
         welcome_box.append(&welcome_text);
         welcome_box.append(&aurora_text);
 
         // Hello username with separate colored username
         let hello_box = GtkBox::new(Orientation::Horizontal, 0);
         hello_box.set_halign(Align::Center);
-        
+
         let hello_text = Label::builder()
             .label("Hello ")
             .halign(Align::Center)
             .build();
         hello_text.add_css_class("hello");
-        
+
         let username_text = Label::builder()
             .label(&username)
             .halign(Align::Center)
             .build();
         username_text.add_css_class("username");
-        
+
         hello_box.append(&hello_text);
         hello_box.append(&username_text);
 
         let keybind_box = GtkBox::new(Orientation::Horizontal, 0);
         keybind_box.set_halign(Align::Center);
-        
+
         let keybind_prefix = Label::builder()
             .label("Press ")
             .halign(Align::Center)
             .build();
         keybind_prefix.add_css_class("keybind-label");
-        
+
         let keybind_key = Label::builder()
             .label("SUPER + H")
             .halign(Align::Center)
             .build();
         keybind_key.add_css_class("keybinds-help-warn");
-        
+
         let keybind_suffix = Label::builder()
             .label(" to see all keybinds")
             .halign(Align::Center)
             .build();
         keybind_suffix.add_css_class("keybind-label");
-        
+
         keybind_box.append(&keybind_prefix);
         keybind_box.append(&keybind_key);
         keybind_box.append(&keybind_suffix);

@@ -18,15 +18,12 @@
 use std::{process::Command, thread, time::Duration};
 
 fn main() {
-    // Stop Aurora screensaver if running
     let _ = Command::new("pkill")
-        .args(["-f", "aurora-screensaver"])
+        .args(["-f", "org.aurora.screensaver"])
         .status();
 
-    // Give Kitty/Aurora a moment to exit cleanly
-    thread::sleep(Duration::from_millis(250));
+    thread::sleep(Duration::from_millis(300));
 
-    // Start Hyprlock
     if let Err(err) = Command::new("hyprlock").spawn() {
         eprintln!("Failed to launch hyprlock: {err}");
     }

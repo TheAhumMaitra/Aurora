@@ -16,42 +16,17 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crossterm::event::{self, Event, KeyCode};
-use std::{process::Command, time::Duration};
+use std::process::Command;
 
 fn main() -> std::io::Result<()> {
-    let mut child = Command::new("termflix")
-        .args(["--clean", "--cycle", "15"])
-        .spawn()?;
-
-    loop {
-        if child.try_wait()?.is_some() {
-            break;
-        }
-
-        if event::poll(Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Esc
-                    | KeyCode::Left
-                    | KeyCode::Right
-                    | KeyCode::Char('q')
-                    | KeyCode::Char('r')
-                    | KeyCode::Char('b')
-                    | KeyCode::Char('c')
-                    | KeyCode::Char('h') => {
-                        // Let termflix handle these
-                    }
-
-                    _ => {
-                        let _ = child.kill();
-                        let _ = child.wait();
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    Command::new("termflix")
+        .args([
+            "--clean",
+            "--cycle", "15",
+            "--screensaver",
+            "--screensaver-keys",
+        ])
+        .status()?;
 
     Ok(())
 }

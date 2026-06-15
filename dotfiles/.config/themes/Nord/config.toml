@@ -16,3 +16,6 @@ icon_theme = "Yaru-blue-dark"
 publisher = "arcticicestudio"
 extension_name = "nord-visual-studio-code"
 theme_name = "Nord"
+
+[zed]
+theme_name = "Nord Dark"

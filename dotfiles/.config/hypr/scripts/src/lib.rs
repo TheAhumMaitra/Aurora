@@ -17,6 +17,7 @@
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use serde::Deserialize;
+use serde_json::{Value, json};
 use std::fs;
 use std::io::Read;
 
@@ -119,6 +120,7 @@ struct Config {
     settings: Option<Settings>,
     gtk: Option<GtkOptions>,
     vscode: Option<VsCodeOptions>,
+    zed: Option<ZedOptions>,
 }
 
 // get options inside of the theme configuration file's settings category (we only need required options)
@@ -126,6 +128,12 @@ struct Config {
 struct Settings {
     script: Option<String>,
     interpreter: Option<String>,
+}
+
+// get zed settinsg from theme configuration file
+#[derive(Deserialize, Debug)]
+struct ZedOptions {
+    theme_name: String,
 }
 
 // get options inside of the theme configuration file's settings GTK (we only need required options)
@@ -158,7 +166,7 @@ pub fn apply_theme(theme_name: &str) {
         .map(|c| c.name.clone())
         .unwrap_or_else(|| theme_name.to_string());
 
-    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop"]; //directories want to be copied
+    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed"]; //directories want to be copied
 
     let message = format!("{display_name} is applied!");
 
@@ -185,6 +193,7 @@ pub fn apply_theme(theme_name: &str) {
     if let Some(config) = &config {
         apply_gtk_options(&paths, config);
         apply_vscode_options(&paths, config);
+        apply_zed_options(&paths, config);
     }
 
     // write selected theme directory into the theme name log file
@@ -404,7 +413,54 @@ fn write_gtk_settings(
 
     fs::write(settings_path, lines.join("\n") + "\n").expect("Failed to write gtk settings.ini");
 }
+fn apply_zed_options(paths: &AuroraPaths, config: &Config) {
+    let Some(zed) = &config.zed else {
+        return;
+    };
 
+    let theme_name = zed.theme_name.trim();
+
+    if theme_name.is_empty() {
+        eprintln!("Missing theme_name in [zed]");
+        return;
+    }
+
+    let settings_path = paths.config.join("zed/settings.json");
+
+    if let Err(error) = write_zed_settings(&settings_path, theme_name) {
+        eprintln!("Failed to update Zed settings: {error}");
+    }
+}
+fn write_zed_settings(
+    settings_path: &Path,
+    theme_name: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let content = fs::read_to_string(settings_path).unwrap_or_default();
+
+    let mut settings: Value = if content.trim().is_empty() {
+        json!({})
+    } else {
+        json5::from_str(&content).unwrap_or_else(|_| json!({}))
+    };
+
+    // Make sure the root is an object
+    if !settings.is_object() {
+        settings = json!({});
+    }
+
+    settings["theme"] = Value::String(theme_name.to_string());
+
+    if let Some(parent) = settings_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    fs::write(
+        settings_path,
+        serde_json::to_string_pretty(&settings)?,
+    )?;
+
+    Ok(())
+}
 fn apply_vscode_options(paths: &AuroraPaths, config: &Config) {
     let Some(vscode) = &config.vscode else {
         return;
@@ -484,82 +540,26 @@ fn vscode_extension_is_installed(home: &Path, extension_id: &str) -> bool {
     })
 }
 
-const VSCODE_THEME_SETTING_PREFIXES: [&str; 3] = [
-    "\"workbench.colorTheme\":",
-    "\"workbench.preferredDarkColorTheme\":",
-    "\"workbench.preferredLightColorTheme\":",
-];
-
 fn write_vscode_settings(settings_path: &Path, theme_name: &str) -> std::io::Result<()> {
-    let content = fs::read_to_string(settings_path).unwrap_or_else(|_| "{\n}\n".to_string());
-    let escaped_theme_name = escape_json_string(theme_name);
-    let mut lines: Vec<String> = if content.trim().is_empty() || content.trim() == "{}" {
-        vec!["{".to_string(), "}".to_string()]
-    } else {
-        content.lines().map(String::from).collect()
-    };
+    let mut settings: Value = fs::read_to_string(settings_path)
+        .ok()
+        .and_then(|content| serde_json::from_str(&content).ok())
+        .unwrap_or_else(|| json!({}));
 
-    lines.retain(|line| !is_vscode_theme_setting(line));
+    settings["workbench.colorTheme"] = Value::String(theme_name.to_string());
 
-    let insert_index = match lines.iter().position(|line| line.trim() == "{") {
-        Some(index) => index + 1,
-        None => {
-            lines = vec!["{".to_string(), "}".to_string()];
-            1
-        }
-    };
+    settings["workbench.preferredDarkColorTheme"] = Value::String(theme_name.to_string());
 
-    for (offset, line) in vscode_theme_setting_lines(&escaped_theme_name)
-        .into_iter()
-        .enumerate()
-    {
-        lines.insert(insert_index + offset, line);
-    }
+    settings["workbench.preferredLightColorTheme"] = Value::String(theme_name.to_string());
 
     if let Some(parent) = settings_path.parent() {
         fs::create_dir_all(parent)?;
     }
 
-    fs::write(settings_path, lines.join("\n") + "\n")
+    fs::write(settings_path, serde_json::to_string_pretty(&settings)?)?;
+
+    Ok(())
 }
-
-fn is_vscode_theme_setting(line: &str) -> bool {
-    let trimmed = line.trim_start();
-    VSCODE_THEME_SETTING_PREFIXES
-        .iter()
-        .any(|prefix| trimmed.starts_with(prefix))
-}
-
-fn vscode_theme_setting_lines(escaped_theme_name: &str) -> [String; 3] {
-    [
-        format!("  \"workbench.colorTheme\": \"{escaped_theme_name}\","),
-        format!("  \"workbench.preferredDarkColorTheme\": \"{escaped_theme_name}\","),
-        format!("  \"workbench.preferredLightColorTheme\": \"{escaped_theme_name}\","),
-    ]
-}
-
-fn escape_json_string(value: &str) -> String {
-    let mut escaped = String::new();
-
-    for character in value.chars() {
-        match character {
-            '"' => escaped.push_str("\\\""),
-            '\\' => escaped.push_str("\\\\"),
-            '\n' => escaped.push_str("\\n"),
-            '\r' => escaped.push_str("\\r"),
-            '\t' => escaped.push_str("\\t"),
-            '\u{08}' => escaped.push_str("\\b"),
-            '\u{0C}' => escaped.push_str("\\f"),
-            character if character.is_control() => {
-                escaped.push_str(&format!("\\u{:04x}", character as u32));
-            }
-            character => escaped.push(character),
-        }
-    }
-
-    escaped
-}
-
 fn copy_theme_path(source: &Path, target: &Path) -> std::io::Result<()> {
     if source.is_file() {
         if should_copy(source, target)? {
@@ -702,6 +702,7 @@ pub fn download_theme(repo_url: String) {
 mod tests {
     use super::{
         Config, copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings,
+        write_zed_settings,
     };
     use std::fs;
     use std::path::PathBuf;
@@ -789,6 +790,38 @@ mod tests {
         );
 
         fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn write_zed_settings_creates_theme_setting() {
+        let root = test_dir("zed-settings-empty");
+        let settings_path = root.join("zed/settings.json");
+
+        write_zed_settings(&settings_path, "Catppuccin Mocha").unwrap();
+
+        assert_eq!(
+            fs::read_to_string(&settings_path).unwrap(),
+            "{\n  \"theme\": \"Catppuccin Mocha\"\n}\n"
+        );
+    }
+    #[test]
+    fn write_zed_settings_updates_theme_setting() {
+        let root = test_dir("zed-settings-update");
+        let settings_path = root.join("zed/settings.json");
+
+        fs::create_dir_all(settings_path.parent().unwrap()).unwrap();
+
+        fs::write(
+            &settings_path,
+            "{\n  \"theme\": \"Old Theme\",\n  \"vim_mode\": true\n}\n",
+        )
+        .unwrap();
+
+        write_zed_settings(&settings_path, "Catppuccin Mocha").unwrap();
+
+        assert_eq!(
+            fs::read_to_string(&settings_path).unwrap(),
+            "{\n  \"theme\": \"Catppuccin Mocha\",\n  \"vim_mode\": true\n}\n"
+        );
     }
 
     #[test]

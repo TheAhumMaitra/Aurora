@@ -435,29 +435,44 @@ fn write_zed_settings(
     settings_path: &Path,
     theme_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let content = fs::read_to_string(settings_path).unwrap_or_default();
+    // Read existing settings if present
+    let content = match fs::read_to_string(settings_path) {
+        Ok(content) => content,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(err) => return Err(err.into()),
+    };
 
+    // Parse existing settings
     let mut settings: Value = if content.trim().is_empty() {
         json!({})
     } else {
-        json5::from_str(&content).unwrap_or_else(|_| json!({}))
+        json5::from_str(&content)?
     };
 
-    // Make sure the root is an object
+    // Ensure root is an object
     if !settings.is_object() {
-        settings = json!({});
+        return Err("Zed settings root must be a JSON object".into());
     }
 
+    // Update theme
     settings["theme"] = Value::String(theme_name.to_string());
 
+    // Create parent directory if needed
     if let Some(parent) = settings_path.parent() {
         fs::create_dir_all(parent)?;
     }
 
+    // Write back
     fs::write(
         settings_path,
-        serde_json::to_string_pretty(&settings)?,
+        format!("{}\n", serde_json::to_string_pretty(&settings)?),
     )?;
+
+    println!(
+        "Updated Zed theme '{}' in {}",
+        theme_name,
+        settings_path.display()
+    );
 
     Ok(())
 }

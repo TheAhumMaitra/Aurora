@@ -15,3 +15,6 @@ icon_theme = "Yaru-blue"
 publisher = "enkia"
 extension_name = "tokyo-night"
 theme_name = "Tokyo Night"
+
+[zed]
+theme_name = "Tokyo Night"

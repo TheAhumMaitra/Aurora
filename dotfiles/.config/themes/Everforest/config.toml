@@ -16,3 +16,6 @@ icon_theme = "Yaru-sage"
 publisher = "sainnhe"
 extension_name = "everforest"
 theme_name = "Everforest Dark"
+
+[zed]
+theme_name = "Everforest"

@@ -19,3 +19,6 @@ icon_theme = "Yaru-grey"
 publisher = "Aliqyan-21"
 extension_name = "darkvoid"
 theme_name = "darkvoid"
+
+[zed]
+theme_name = "Dark Void"

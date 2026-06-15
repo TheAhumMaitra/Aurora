@@ -20,3 +20,6 @@ icon_theme = "Yaru-purple"
 publisher = "dracula-theme"
 extension_name = "theme-dracula"
 theme_name = "Dracula Theme"
+
+[zed]
+theme_name = "Dracula"

@@ -1,0 +1,59 @@
+# Everblush ;)
+
+theme[main_bg]="#141b1e"
+theme[main_fg]="#dadada"
+
+theme[title]="#67b0e8"
+theme[hi_fg]="#6cbfbf"
+theme[selected_bg]="#232a2d"
+theme[selected_fg]="#dadada"
+
+theme[inactive_fg]="#b3b9b8"
+
+# Graph colors
+theme[graph_text]="#67b0e8"
+theme[meter_bg]="#232a2d"
+
+# CPU
+theme[cpu_box]="#67b0e8"
+theme[cpu_start]="#8ccf7e"
+theme[cpu_mid]="#e5c76b"
+theme[cpu_end]="#e57474"
+
+# Memory
+theme[mem_box]="#c47fd5"
+theme[mem_start]="#6cbfbf"
+theme[mem_mid]="#67b0e8"
+theme[mem_end]="#c47fd5"
+
+# Network
+theme[net_box]="#6cbfbf"
+theme[download_start]="#67b0e8"
+theme[download_mid]="#6cbfbf"
+theme[download_end]="#8ccf7e"
+
+theme[upload_start]="#e5c76b"
+theme[upload_mid]="#c47fd5"
+theme[upload_end]="#e57474"
+
+# Process colors
+theme[proc_box]="#8ccf7e"
+theme[proc_misc]="#b3b9b8"
+
+# Temperature
+theme[temp_start]="#8ccf7e"
+theme[temp_mid]="#e5c76b"
+theme[temp_end]="#e57474"
+
+# Terminal colors
+theme[black]="#141b1e"
+theme[red]="#e57474"
+theme[green]="#8ccf7e"
+theme[yellow]="#e5c76b"
+theme[blue]="#67b0e8"
+theme[magenta]="#c47fd5"
+theme[cyan]="#6cbfbf"
+theme[white]="#dadada"
+
+theme[gray]="#b3b9b8"
+theme[dark_gray]="#232a2d"

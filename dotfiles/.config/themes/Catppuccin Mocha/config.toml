@@ -17,3 +17,6 @@ icon_theme = "Yaru-purple"
 publisher = "Catppuccin"
 extension_name = "catppuccin-vsc"
 theme_name = "Catppuccin Mocha"
+
+[zed]
+theme_name = "Catppuccin Mocha"

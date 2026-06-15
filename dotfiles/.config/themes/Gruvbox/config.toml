@@ -16,3 +16,6 @@ icon_theme = "Yaru-wartybrown-dark"
 publisher = "jdinhlife"
 extension_name = "gruvbox"
 theme_name = "Gruvbox Dark Soft"
+
+[zed]
+theme_name = "Gruvbox Dark Soft"

@@ -17,3 +17,6 @@ icon_theme = "Yaru-blue-dark"
 publisher = "mvllow"
 extension_name = "rose-pine"
 theme_name = "Rosé Pine"
+
+[zed]
+theme_name = "Rosé Pine"

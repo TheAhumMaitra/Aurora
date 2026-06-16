@@ -27,6 +27,9 @@ config-file = ./colors.ghostty
 keybind = ctrl+z=close_surface
 keybind = ctrl+d=new_split:right
 
+# disable prompt for closing surfaces
+confirm-close-surface = false
+
 # Empty values reset the configuration to the default value
 font-family = "JetBrainsMono Nerd Font"
 font-style = "Medium"

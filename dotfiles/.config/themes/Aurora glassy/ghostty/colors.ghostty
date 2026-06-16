@@ -1,0 +1,4 @@
+#for blurry terminal
+background = 000000
+foreground = ffffff
+background-opacity = 0.2

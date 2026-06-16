@@ -16,9 +16,13 @@
 #       You should have received a copy of the GNU General Public License
 #       along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
-background = 000000
-foreground = ffffff
-background-opacity = 0.2
+#default colors
+config-file = ./colors.ghostty
+
+#for blurry terminal
+#background = 000000
+# foreground = ffffff
+#background-opacity = 0.2
 
 keybind = ctrl+z=close_surface
 keybind = ctrl+d=new_split:right

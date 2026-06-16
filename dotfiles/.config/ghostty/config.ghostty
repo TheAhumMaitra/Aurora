@@ -29,3 +29,7 @@ keybind = ctrl+d=new_split:right
 
 # Empty values reset the configuration to the default value
 font-family = "JetBrainsMono Nerd Font"
+font-style = "Medium"
+font-style-bold = "ExtraBold"
+font-style-italic = "Medium Italic"
+font-style-bold-italic = "ExtraBold Italic"

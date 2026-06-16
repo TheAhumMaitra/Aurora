@@ -166,7 +166,7 @@ pub fn apply_theme(theme_name: &str) {
         .map(|c| c.name.clone())
         .unwrap_or_else(|| theme_name.to_string());
 
-    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed"]; //directories want to be copied
+    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty"]; //directories want to be copied
 
     let message = format!("{display_name} is applied!");
 

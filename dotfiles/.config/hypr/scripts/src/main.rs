@@ -136,7 +136,9 @@ fn main() {
                     .spawn()
                     .expect("Failed to run the binary");
             } else {
-                println!("Requested executable binary not found in PATH. Try to install the scripts again in PATH!");
+                println!(
+                    "Requested executable binary not found in PATH. Try to install the scripts again in PATH!"
+                );
             }
         }
     }

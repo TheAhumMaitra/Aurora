@@ -131,6 +131,13 @@ hl.window_rule({
 	float = true,
 	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
+hl.window_rule({
+	name = "",
+	match = { class = "xdg-desktop-portal-gtk" },
+	float = true,
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
+})
+-- xdg-desktop-portal-gtk
 -- screensaver
 hl.window_rule({
 	name = "Aurora screensaver",

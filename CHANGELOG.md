@@ -1,5 +1,116 @@
 ## [unreleased]
 
+### ⚡ Performance & Improvements
+
+- Improved margin and padding on notification
+- Add spdx header
+- Show theme name from the config file not directory
+- Make btop floating window little bit larger
+- Changed icons
+- Mark default theme as step
+- Remove docs and website from main repo
+- Improved pulseaudio (aka audio) module
+- Remove some texts from README (not required)
+- The installation script now pulls changes before updating
+- Strech the image and change default width of the theme switcher's window
+- Update some crates version
+- Update `crago.lock`
+- Using dynamic color values for welcome app
+- Changed the format
+- Removed duplicate values and improved the colors
+- Add github templates
+- Add `AI Tool Policy`
+- Enhance README
+- Add `contributing` and `code of conduct` section in README
+- Improved screensaver and added support for screensaver
+- Increase timeout for screensaver
+- Add copyright notices
+- Decreased the time of changing the effect and it's now aligned perfectly with `hypridl` config, it will exit beofore hyprlock triggers by hypridle
+- Switch to termflix
+- Remove timoeut to exit the screensaver
+- Increased time to close screensaver and using exact class of the window to close
+- Format
+- Format
+
+### 🐛 Bug Fixes
+
+- Remove wrong license on `.vscode` folder and fix gtk issues
+- Added some comments
+- Set default theme as `Aurora Default`
+- Exclude user configs
+- Add git keep to keep the user related folders
+- Fix i88n production error
+- Remove contents of i88n/en.yaml for vercel production
+- Remove prod errors for video shortcode
+- Set default theme
+- Remove unesseary shellbang and `Installation script` text from some files, fault of copy pasting copyright notices lol
+- Typos are fixed, added favicon and removed not required files
+- Rename duplicate button
+- Remove unesseary shellbangs
+- Remove nwg dock configs for yet
+- The theme switcher's config.tom;'s fields validation was wrong, feat: Add license field for theme's config and made wallpaper sources filds better
+- Add some copyright notices in some scripts
+- Fixed the bug which was ending the installation without even starting
+- Fixed some bugs for installation script and added more better features
+- Fixed some crtical bugs for installation script
+- Fixed one critical bug which was not copying contents of the config
+- Fixed the bug which was not installing the theme switcher
+- Fixed gtk theme reset command
+- Fixed the structure of custom alyouts file and rmeoved it from the `custom_layout` directory, now it's easier to add more layouts and also I was facing a error which was saying `hl.layout` is already registerd
+- Improved layout switcher
+- Add README files
+- FIxed critical error about installation script's sudo-rs implmentation
+- Fix sudo-rs moving issue
+- Fixed the file name
+- Fix file name conventions
+- Fized qt broken dependency error for SDDM
+- Fixed warning, gtk doesn't allow percent for there
+- Forget to update the old refresh script bruh. NOW it is good
+- Mark last step as step
+- Remove external thmes, I downloaded
+- Fixed ESC based closing not working
+- Remove some warnings before compiling
+- Remoev duplicate values
+- Fixed a typo, which was causing issues
+- Fixed the timeouts
+- Update Crago lock
+- Update Cargo lock
+- Fixed the problem which was not writing Zed's theme
+- Remove my external themes, they are not default ones
+
+### 💼 Other
+
+- Fixed icon issues
+- Fixed ASCII art
+- Add assests
+- Add one required Cargo pacakge in README
+- Adding more git commit message styles
+
+### 📚 Documentation
+
+- Add tutorial to install external themes
+- Fix vercel prod error
+- Add default cursor theme name and some helpful instructions
+- Update installation setps
+- Add keybinds page
+- Updated the way of creating themes, added more information about theme's configuration file's structure
+- Updated new packages requirement, added 2 new packges (which are tuis required for wifi and bluetooth)
+- Added one required package
+- Update docs
+- Add sub-commands of Aurora's CLI
+- Update mannual installation steps
+- Add required pacakges, fix: updated installation script to install required pacakges
+- Add a rough contributing.md
+- Add Support section in README along with Discord server link
+- Add new documentation
+
+### 📦 Packages
+
+- Upgraded `which` pacakage
+- Removed unused pacakge
+- Removed unused pacakge and replaced with required pacakge in installation script
+- Added required pacakges
+
 ### 🚀 Features
 
 - Add theme switcher (preview, test) and Dracula theme
@@ -96,70 +207,40 @@
 - Add devin wiki
 - Now theme switcher does suppport VS Code and optimized it, so it's fast :D
 - Add wallpaper preview on selecting current theme on theme switcher
-
-### 🐛 Bug Fixes
-
-- Remove wrong license on `.vscode` folder and fix gtk issues
-- Added some comments
-- Set default theme as `Aurora Default`
-- Exclude user configs
-- Add git keep to keep the user related folders
-- Fix i88n production error
-- Remove contents of i88n/en.yaml for vercel production
-- Remove prod errors for video shortcode
-- Set default theme
-- Fix vercel prod error
-- Remove unesseary shellbang and `Installation script` text from some files, fault of copy pasting copyright notices lol
-- Typos are fixed, added favicon and removed not required files
-- Rename duplicate button
-- Remove unesseary shellbangs
-- Remove nwg dock configs for yet
-- The theme switcher's config.tom;'s fields validation was wrong, feat: Add license field for theme's config and made wallpaper sources filds better
-- Add some copyright notices in some scripts
-- Fixed the bug which was ending the installation without even starting
-- Fixed some bugs for installation script and added more better features
-- Fixed some crtical bugs for installation script
-- Fixed one critical bug which was not copying contents of the config
-- Fixed the bug which was not installing the theme switcher
-- Fixed gtk theme reset command
-- Fixed the structure of custom alyouts file and rmeoved it from the `custom_layout` directory, now it's easier to add more layouts and also I was facing a error which was saying `hl.layout` is already registerd
-- Improved layout switcher
-- Add README files
-- FIxed critical error about installation script's sudo-rs implmentation
-- Fix sudo-rs moving issue
-- Fixed the file name
-- Fix file name conventions
-- Fized qt broken dependency error for SDDM
-- Fixed warning, gtk doesn't allow percent for there
-- Forget to update the old refresh script bruh. NOW it is good
-- Mark last step as step
-- Remove external thmes, I downloaded
-
-### 💼 Other
-
-- Add default cursor theme name and some helpful instructions
-- Improved margin and padding on notification
-- Fixed icon issues
-- Add spdx header
-- Show theme name from the config file not directory
-- Make btop floating window little bit larger
-- Fixed ASCII art
-- Changed icons
-- Mark default theme as step
-- Remove docs and website from main repo
-- Improved pulseaudio (aka audio) module
-- Remove some texts from README (not required)
-- The installation script now pulls changes before updating
-
-### 📚 Documentation
-
-- Add tutorial to install external themes
-- Update installation setps
-- Add keybinds page
-- Updated the way of creating themes, added more information about theme's configuration file's structure
-- Updated new packages requirement, added 2 new packges (which are tuis required for wifi and bluetooth)
-- Added one required package
-- Update docs
-- Add sub-commands of Aurora's CLI
-- Update mannual installation steps
-- Add required pacakges, fix: updated installation script to install required pacakges
+- Notification for theme applied still used folder name and improved the script a bit
+- Now users can resize a floating window by grabbing it with the mouse in the border corner
+- Add default miscs
+- Optimize stylig of preview image and panel
+- Enable snapping; enhancement: decreased the shadow's size a bit
+- Add `runscript` subcommand
+- Add theme based color switching on all Aurora's default guis
+- Add Aurora's custom css colorschsme file for all default themes
+- Make screensaver fullscreen
+- Add launcher to open screensaver by Aurora
+- Add screensaver support, used `tarts` for showing unique effects
+- Add support for installing rust tools
+- Add default softwares envs
+- Add support for it to exit by pressing any key
+- Add safety hooks
+- Add a script to close screensaver and spawn hyprlock
+- Add Zed support and using `serde_json` for better json handling
+- Add Zed theme for Catpuccin Theme
+- Add details about zed
+- Add Zed support for Dracula
+- Add Zed support for Gruvbox
+- Add Zed Support for Rosé Pine theme
+- Add Zed's support for Everforest
+- Add Zed support for Aurora Default
+- Add Zed's support for Aurora Glassy
+- Add Zed's support for Tokyo Night
+- Add Zed's support for Nord
+- Add default theme's files
+- Rely on new native support
+- Add support for Ghostty
+- Add ghostty's support for all default themes
+- Add theme based colors support, removed default no opacity white background ;)
+- Add default Ghostty's color configuration
+- Add a hotkey to launch secondary terminal - which is Ghostty
+- Add some font style
+- Disable prompt for closing surfaces
+- Avioid starting screensaver when hyprlock is active

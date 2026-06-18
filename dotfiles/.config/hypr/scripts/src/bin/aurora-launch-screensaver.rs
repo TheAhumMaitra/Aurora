@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //    Copyright (C) 2026 Ahum Maitra
-
-//      This program is free software: you can redistribute it and/or modify
-//      it under the terms of the GNU General Public License as published by
-//      the Free Software Foundation, either version 3 of the License, or
-//      (at your option) any later version.
-
-//      This program is distributed in the hope that it will be useful,
-//      but WITHOUT ANY WARRANTY; without even the implied warranty of
-//      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//      GNU General Public License for more details.
-
-//      You should have received a copy of the GNU General Public License
-//      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use std::{
     fs::{self, OpenOptions},
@@ -33,26 +33,28 @@ fn aurora_running() -> bool {
 }
 
 fn main() {
-    // If a lock exists but Aurora is not running,
-    // the lock is stale. Remove it.
+    // Don't launch the screensaver while the screen is locked.
+    if Command::new("pidof")
+        .arg("hyprlock")
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+    {
+        return;
+    }
+
+    // Remove stale lock file.
     if Path::new(LOCK_FILE).exists() && !aurora_running() {
         let _ = fs::remove_file(LOCK_FILE);
     }
 
-    // Prevent duplicate launches
-    let lock = OpenOptions::new()
+    // Prevent duplicate launches.
+    if OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(LOCK_FILE);
-
-    if lock.is_err() {
-        return;
-    }
-
-    // If Aurora somehow started between the stale-lock check
-    // and lock acquisition, don't launch another copy.
-    if aurora_running() {
-        let _ = fs::remove_file(LOCK_FILE);
+        .open(LOCK_FILE)
+        .is_err()
+    {
         return;
     }
 
@@ -73,7 +75,7 @@ fn main() {
         ])
         .status();
 
-    // Always remove the lock when Kitty exits
+    // Always remove the lock file when Kitty exits.
     let _ = fs::remove_file(LOCK_FILE);
 
     if let Err(err) = result {

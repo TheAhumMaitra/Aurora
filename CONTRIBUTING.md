@@ -144,17 +144,20 @@ While the prerequisites above must be satisfied prior to having your pull reques
 * Reference issues and pull requests liberally after the first line
 * When only changing documentation, include `[docs-only]` in the commit title
 * Consider starting the commit message with an applicable name:
-    * :enhancement-struct: when improving the format/structure of the code
+    * :pkg(add): when adding a pacakge 
+    * :pkg(rem): when removing a package
+    * :pkg(up-all): when upgrading all packages
+    * :pkg(up): when upgrading one pacakge
+    * :pkg(ups): when upgrading many pacakges
+    * :yipee: when you are adding changes in CONTRIBUTING.md
     * :sys_imv:  when improving performance
     * :water:  when plugging memory leaks (Mostly for code written in Lua)
-    * :docs_add: when writing docs
+    * :readme: when improving readme
     * :fix: when fixing a bug
-    * :fire: when removing code or files that are not needed
+    * :fire: when removing code or files, packages that are not needed
     * :cli: when fixing the CLI or adding features in CLI
     * :kawaii: when adding tests
     * :feat: when adding new features
-    * :up: when upgrading dependencies
-    * :down: when downgrading dependencies
 
 ### Rust Styleguide
 Please follow [`Rust styleguide`](https://doc.rust-lang.org/style-guide/)

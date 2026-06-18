@@ -158,6 +158,7 @@ While the prerequisites above must be satisfied prior to having your pull reques
     * :cli: when fixing the CLI or adding features in CLI
     * :kawaii: when adding tests
     * :feat: when adding new features
+    * :cl: when updating changelog
 
 ### Rust Styleguide
 Please follow [`Rust styleguide`](https://doc.rust-lang.org/style-guide/)

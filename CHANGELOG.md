@@ -1,246 +1,274 @@
-## [unreleased]
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## Unreleased
 
 ### ⚡ Performance & Improvements
 
-- Improved margin and padding on notification
-- Add spdx header
-- Show theme name from the config file not directory
-- Make btop floating window little bit larger
-- Changed icons
-- Mark default theme as step
-- Remove docs and website from main repo
-- Improved pulseaudio (aka audio) module
-- Remove some texts from README (not required)
-- The installation script now pulls changes before updating
-- Strech the image and change default width of the theme switcher's window
-- Update some crates version
-- Update `crago.lock`
-- Using dynamic color values for welcome app
-- Changed the format
-- Removed duplicate values and improved the colors
-- Add github templates
-- Add `AI Tool Policy`
-- Enhance README
-- Add `contributing` and `code of conduct` section in README
-- Improved screensaver and added support for screensaver
-- Increase timeout for screensaver
-- Add copyright notices
-- Decreased the time of changing the effect and it's now aligned perfectly with `hypridl` config, it will exit beofore hyprlock triggers by hypridle
-- Switch to termflix
-- Remove timoeut to exit the screensaver
-- Increased time to close screensaver and using exact class of the window to close
-- Format
-- Format
+- Improved margin and padding on notification ([dbcc15a](dbcc15af591fc4b767cf6642ce7b0689f84ed16e))
+- Add spdx header ([8f130a5](8f130a516643667660a61e0aab6ce0047604c43f))
+- Show theme name from the config file not directory ([0aec185](0aec18504737959012128179610b0a08a22cd2c3))
+- Make btop floating window little bit larger ([dc04ad0](dc04ad07466be7a63c52dc924e635e7c2f1b3ae8))
+- Changed icons ([f4bbd81](f4bbd8150032a2f0a3f1f7c1af0e4ce22e4cc600))
+- Mark default theme as step ([661371e](661371e71070cc3ef7554d8f9fcc6a5d5d3d6a56))
+- Remove docs and website from main repo ([7e3be72](7e3be72cb453c862e8cf57b7bd5f8df7b1a89a89))
+- Improved pulseaudio (aka audio) module ([acad8e1](acad8e1665ba6a7e5f238ddb02f82c6e333fc0c4))
+- Remove some texts from README (not required) ([8fed06a](8fed06a4bdbed951209431917d98c0140ec93c01))
+- The installation script now pulls changes before updating ([b4e029e](b4e029e63c5ccd98741a6c41e1bcacc9698b6d71))
+- Strech the image and change default width of the theme switcher's window ([098c32a](098c32a7722474c316c23782f9ba752e9497174e))
+- Update some crates version ([3d4a3ac](3d4a3ac1c1cb05fed2dea29059a0e29e5ab82786))
+- Update `crago.lock` ([89130bd](89130bd9706f1d60a733890c500d19278ad54509))
+- Using dynamic color values for welcome app ([42b4069](42b40698a2ef4178248b82ea1ee64d19892063c0))
+- Changed the format ([a554681](a5546814aa4f77e999c6d5166277b2065318e152))
+- Removed duplicate values and improved the colors ([f00bb55](f00bb552eaf32e0dd64170a7afceb0511bca0292))
+- Add github templates ([6b4a42c](6b4a42c8425be376e803a011f43368926216c991))
+- Add `AI Tool Policy` ([78dfd3b](78dfd3bc7130ba579f497da407212a95e901c3ae))
+- Enhance README ([c0a7a5f](c0a7a5f6b0061ed07ac085094634b19c9b483eb4))
+- Add `contributing` and `code of conduct` section in README ([5b51ca8](5b51ca81a1adbb0e9efa0a17fbbe603821a6e9f0))
+- Improved screensaver and added support for screensaver ([cea5ca5](cea5ca54d74b6c21bf552d4dd77355688d3e9f0c))
+- Increase timeout for screensaver ([69f3e45](69f3e458a3da630a1d12cf21a708841fab70052b))
+- Add copyright notices ([a87966e](a87966e32d46e0d7010b27a95b65c91ba084a3eb))
+- Decreased the time of changing the effect and it's now aligned perfectly with `hypridl` config, it will exit beofore hyprlock triggers by hypridle ([d02c1ee](d02c1ee28bc647c4ea0ce85c55e6abe5be9cd07b))
+- Switch to termflix ([922ac63](922ac63887848443e6d9303691fb0ab2d8726bfe))
+- Remove timoeut to exit the screensaver ([39d37bd](39d37bdbd6c3d09c9ebb4c8ff55aa0a2b9181e0d))
+- Increased time to close screensaver and using exact class of the window to close ([3c0c631](3c0c63153fbd121a9bf4a9c9799fb7b8f6795393))
+- Format ([f6828fc](f6828fcd277e08750d72a44e834b0c6f53662629))
+- Format ([499fed1](499fed17f440a27b3235e262527ae8fdf465219e))
 
 ### 🐛 Bug Fixes
 
-- Remove wrong license on `.vscode` folder and fix gtk issues
-- Added some comments
-- Set default theme as `Aurora Default`
-- Exclude user configs
-- Add git keep to keep the user related folders
-- Fix i88n production error
-- Remove contents of i88n/en.yaml for vercel production
-- Remove prod errors for video shortcode
-- Set default theme
-- Remove unesseary shellbang and `Installation script` text from some files, fault of copy pasting copyright notices lol
-- Typos are fixed, added favicon and removed not required files
-- Rename duplicate button
-- Remove unesseary shellbangs
-- Remove nwg dock configs for yet
-- The theme switcher's config.tom;'s fields validation was wrong, feat: Add license field for theme's config and made wallpaper sources filds better
-- Add some copyright notices in some scripts
-- Fixed the bug which was ending the installation without even starting
-- Fixed some bugs for installation script and added more better features
-- Fixed some crtical bugs for installation script
-- Fixed one critical bug which was not copying contents of the config
-- Fixed the bug which was not installing the theme switcher
-- Fixed gtk theme reset command
-- Fixed the structure of custom alyouts file and rmeoved it from the `custom_layout` directory, now it's easier to add more layouts and also I was facing a error which was saying `hl.layout` is already registerd
-- Improved layout switcher
-- Add README files
-- FIxed critical error about installation script's sudo-rs implmentation
-- Fix sudo-rs moving issue
-- Fixed the file name
-- Fix file name conventions
-- Fized qt broken dependency error for SDDM
-- Fixed warning, gtk doesn't allow percent for there
-- Forget to update the old refresh script bruh. NOW it is good
-- Mark last step as step
-- Remove external thmes, I downloaded
-- Fixed ESC based closing not working
-- Remove some warnings before compiling
-- Remoev duplicate values
-- Fixed a typo, which was causing issues
-- Fixed the timeouts
-- Update Crago lock
-- Update Cargo lock
-- Fixed the problem which was not writing Zed's theme
-- Remove my external themes, they are not default ones
+- Remove wrong license on `.vscode` folder and fix gtk issues ([bfc94c7](bfc94c7953ce2d57c1ec601d3ec8e6a09e20bcf9))
+- Added some comments ([e39ba20](e39ba20f0a3f94e06b36ce9904277927e2f60b26))
+- Set default theme as `Aurora Default` ([35e1ae0](35e1ae0aac7e516702a3adc693efe5069aa54ed7))
+- Exclude user configs ([3c7aeab](3c7aeab1d377831e6eacc87283fda46a69c854e6))
+- Add git keep to keep the user related folders ([4ff07da](4ff07daa91ba8264169f2954a0ca7478c4ec88ed))
+- Fix i88n production error ([88604f9](88604f9219a042dca69dae50d956da3eadb2be1a))
+- Remove contents of i88n/en.yaml for vercel production ([6a57f7b](6a57f7bb27d60b37d38902999d64be12e4528e02))
+- Remove prod errors for video shortcode ([b69efdb](b69efdba20dbaa8afd8636bde2f2ad8d8e004aa2))
+- Set default theme ([780e8df](780e8df7d5f659ddc5a7918067207fdf5ccaf491))
+- Remove unesseary shellbang and `Installation script` text from some files, fault of copy pasting copyright notices lol ([1857977](1857977ae626c3e661e92a87fec1c172f5d89fee))
+- Typos are fixed, added favicon and removed not required files ([3b52c92](3b52c92b2d99ca8a28dddf98bed9dda305bc4c94))
+- Rename duplicate button ([5e67ad5](5e67ad5d9cf73fa9deb3d209047c20d590c424aa))
+- Remove unesseary shellbangs ([6210950](621095008f0077a726437fb0ab5622d3ed69dc36))
+- Remove nwg dock configs for yet ([770ab50](770ab502ef64bc2d5a9246edfadb491f492b7fe3))
+- The theme switcher's config.tom;'s fields validation was wrong, feat: Add license field for theme's config and made wallpaper sources filds better ([47bca51](47bca51efbefffae621de439b68d5971f133a957))
+- Add some copyright notices in some scripts ([e898d34](e898d348f147a2817154c407eecdd697279442ad))
+- Fixed the bug which was ending the installation without even starting ([d90a62d](d90a62d4f4f9cceb355c29f43bf5c18cd70e0910))
+- Fixed some bugs for installation script and added more better features ([53b73ae](53b73ae2e242b55cb6101dfa860d2e779337e518))
+- Fixed some crtical bugs for installation script ([dfdb22d](dfdb22d52ef8e88276fd58c8f840e014e3769532))
+- Fixed one critical bug which was not copying contents of the config ([f932dd8](f932dd80adfaf54b31d30e5aab565c5e7d83494e))
+- Fixed the bug which was not installing the theme switcher ([387b242](387b242a256d3a8a4f0495bfdc4d2203f8f837ca))
+- Fixed gtk theme reset command ([5bbcf25](5bbcf25ee9455e6f9c3f508997728c90b5a96ac4))
+- Fixed the structure of custom alyouts file and rmeoved it from the `custom_layout` directory, now it's easier to add more layouts and also I was facing a error which was saying `hl.layout` is already registerd ([7418243](7418243aed4e25a7427dfe355b1572a87222da10))
+- Improved layout switcher ([f69e73f](f69e73fab2cdbe88ad8587ce10f89139cd433b94))
+- Add README files ([6ff7bb4](6ff7bb4ecba7e5faf24dda2a6bf82835e0701870))
+- FIxed critical error about installation script's sudo-rs implmentation ([080a7d1](080a7d135c474a69436e016f32ea97b5754983f3))
+- Fix sudo-rs moving issue ([0ae536b](0ae536bead7660b966ca477b67b0103a7018188a))
+- Fixed the file name ([1d1217a](1d1217ac72872e6a641d32b5307b9b1922c7abfd))
+- Fix file name conventions ([0b44cf5](0b44cf5a34504ecf8ef62ddcf9eb60e679c1510d))
+- Fized qt broken dependency error for SDDM ([6c31b2b](6c31b2b2c1c7e95c02e519e94dabe5a8ace2e5fe))
+- Fixed warning, gtk doesn't allow percent for there ([f06b76a](f06b76a9e686fc2c2883c2c4df773c10df6d5758))
+- Forget to update the old refresh script bruh. NOW it is good ([2ea76ec](2ea76ec8beee933dd01c3c772cc440d1ed63323b))
+- Mark last step as step ([fa53b7e](fa53b7e72140da9297eaede4d61bb1646abb2071))
+- Remove external thmes, I downloaded ([6d01c39](6d01c391b71774bf9eb877abf5537e0731e72cde))
+- Fixed ESC based closing not working ([34c98a6](34c98a6cee40107304b1a4b0ca328f74f1be6998))
+- Remove some warnings before compiling ([9a6d93c](9a6d93c55f162f27abe76f6932ff08af9c8905a5))
+- Remoev duplicate values ([150e663](150e6632e258ce27f86ed18b40e6fe415c7d03fd))
+- Fixed a typo, which was causing issues ([180c4fd](180c4fd09bd4040ff1aef34ef784ba8bfada1d25))
+- Fixed the timeouts ([eab9e87](eab9e87fc1c2152cd156bd401b5ca08889732411))
+- Update Crago lock ([6d00244](6d0024499486e41020dec9eec22868b69f1c320b))
+- Update Cargo lock ([70ff44b](70ff44bc25eca6ee78ffab1537c23d1e09448165))
+- Fixed the problem which was not writing Zed's theme ([226615d](226615d32228ece3d5b05b9c1096171b7b085d1c))
+- Remove my external themes, they are not default ones ([82bd7e7](82bd7e72f8ec6bc7eb2f6a36c486af8714102044))
 
 ### 💼 Other
 
-- Fixed icon issues
-- Fixed ASCII art
-- Add assests
-- Add one required Cargo pacakge in README
-- Adding more git commit message styles
+- Publish to Github ([c9f90fe](c9f90fecac905302a2bca94ce7ce1c2b90fc5746))
+- Add mise config ([cfb68b1](cfb68b117c824461aa65695113123db2937a2a02))
+- Add confrigration ([315f562](315f562b332a0684060f8536324d567e6660dd5b))
+- Add wlogout config ([d41fe43](d41fe438c9e454ff563dfa8f86d0e4dec23b6ee6))
+- Add support for special keys (limited yet) and reset rofi configuration ([3a6d0d5](3a6d0d5f20044acaf6334d6a9ebbbf72aa3ccccd))
+- Add greetings with username in welcome app ([b27c64f](b27c64f1280620f771c6e0c334d03a8ee0fa779d))
+- Add Rust analyer settings for vs code ([18092fb](18092fbfa6fc3254049ab99c4d1ffa346b3cc4ab))
+- Add blur and improve wlogout config ([0891de2](0891de2d869cce0a072f4326a8c26c6739d29732))
+- Add default theme's color binds to everywhere* ([039ec87](039ec8743c8cce9cac914f7f38d0bde587bed51b))
+- Add some new features ([510d333](510d3339bee7f38d1ef70c5d4aa11aa415c4a6ca))
+- Feat : Add Tokyo Night ([e04bda1](e04bda11a612d42aedaac12fe6beb0bb9ae45f3e))
+- Bulk update, preparing for Lua :) ([e266704](e2667049ecebcce2353769b28827a52652cd8b65))
+- Update README with preview section ([3bf28a8](3bf28a84f763ed331723f27672cc0e026a748757))
+- Feat : Solved issues with Hyprland color changing ([529ac85](529ac85676499f5ac38c4194d10525b5a06bcc80))
+- Feat New cli, new installation script ([6f8e25c](6f8e25ce145563c89ec1c46787aa563c23da8120))
+- Improved website and fixed some errors in Hero ([c3e4264](c3e4264a9150e863a1aaeb277ab09545df7b9a8a))
+- Fixed icon issues ([7677385](767738502e49bca6aaca8688fcb23f95926e4769))
+- Fixed ASCII art ([dfc5045](dfc5045fc6bc6c76b9fd471eba4e13be153f6ab4))
+- Merge branch 'hyprland-git-lua' ([e5738e8](e5738e879c4d2c3f3c9546f88800234ebb562c2e))
+- Merge `hyprland-git-lua` to `master` ([3b44301](3b443018c934d354be6eea42d288ddf957b2a222))
+- Add CHANGELOG (little bit inaccurate) ([83c86d3](83c86d364d6a9e4601d5cad457bef8a7a164443a))
+- Add assests ([068c8ed](068c8edbf5428e647b223fe5442b4bac7203254a))
+- Add new dependencies ([8d67a9e](8d67a9e267b5fe99096db53390ee859c3e94c649))
+- Add one required Cargo pacakge in README ([9585eff](9585efff2729e64b7ba183a7afc5a6aa84ccdaa6))
+- Adding more git commit message styles ([b8a3b83](b8a3b833bc9cb734c86822d93a426e4524c8aaac))
+- Add new git commit message style ([cda0643](cda0643b50a6463b9a1473fcb866545eff85d6fd))
+- Update Changelog ([0ef71e8](0ef71e8e4beb36a356fcd0564b93091777af729a))
 
 ### 📚 Documentation
 
-- Add tutorial to install external themes
-- Fix vercel prod error
-- Add default cursor theme name and some helpful instructions
-- Update installation setps
-- Add keybinds page
-- Updated the way of creating themes, added more information about theme's configuration file's structure
-- Updated new packages requirement, added 2 new packges (which are tuis required for wifi and bluetooth)
-- Added one required package
-- Update docs
-- Add sub-commands of Aurora's CLI
-- Update mannual installation steps
-- Add required pacakges, fix: updated installation script to install required pacakges
-- Add a rough contributing.md
-- Add Support section in README along with Discord server link
-- Add new documentation
+- Add tutorial to install external themes ([b79440e](b79440e8b1bbfd78ace22d34df3f677544c547b0))
+- Fix vercel prod error ([84b49d3](84b49d392929a23ebdcdc3fd63662be0c3bdc599))
+- Add default cursor theme name and some helpful instructions ([66b1fe8](66b1fe84cb7d2ce74f700b45f4f4e0838444b988))
+- Update installation setps ([e383509](e383509d5d17ee35fddcf4433c445622aa5d79f3))
+- Add keybinds page ([bf541cb](bf541cb730c61e728711a246aa738be7efde0c31))
+- Updated the way of creating themes, added more information about theme's configuration file's structure ([3f41eb4](3f41eb4fcf204fd14acfd89ef301309911fa1e4b))
+- Updated new packages requirement, added 2 new packges (which are tuis required for wifi and bluetooth) ([ba80246](ba802464ba0bc52987c5d5cacaa7b7cc42c3343f))
+- Added one required package ([cf652bb](cf652bb6c0ce45b61ce5bc5bbb1e66d1db01fedf))
+- Update docs ([37f1693](37f1693b118ea64a0a3cc8f729979eed351831d0))
+- Add sub-commands of Aurora's CLI ([2b7d75f](2b7d75f5bfab5efc74c067e59abb206bb8eb5010))
+- Update mannual installation steps ([9477d00](9477d00e101526ad06d2f5d8d6fd2f74b3894e67))
+- Add required pacakges, fix: updated installation script to install required pacakges ([8dbe5d3](8dbe5d3a8b3d95098022696d9a99f6e5e7a400f1))
+- Add a rough contributing.md ([f5cfa55](f5cfa551ef3a9f066662d671d19f47f8d1b5f64e))
+- Add Support section in README along with Discord server link ([e1cbb38](e1cbb38f463c26b77b453410a771f0ff2adb9aaa))
+- Add new documentation ([2f3c5c4](2f3c5c474d3bb8e63227b68c23e7b405c2db0e68))
 
 ### 📦 Packages
 
-- Upgraded `which` pacakage
-- Removed unused pacakge
-- Removed unused pacakge and replaced with required pacakge in installation script
-- Added required pacakges
+- Upgraded `which` pacakage ([4829f09](4829f09fd9dc327bdcca990bbf8fd8c218db24f6))
+- Removed unused pacakge ([5779e7e](5779e7ee474afed1b217f5e3500e2134144e7b29))
+- Removed unused pacakge and replaced with required pacakge in installation script ([969db44](969db44616176a8f3fbd0f991774d80400870e07))
+- Added required pacakges ([e4d844b](e4d844b311f968f1beed498e9901f7b875b07df4))
 
 ### 🚀 Features
 
-- Add theme switcher (preview, test) and Dracula theme
-- Add escape key exit on theme switcher
-- Add Catpuccin Mocha theme*
-- Add basic CLI and add wlogout for captuccin mocha and also added colors.conf support
-- Add settings app
-- Mostly all lua conversion completed for yet
-- Add some keybinds
-- Add up and down resizing support
-- Add proper license metadata and much more
-- Add `load_css` function in `lib.s` for DRY. Add waybar related keybinds, also added small aurora logo in waybar
-- Add trademark in Aurora name
-- Add CODE OF CONDUCT
-- Add installation tutorial in README
-- Add basic ghostty config
-- Now themes can have custom scripts
-- Add `ThemeInfo` command to view current theme's name (for yet, it justs prints name)
-- Add user config feature and add basic gtk theming support for Dracula theme
-- Added some crucial keybinds
-- Make papirus icon theme default for rofi and added `sudo-rs` recomandation in README
-- Add docs template (docs are not fully ready yet)
-- Add public
-- Add `Creating themes` tutorial in docs
-- Add preview video in README on this branch also
-- Add waybar window title max length for fixing overlapping and added tooltip for showing the full title on waybar's window title module
-- Add catagories in README
-- Add main website
-- Add `Aurora Glassy` theme
-- Add layer rule for rofi and waybar for `Aurora Glass` theme. It will not affect other themes
-- Add theme configuration support for Hyprland. Improve website a bit and added a recomanded package in README
-- Add navbar itemes
-- Make navigation item's text size little bit large
-- It's better to empty previous theme configs
-- Add gtk settings reset support before switching any theme
-- Add default cursor theme
-- Add wallaper switcher support
-- Add download-theme sub-command in cli and add some more options in theme config
-- Add refresh subcommand for refreshing the whole system
-- Improve installation script by adding safety checks. Also added aur extras group for adding external aur pacakges and also added yay installation if not avilable
-- Customized the installation script
-- Add some more packages in aur extras
-- Add search bar on theme switcher
-- Improved colorscheme of the theme switcher and added some padding in search bar
-- Added searh bar, catgorized listing in keybinds app and added safety hook not to delete user configs
-- Added a Hyprland layout switcher gui app
-- Remove Hyprsettings support
-- Add grid layout
-- Add new tui's for wifi and bluetooth and created custom wifi and bluetooth module for waybar
-- Add support for new tuis
-- Added custom weather module which will open a tui for showing weather details
-- Add support for the new tui for weather module in waybar on installation script
-- Add bluetooth manager and fixed wrong tui name
-- Added one package required by Aurora in installation script, docs: Updated docs about required pcakges, readme: Removed not rquired packages
-- Add resources monitor module for waybar and updated docs and installation script about it
-- Added battery monitor for Aurora, removed winow title feature for Aurora
-- Add jolt configuration
-- Add Rose Pine theme
-- Add Nord theme
-- Add waybar position switcher
-- Support `sudo-rs` by default for installation script
-- Added some existing keybinds
-- Add Macchina - neofetch like system information provider
-- Replecae macchina with leenfetch
-- Add new settings app (beta)
-- Add Gruvbox theme
-- Add Everforest theme
-- Add theme configuration file of Gruvbox
-- Add theme based foreground support for Waybar and improved Tokyo Night's color for foreground (rofi)
-- Add all themes preview
-- Add offical themes libary/ gallrey
-- Add search bar
-- Add support for copying all subdirectories and their files for the theme switcher and now Aurora supports neovim
-- Add Neovim themes for most themes
-- Add Neovim themes for Aurora's default theme
-- Switched to btop
-- Add Lazyvim setup during installation
-- Switch to Zen
-- Set theme scheme as dark always when theme changes via theme switcher for gtk
-- Add sddm support for Installation script
-- Improve the installer
-- Add default gtk theming support for theme switcher, removed main script from Dracula theme
-- Apply default theme after installation
-- Add Dracula theme's new background
-- Add external themes updatation feature
-- Add screenrecorder, it is visble in waybar
-- Enhanced the screenrecorder
-- Added new wallpapers, fix: Fixed the configuration, enhancement: Changed default wallpaper OF Tokto Night
-- Set default theme as Aurora Default
-- Add fullscreen keybinds
-- Users now can move the window
-- Add DeepWiki's wiki page's badge
-- Add new badges
-- Add devin wiki
-- Now theme switcher does suppport VS Code and optimized it, so it's fast :D
-- Add wallpaper preview on selecting current theme on theme switcher
-- Notification for theme applied still used folder name and improved the script a bit
-- Now users can resize a floating window by grabbing it with the mouse in the border corner
-- Add default miscs
-- Optimize stylig of preview image and panel
-- Enable snapping; enhancement: decreased the shadow's size a bit
-- Add `runscript` subcommand
-- Add theme based color switching on all Aurora's default guis
-- Add Aurora's custom css colorschsme file for all default themes
-- Make screensaver fullscreen
-- Add launcher to open screensaver by Aurora
-- Add screensaver support, used `tarts` for showing unique effects
-- Add support for installing rust tools
-- Add default softwares envs
-- Add support for it to exit by pressing any key
-- Add safety hooks
-- Add a script to close screensaver and spawn hyprlock
-- Add Zed support and using `serde_json` for better json handling
-- Add Zed theme for Catpuccin Theme
-- Add details about zed
-- Add Zed support for Dracula
-- Add Zed support for Gruvbox
-- Add Zed Support for Rosé Pine theme
-- Add Zed's support for Everforest
-- Add Zed support for Aurora Default
-- Add Zed's support for Aurora Glassy
-- Add Zed's support for Tokyo Night
-- Add Zed's support for Nord
-- Add default theme's files
-- Rely on new native support
-- Add support for Ghostty
-- Add ghostty's support for all default themes
-- Add theme based colors support, removed default no opacity white background ;)
-- Add default Ghostty's color configuration
-- Add a hotkey to launch secondary terminal - which is Ghostty
-- Add some font style
-- Disable prompt for closing surfaces
-- Avioid starting screensaver when hyprlock is active
+- Add theme switcher (preview, test) and Dracula theme ([49c29cb](49c29cb082597d60a9dec46e23279ef955de9ae2))
+- Add escape key exit on theme switcher ([42fa7f4](42fa7f49ae8a30d2bbb5f3e788410b30ba408048))
+- Add Catpuccin Mocha theme* ([1a4bf87](1a4bf879ab2d9ae6edd28d18db97e83116a3dacb))
+- Add basic CLI and add wlogout for captuccin mocha and also added colors.conf support ([7f42272](7f42272968d83bce125ec0e05e791f0b5e7367cd))
+- Add settings app ([9d1b189](9d1b189c3abf562cb876d0d5f5c7e773cd2f6856))
+- Mostly all lua conversion completed for yet ([0801e27](0801e278d8e371a2cf2f2e72f2be4ad0170e9789))
+- Add some keybinds ([c95059a](c95059a6d6907fdc952dd95d95c663047d9bd803))
+- Add up and down resizing support ([e02861f](e02861f3560eafa1022043e5ab1b515169207e97))
+- Add proper license metadata and much more ([32cf84c](32cf84cd8b9811241ce03c87a51daac72e73cb66))
+- Add `load_css` function in `lib.s` for DRY. Add waybar related keybinds, also added small aurora logo in waybar ([1e3928c](1e3928cb8f58c67271b173b7b04c1f6f042f6f4c))
+- Add trademark in Aurora name ([92253a7](92253a7349beda114c6a1c285a26f1d7b5dc6598))
+- Add CODE OF CONDUCT ([5aae6db](5aae6dbd134e891ce1a83ac4c6a3d8e88bef1f19))
+- Add installation tutorial in README ([ed20474](ed20474a06e5cd8f853c8ec9b65f7a5b5f0963d5))
+- Add basic ghostty config ([9e86aaf](9e86aaf1d914d1f00f17a6183106175707d77540))
+- Now themes can have custom scripts ([5b7b5ad](5b7b5ad4eed52c555a844c003bf77e4c960f224d))
+- Add `ThemeInfo` command to view current theme's name (for yet, it justs prints name) ([b47bb4b](b47bb4be1c1aebd566dc08ce738a6f93068eb7c6))
+- Add user config feature and add basic gtk theming support for Dracula theme ([2a1a281](2a1a2817693ad343056799ac0fb00d5a934d5e41))
+- Added some crucial keybinds ([158c816](158c816ebe108191764f5a690e239028d8f90434))
+- Make papirus icon theme default for rofi and added `sudo-rs` recomandation in README ([247feb9](247feb93af9530bef5a057e309188e207df5e23f))
+- Add docs template (docs are not fully ready yet) ([9cc2ddd](9cc2dddfdb6597e867811b0f986f104e238c6928))
+- Add public ([08c96d6](08c96d6f846b1a94fc3611f14961395887c4b11f))
+- Add `Creating themes` tutorial in docs ([c0159ae](c0159ae5d7cfa3122c2fa86ea8bf961651faf3e7))
+- Add preview video in README on this branch also ([e92dc27](e92dc275f3731b90ba95db3ea69ff752bd8f5850))
+- Add waybar window title max length for fixing overlapping and added tooltip for showing the full title on waybar's window title module ([5031dc7](5031dc74d7f0ac6a30a6b92123adfa1a69bf53de))
+- Add catagories in README ([2af06d3](2af06d36b4c8b51c8cf540e7638970296372de79))
+- Add main website ([1946261](1946261a58b5bab4200bab5591b2558c6b1230a2))
+- Add `Aurora Glassy` theme ([00f021f](00f021f80aa5b4a3fb1e15fc7d5893448a6d2015))
+- Add layer rule for rofi and waybar for `Aurora Glass` theme. It will not affect other themes ([59bd0ac](59bd0ac1bbb85eb325789b1b6b5e1d7eedb6280f))
+- Add theme configuration support for Hyprland. Improve website a bit and added a recomanded package in README ([da1a7d0](da1a7d05c4ed217be75da4d6f9c52119b8f7e684))
+- Add navbar itemes ([1d30d1f](1d30d1f03e559613f3ca8264bd33b5ce2b5b7b8d))
+- Make navigation item's text size little bit large ([e72d3c1](e72d3c1064f34d6a87ca27ee1c8540598d991163))
+- It's better to empty previous theme configs ([80362eb](80362ebb43edceca127fc66b26b403740a741e19))
+- Add gtk settings reset support before switching any theme ([1514ce4](1514ce4e7dd4f4f051615ea0af71a0d06458ab11))
+- Add default cursor theme ([10226a8](10226a8e8502fe36aa0350ba3bad85f90e0a1742))
+- Add wallaper switcher support ([45de610](45de6106c7bf7919d9b478c0c5f846002fe141b0))
+- Add download-theme sub-command in cli and add some more options in theme config ([0dc1ee8](0dc1ee8a6832e9464612d80c7a15c39be0ec75f1))
+- Add refresh subcommand for refreshing the whole system ([9a1e5a4](9a1e5a40a4cc8af2ce4cd372c6d5983f94fa7468))
+- Improve installation script by adding safety checks. Also added aur extras group for adding external aur pacakges and also added yay installation if not avilable ([325c26d](325c26d80d02951b23479b464971fa35d4d90763))
+- Customized the installation script ([3ea50f4](3ea50f4ce999eb5e9722bcf901a333ff65024fbb))
+- Add some more packages in aur extras ([95e0116](95e01161a96285b7658f15bcfda396d09e1ebb65))
+- Add search bar on theme switcher ([eb68c84](eb68c84142b32a6dd01563ab3dc50d01dcddab32))
+- Improved colorscheme of the theme switcher and added some padding in search bar ([e8fd59c](e8fd59cf396715d315175d0b5ae2fb58e718697b))
+- Added searh bar, catgorized listing in keybinds app and added safety hook not to delete user configs ([343fd15](343fd152c5e28eb5776a66bf60464313c1991711))
+- Added a Hyprland layout switcher gui app ([f730b02](f730b02413d599c1307c7514330e85fa9de8e9b8))
+- Remove Hyprsettings support ([c7e262a](c7e262a0ec56a3dc556586546eb6ec21b00c2f06))
+- Add grid layout ([85e2858](85e28583920f3dbf541a7ca4f9488c885594d4f2))
+- Add new tui's for wifi and bluetooth and created custom wifi and bluetooth module for waybar ([2a7c1c8](2a7c1c86e4e654d83fe3c0b34688eb09ae955a6b))
+- Add support for new tuis ([06d88d2](06d88d2c600802a61d994a9e20221f02ee4db68c))
+- Added custom weather module which will open a tui for showing weather details ([dd2d51c](dd2d51c540e17889ed21bdbb183d18a51c7fc94a))
+- Add support for the new tui for weather module in waybar on installation script ([e32df7c](e32df7c84e0e30cbb48fb1554e3478fdee58eb07))
+- Add bluetooth manager and fixed wrong tui name ([b19a6ad](b19a6adf31d5dd24362ca223f2b01d51607dc705))
+- Added one package required by Aurora in installation script, docs: Updated docs about required pcakges, readme: Removed not rquired packages ([830bbd4](830bbd496a7f544498cf92a90d557dfe84b93de3))
+- Add resources monitor module for waybar and updated docs and installation script about it ([aa859fc](aa859fc84034989672a61d70b30913418a949e9a))
+- Added battery monitor for Aurora, removed winow title feature for Aurora ([cb33ddd](cb33ddd8b4629c63ff83c93ff1c35b4aa7b50dc4))
+- Add jolt configuration ([f56eead](f56eead24a6a8621d8237e0b151298205ab89962))
+- Add Rose Pine theme ([bf8c928](bf8c928b4e537aedd7855b249db39b648de8e9cc))
+- Add Nord theme ([f50f004](f50f004cce99a2b18e82acb0ed1b001207af6dee))
+- Add waybar position switcher ([e5d8f91](e5d8f9197217f795a75c69b59f9bf379114c31f3))
+- Support `sudo-rs` by default for installation script ([84b0ef6](84b0ef6893b924f2047d696e5c6cf728e0c2ed47))
+- Added some existing keybinds ([5c0b0ea](5c0b0eaf8d18e663f6f25dd16c6cf56fc4cd3adc))
+- Add Macchina - neofetch like system information provider ([301df95](301df95c8b710f23d4aa416b81d5d2046a46b972))
+- Replecae macchina with leenfetch ([0438222](04382229fc9b8d319eab0a4f5fd1e4bc6e24f5af))
+- Add new settings app (beta) ([e052a11](e052a11f546e2af407aee50c0f4f78defc26613e))
+- Add Gruvbox theme ([50cafa4](50cafa43135e30fb694264b599f2cae2f6c7302c))
+- Add Everforest theme ([ed289de](ed289de7c021c2da73e2fe249d3ed7fce4642eca))
+- Add theme configuration file of Gruvbox ([8dfd091](8dfd091cbd8f9df5ac8b3176a704d869b2942180))
+- Add theme based foreground support for Waybar and improved Tokyo Night's color for foreground (rofi) ([5234533](52345332988c779a70b0138e493f19f3b7f88eba))
+- Add all themes preview ([9b07e3c](9b07e3c6d7b7a2cf741048d59d3393017024272e))
+- Add offical themes libary/ gallrey ([7630dca](7630dca992242eb9784d2e9f42d3a4cae19f71f5))
+- Add search bar ([a292081](a292081df2f7a247b989b769318fb2a57ee9eef4))
+- Add support for copying all subdirectories and their files for the theme switcher and now Aurora supports neovim ([57396f8](57396f83ea90d81315e7d51bf245952cf96f4251))
+- Add Neovim themes for most themes ([ac729d7](ac729d73d0788e0dfc0a503c99d37920101f4602))
+- Add Neovim themes for Aurora's default theme ([bf02bf4](bf02bf48c4bc86d2d50a3cf10fcb6ba1fd91d99c))
+- Switched to btop ([7d3acc1](7d3acc1c025135c05046101c320aa35d5e1443a4))
+- Add Lazyvim setup during installation ([78fa837](78fa837c4f75071e8780248a73e40cb7f855df6d))
+- Switch to Zen ([4b04ff8](4b04ff8ecf4feb47018260d153ca23a12743f371))
+- Set theme scheme as dark always when theme changes via theme switcher for gtk ([0687b6e](0687b6ef43947802d267c145f5c2d05115e2fa15))
+- Add sddm support for Installation script ([1a34e94](1a34e94766ac38de8c5da8e6f5da385d7e5c4c2e))
+- Improve the installer ([0bb3e4d](0bb3e4de5a1fcbbbf532e8b95ca7fc09b38ea08a))
+- Add default gtk theming support for theme switcher, removed main script from Dracula theme ([2ed086a](2ed086af0e4a246f93845ed9368c66c292c884a0))
+- Apply default theme after installation ([ad733c9](ad733c9f144abce17f9619ecf055f0b5c68207cf))
+- Add Dracula theme's new background ([ab8096e](ab8096e8ff448317819670c7758f8c40420a594f))
+- Add external themes updatation feature ([1271e5f](1271e5fc89bb3656d327e03651b0ac84cdf346cc))
+- Add screenrecorder, it is visble in waybar ([e53619b](e53619b5104d0e2d0edcd631758422fbaf58cdab))
+- Enhanced the screenrecorder ([fd5212f](fd5212f7fe248793e21e846853bda41f44984f2e))
+- Added new wallpapers, fix: Fixed the configuration, enhancement: Changed default wallpaper OF Tokto Night ([12b92e5](12b92e50d971f374ac7d3a5761d15969a5360bc1))
+- Set default theme as Aurora Default ([4ba0389](4ba0389abd6068acc7c238e7431742005d718563))
+- Add fullscreen keybinds ([b597ce8](b597ce880209c9919caea9c57d58cd77bfc96cc7))
+- Users now can move the window ([cc5cd90](cc5cd90e24009efb2c72d74472a9eb95918680be))
+- Add DeepWiki's wiki page's badge ([009ad9f](009ad9f6a1a7d1cc21c73c8ed97e2eab2338b9e9))
+- Add new badges ([17a19b1](17a19b1dff2604ebfbacfb87290dd3dd46e1168c))
+- Add devin wiki ([72cbb47](72cbb47e5ce3d2f0da84c180e4471d8dc2a273dd))
+- Now theme switcher does suppport VS Code and optimized it, so it's fast :D ([7eb3d82](7eb3d82651eb09d4d7ad63b98d8d9d4224e5274e))
+- Add wallpaper preview on selecting current theme on theme switcher ([908d9e3](908d9e3fa75a220555cfa1801b424945057db966))
+- Notification for theme applied still used folder name and improved the script a bit ([65d9a2e](65d9a2e053b745f1178f4f9e6c4b2c2a7295cc51))
+- Now users can resize a floating window by grabbing it with the mouse in the border corner ([b6193a4](b6193a471c36757ebc75c0225bf79642a530457e))
+- Add default miscs ([a571d3e](a571d3ea858edc08111bb6e480e6d3f07de83408))
+- Optimize stylig of preview image and panel ([8c355e9](8c355e99af49b4200cf06b30881972a8881f68ec))
+- Enable snapping; enhancement: decreased the shadow's size a bit ([8f0514c](8f0514c1ffa3d4efda73365a78ce93f8975ae7bc))
+- Add `runscript` subcommand ([b83e4a7](b83e4a79c4b6033ba2c17e410d5f45b933b3504f))
+- Add theme based color switching on all Aurora's default guis ([b897ef4](b897ef439da15734197aca32b6f4a9b4093dd2de))
+- Add Aurora's custom css colorschsme file for all default themes ([8478ce3](8478ce390db15726e1dd3b6ab70a2367061fbc20))
+- Make screensaver fullscreen ([03035f0](03035f0cfaf8d2fd3f04be4f5f6a6386821afb0b))
+- Add launcher to open screensaver by Aurora ([39244a9](39244a995ce1d5578588ca4e3ae20a9e79f70a3b))
+- Add screensaver support, used `tarts` for showing unique effects ([35192d2](35192d273f57f5ea9fc97a9e87cc84d522ab46cc))
+- Add support for installing rust tools ([1cc7256](1cc7256c5cb1f641fb46b453e563d82d7857a4f4))
+- Add default softwares envs ([4b6c10b](4b6c10bb9de6802b83d5feb21899d346808ac0de))
+- Add support for it to exit by pressing any key ([66b994e](66b994e73b38e20c85871c434314fa814b31e2a0))
+- Add safety hooks ([f420695](f420695d3ed2b59bb8232d5e882bc13bd9c5be46))
+- Add a script to close screensaver and spawn hyprlock ([04cc9ef](04cc9ef7954c3e0628e3f7a55ce18d90c8a80759))
+- Add Zed support and using `serde_json` for better json handling ([44578e2](44578e238d90a30fbee5cf7032ead1903dcee710))
+- Add Zed theme for Catpuccin Theme ([cfc2945](cfc29458b921a5335f28c8abffafe8384697ed78))
+- Add details about zed ([b729612](b729612cfb26bb6b64ceba7989e6daa69e72d65a))
+- Add Zed support for Dracula ([61f2743](61f2743e84b9ccb988a11d542f614b2d49c5f594))
+- Add Zed support for Gruvbox ([a297c40](a297c404ae83a7adc66d7a3991be3fe6478e15da))
+- Add Zed Support for Rosé Pine theme ([da161b6](da161b6d8bfd5036290e216f11179b3728362310))
+- Add Zed's support for Everforest ([df8495d](df8495d0e3c75ea3750ea24328d2fd11fef550ea))
+- Add Zed support for Aurora Default ([8031eef](8031eef508c7eb2600b507b46a66d0d7ec34c794))
+- Add Zed's support for Aurora Glassy ([732a47c](732a47c5d9c17e4f2b6d2895631b413276c0a0da))
+- Add Zed's support for Tokyo Night ([986d2f0](986d2f04344d0da8188969a10dabd22bbd9cf2ff))
+- Add Zed's support for Nord ([7345ca0](7345ca0eb238cea807289c0f08a35f80e918ab17))
+- Add default theme's files ([0358ec6](0358ec6927cd530008f8ab8481d86da10ad885df))
+- Rely on new native support ([12302f3](12302f3a4bc6d9cd0641144050e2e627690892e4))
+- Add support for Ghostty ([e66d25c](e66d25c174ef57f5f3c985d37145e3ad7af947ce))
+- Add ghostty's support for all default themes ([bdac7fa](bdac7faf1acd7f8e4f1a7721b52b2d07389a42d5))
+- Add theme based colors support, removed default no opacity white background ;) ([fb2a50d](fb2a50dec4a9bcd162a4cf84de4cf8c5e6a1f96d))
+- Add default Ghostty's color configuration ([d72c3a4](d72c3a4cabe1fcda479e247d711c25c8015229ce))
+- Add a hotkey to launch secondary terminal - which is Ghostty ([fc02f6c](fc02f6c5a42fe4f7e073d3eceb1ac03dcc5871c4))
+- Add some font style ([b5d7acf](b5d7acff075acffedcfb4f4e5779f434e982c641))
+- Disable prompt for closing surfaces ([1d38e59](1d38e59fb1eb5155a69d7aca9b8331bd0b38c961))
+- Avioid starting screensaver when hyprlock is active ([84f3e4e](84f3e4e94910a3302a2e0387eeaf76c75d660091))
+
+<!-- generated by git-cliff -->

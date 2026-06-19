@@ -23,6 +23,8 @@ use aurora::aurora_paths;
 use aurora::download_theme;
 use aurora::list_themes;
 
+use aurora::aurora_parse;
+
 use clap::{Parser, Subcommand};
 
 use std::process::{Command, Stdio};
@@ -50,7 +52,9 @@ enum Commands {
     /// Shows current Aurora's version and Aurora's cli version
     Version,
     /// Applies given theme globally
-    ApplyTheme { name: String },
+    ApplyTheme {
+        name: String,
+    },
     /// Lists all available themes
     ListThemes,
     /// Shows information about Aurora
@@ -58,13 +62,19 @@ enum Commands {
     /// Returns theme details
     ThemeInfo,
     ///Downloads a theme
-    DownloadTheme { git_repo_url: String },
+    DownloadTheme {
+        git_repo_url: String,
+    },
     ///Update all external themes
     UpdateThemes,
     ///Refresh the system
     Refresh,
     ///Run specified script
-    Runscript { binary_name: String },
+    Runscript {
+        binary_name: String,
+    },
+    /// Reload Aurora with updated configuration
+    Reload
 }
 
 fn main() {
@@ -111,6 +121,10 @@ fn main() {
                 .spawn()
                 .expect("failed to execute system refresh program");
         }
+        Commands::Reload => match aurora_parse() {
+            Ok(_) => println!("Aurora refreshed successfully."),
+            Err(e) => eprintln!("Aurora error: {e}"),
+        },
         Commands::UpdateThemes => {
             let paths = aurora_paths();
             let themes = paths.themes.clone();

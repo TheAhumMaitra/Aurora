@@ -166,7 +166,9 @@ pub fn apply_theme(theme_name: &str) {
         .map(|c| c.name.clone())
         .unwrap_or_else(|| theme_name.to_string());
 
-    let folders = ["waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty"]; //directories want to be copied
+    let folders = [
+        "waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty",
+    ]; //directories want to be copied
 
     let message = format!("{display_name} is applied!");
 
@@ -712,7 +714,123 @@ pub fn download_theme(repo_url: String) {
         .status()
         .expect("Failed to clone theme");
 }
+#[derive(Debug, Deserialize, Default)]
+pub struct AuroraConfig {
+    #[serde(default)]
+    pub ghostty: GhosttyConfig,
+}
 
+#[derive(Debug, Deserialize, Default)]
+pub struct GhosttyConfig {
+    #[serde(default)]
+    pub blur: bool,
+}
+
+pub fn load_config() -> Result<AuroraConfig, String> {
+    let paths = aurora_paths();
+
+    let config_path = paths.config.join("aurora.toml");
+
+    if !config_path.exists() {
+        return Err(format!(
+            "Aurora configuration file not found: {}",
+            config_path.display()
+        ));
+    }
+
+    let content =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read aurora.toml: {e}"))?;
+
+    toml::from_str(&content).map_err(|e| format!("Failed to parse aurora.toml: {e}"))
+}
+
+pub fn validate_config(_config: &AuroraConfig) -> Result<(), String> {
+    Ok(())
+}
+
+pub fn aurora_parse() -> Result<(), String> {
+    let config = load_config()?;
+
+    validate_config(&config)?;
+
+    config.ghostty.apply()?;
+
+    Ok(())
+}
+
+impl GhosttyConfig {
+    pub fn apply(&self) -> Result<(), String> {
+        ghostty_blur(self.blur)
+    }
+}
+
+fn ghostty_config_path() -> PathBuf {
+    aurora_paths().config.join("ghostty/config.ghostty")
+}
+
+pub fn ghostty_blur(enabled: bool) -> Result<(), String> {
+    let config_path = ghostty_config_path();
+
+    let content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read Ghostty config: {e}"))?;
+
+    let mut output = Vec::new();
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+
+        match trimmed {
+            "config-file = ./colors.ghostty" => {
+                if enabled {
+                    output.push("#config-file = ./colors.ghostty".to_string());
+                } else {
+                    output.push("config-file = ./colors.ghostty".to_string());
+                }
+            }
+
+            "#config-file = ./colors.ghostty" => {
+                if enabled {
+                    output.push("#config-file = ./colors.ghostty".to_string());
+                } else {
+                    output.push("config-file = ./colors.ghostty".to_string());
+                }
+            }
+
+            "#background = 000000" | "background = 000000" => {
+                if enabled {
+                    output.push("background = 000000".to_string());
+                } else {
+                    output.push("#background = 000000".to_string());
+                }
+            }
+
+            "#foreground = ffffff" | "foreground = ffffff" => {
+                if enabled {
+                    output.push("foreground = ffffff".to_string());
+                } else {
+                    output.push("#foreground = ffffff".to_string());
+                }
+            }
+
+            "#background-opacity = 0.2" | "background-opacity = 0.2" => {
+                if enabled {
+                    output.push("background-opacity = 0.2".to_string());
+                } else {
+                    output.push("#background-opacity = 0.2".to_string());
+                }
+            }
+
+            _ => output.push(line.to_string()),
+        }
+    }
+
+    fs::write(&config_path, output.join("\n") + "\n")
+        .map_err(|e| format!("Failed to write Ghostty config: {e}"))?;
+
+    Ok(())
+}
+
+// tests
 #[cfg(test)]
 mod tests {
     use super::{

@@ -22,7 +22,8 @@ fn main() -> std::io::Result<()> {
     Command::new("termflix")
         .args([
             "--clean",
-            "--cycle", "15",
+            "--cycle",
+            "15",
             "--screensaver",
             "--screensaver-keys",
         ])

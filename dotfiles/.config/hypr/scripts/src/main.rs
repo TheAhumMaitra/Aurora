@@ -23,6 +23,7 @@ use aurora::aurora_paths;
 use aurora::download_theme;
 use aurora::ghostty_blur_change;
 use aurora::list_themes;
+use aurora::screensaver_change;
 use aurora::welcome_app_change;
 
 use aurora::aurora_parse;
@@ -71,6 +72,8 @@ enum Commands {
     Runscript { binary_name: String },
     /// Reload Aurora with updated configuration
     Reload,
+    /// Turn Aurora screensaver on or off
+    Screensaver { state: ToggleState },
     /// Change Ghostty settings
     Ghostty {
         #[command(subcommand)]
@@ -166,6 +169,16 @@ fn main() {
         Commands::Reload => match aurora_parse() {
             Ok(_) => println!("Aurora refreshed successfully."),
             Err(e) => eprintln!("Aurora error: {e}"),
+        },
+        Commands::Screensaver { state } => match screensaver_change(state.enabled()) {
+            Ok(_) => println!(
+                "Aurora screensaver {}.",
+                state.to_possible_value().unwrap().get_name()
+            ),
+            Err(err) => {
+                eprintln!("Failed to change Aurora screensaver: {err}");
+                std::process::exit(1);
+            }
         },
         Commands::Ghostty { command } => match command {
             GhosttyCommands::Blur { state } => match ghostty_blur_change(state.enabled()) {

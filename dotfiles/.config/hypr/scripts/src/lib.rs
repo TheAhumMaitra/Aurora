@@ -714,10 +714,14 @@ pub fn download_theme(repo_url: String) {
         .status()
         .expect("Failed to clone theme");
 }
+
 #[derive(Debug, Deserialize, Default)]
 pub struct AuroraConfig {
     #[serde(default)]
     pub ghostty: GhosttyConfig,
+
+    #[serde(default)]
+    pub settings: SettingsSec,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -726,9 +730,14 @@ pub struct GhosttyConfig {
     pub blur: bool,
 }
 
+#[derive(Debug, Deserialize, Default)]
+pub struct SettingsSec {
+    #[serde(default)]
+    pub welcome_app: bool,
+}
+
 pub fn load_config() -> Result<AuroraConfig, String> {
     let paths = aurora_paths();
-
     let config_path = paths.config.join("aurora.toml");
 
     if !config_path.exists() {
@@ -738,8 +747,8 @@ pub fn load_config() -> Result<AuroraConfig, String> {
         ));
     }
 
-    let content =
-        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read aurora.toml: {e}"))?;
+    let content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read aurora.toml: {e}"))?;
 
     toml::from_str(&content).map_err(|e| format!("Failed to parse aurora.toml: {e}"))
 }
@@ -749,87 +758,126 @@ pub fn validate_config(_config: &AuroraConfig) -> Result<(), String> {
 }
 
 pub fn aurora_parse() -> Result<(), String> {
+    let paths = aurora_paths();
     let config = load_config()?;
 
     validate_config(&config)?;
 
-    config.ghostty.apply()?;
+    config.ghostty.apply(&paths)?;
+    config.settings.apply(&paths)?;
 
     Ok(())
 }
 
 impl GhosttyConfig {
-    pub fn apply(&self) -> Result<(), String> {
-        ghostty_blur(self.blur)
+    pub fn apply(&self, paths: &AuroraPaths) -> Result<(), String> {
+        ghostty_blur(paths, self.blur)
     }
 }
 
-fn ghostty_config_path() -> PathBuf {
-    aurora_paths().config.join("ghostty/config.ghostty")
+impl SettingsSec {
+    pub fn apply(&self, paths: &AuroraPaths) -> Result<(), String> {
+        autostart_welcome_app(paths, self.welcome_app)
+    }
 }
 
-pub fn ghostty_blur(enabled: bool) -> Result<(), String> {
-    let config_path = ghostty_config_path();
+fn edit_file(
+    path: &Path,
+    edit: impl FnOnce(&mut Vec<String>) -> Result<(), String>,
+) -> Result<(), String> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
 
-    let content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read Ghostty config: {e}"))?;
+    let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
 
-    let mut output = Vec::new();
+    edit(&mut lines)?;
 
-    for line in content.lines() {
-        let trimmed = line.trim();
-
-        match trimmed {
-            "config-file = ./colors.ghostty" => {
-                if enabled {
-                    output.push("#config-file = ./colors.ghostty".to_string());
-                } else {
-                    output.push("config-file = ./colors.ghostty".to_string());
-                }
-            }
-
-            "#config-file = ./colors.ghostty" => {
-                if enabled {
-                    output.push("#config-file = ./colors.ghostty".to_string());
-                } else {
-                    output.push("config-file = ./colors.ghostty".to_string());
-                }
-            }
-
-            "#background = 000000" | "background = 000000" => {
-                if enabled {
-                    output.push("background = 000000".to_string());
-                } else {
-                    output.push("#background = 000000".to_string());
-                }
-            }
-
-            "#foreground = ffffff" | "foreground = ffffff" => {
-                if enabled {
-                    output.push("foreground = ffffff".to_string());
-                } else {
-                    output.push("#foreground = ffffff".to_string());
-                }
-            }
-
-            "#background-opacity = 0.2" | "background-opacity = 0.2" => {
-                if enabled {
-                    output.push("background-opacity = 0.2".to_string());
-                } else {
-                    output.push("#background-opacity = 0.2".to_string());
-                }
-            }
-
-            _ => output.push(line.to_string()),
-        }
-    }
-
-    fs::write(&config_path, output.join("\n") + "\n")
-        .map_err(|e| format!("Failed to write Ghostty config: {e}"))?;
+    fs::write(path, lines.join("\n") + "\n")
+        .map_err(|e| format!("Failed to write {}: {e}", path.display()))?;
 
     Ok(())
 }
 
+fn leading_indent(line: &str) -> &str {
+    let idx = line
+        .char_indices()
+        .find(|(_, c)| !c.is_whitespace())
+        .map(|(i, _)| i)
+        .unwrap_or(line.len());
+
+    &line[..idx]
+}
+
+fn matches_line(line: &str, target: &str, comment_prefix: &str) -> bool {
+    let trimmed = line.trim();
+
+    if trimmed == target {
+        return true;
+    }
+
+    if let Some(rest) = trimmed.strip_prefix(comment_prefix) {
+        return rest.trim_start() == target;
+    }
+
+    false
+}
+
+fn toggle_line(
+    lines: &mut Vec<String>,
+    target: &str,
+    comment_prefix: &str,
+    commented: bool,
+) -> Result<(), String> {
+    let index = lines
+        .iter()
+        .position(|line| matches_line(line, target, comment_prefix))
+        .ok_or_else(|| format!("Line not found: {target}"))?;
+
+    let indent = leading_indent(&lines[index]);
+    let body = if commented {
+        format!("{comment_prefix} {target}")
+    } else {
+        target.to_string()
+    };
+
+    lines[index] = format!("{indent}{body}");
+    Ok(())
+}
+
+fn ghostty_config_path(paths: &AuroraPaths) -> PathBuf {
+    paths.config.join("ghostty/config.ghostty")
+}
+
+fn autostart_path(paths: &AuroraPaths) -> PathBuf {
+    paths.config.join("hypr/configs/autostart.lua")
+}
+
+pub fn autostart_welcome_app(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
+    let path = autostart_path(paths);
+
+    edit_file(&path, |lines| {
+        toggle_line(lines, r#"hl.exec_cmd("welcome_app")"#, "--", !enabled)
+    })
+}
+
+pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
+    let path = ghostty_config_path(paths);
+
+    edit_file(&path, |lines| {
+        toggle_line(
+            lines,
+            "config-file = ./colors.ghostty",
+            "#",
+            enabled,
+        )?;
+
+        toggle_line(lines, "background = 000000", "#", !enabled)?;
+        toggle_line(lines, "foreground = ffffff", "#", !enabled)?;
+        toggle_line(lines, "background-opacity = 0.2", "#", !enabled)?;
+
+        Ok(())
+    })
+}
 // tests
 #[cfg(test)]
 mod tests {

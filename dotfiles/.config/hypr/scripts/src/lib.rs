@@ -819,6 +819,13 @@ pub struct GhosttyConfig {
 pub struct SettingsSec {
     #[serde(default)]
     pub welcome_app: bool,
+
+    #[serde(default = "default_screensaver")]
+    pub screensaver: bool,
+}
+
+fn default_screensaver() -> bool {
+    true
 }
 
 pub fn load_config() -> Result<AuroraConfig, String> {
@@ -862,7 +869,8 @@ impl GhosttyConfig {
 
 impl SettingsSec {
     pub fn apply(&self, paths: &AuroraPaths) -> Result<(), String> {
-        autostart_welcome_app(paths, self.welcome_app)
+        autostart_welcome_app(paths, self.welcome_app)?;
+        hypridle_screensaver(paths, self.screensaver)
     }
 }
 
@@ -929,12 +937,27 @@ fn toggle_line(
     Ok(())
 }
 
+fn line_is_enabled(path: &Path, target: &str, comment_prefix: &str) -> Result<bool, String> {
+    let content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
+
+    content
+        .lines()
+        .find(|line| matches_line(line, target, comment_prefix))
+        .map(|line| !line.trim_start().starts_with(comment_prefix))
+        .ok_or_else(|| format!("Line not found: {target}"))
+}
+
 fn ghostty_config_path(paths: &AuroraPaths) -> PathBuf {
     paths.config.join("ghostty/config.ghostty")
 }
 
 fn autostart_path(paths: &AuroraPaths) -> PathBuf {
     paths.config.join("hypr/configs/autostart.lua")
+}
+
+fn hypridle_path(paths: &AuroraPaths) -> PathBuf {
+    paths.config.join("hypr/hypridle.conf")
 }
 
 pub fn autostart_welcome_app(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
@@ -948,6 +971,83 @@ pub fn autostart_welcome_app(paths: &AuroraPaths, enabled: bool) -> Result<(), S
 pub fn welcome_app_change(enabled: bool) -> Result<(), String> {
     let paths = aurora_paths();
     autostart_welcome_app(&paths, enabled)
+}
+
+pub fn welcome_app_is_enabled() -> Result<bool, String> {
+    let paths = aurora_paths();
+    line_is_enabled(
+        &autostart_path(&paths),
+        r#"hl.exec_cmd("welcome_app")"#,
+        "--",
+    )
+}
+
+fn comment_line(line: &str, comment_prefix: &str) -> String {
+    let indent = leading_indent(line);
+    let body = line[indent.len()..].trim_start();
+
+    if body.starts_with(comment_prefix) {
+        line.to_string()
+    } else {
+        format!("{indent}{comment_prefix} {body}")
+    }
+}
+
+fn uncomment_line(line: &str, comment_prefix: &str) -> String {
+    let indent = leading_indent(line);
+    let body = line[indent.len()..].trim_start();
+
+    body.strip_prefix(comment_prefix)
+        .map(|rest| format!("{indent}{}", rest.trim_start()))
+        .unwrap_or_else(|| line.to_string())
+}
+
+pub fn hypridle_screensaver(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
+    let path = hypridle_path(paths);
+
+    edit_file(&path, |lines| {
+        let timeout_index = lines
+            .iter()
+            .position(|line| matches_line(line, "on-timeout = aurora-launch-screensaver", "#"))
+            .ok_or_else(|| "Screensaver listener not found".to_string())?;
+
+        let start = (0..=timeout_index)
+            .rev()
+            .find(|index| matches_line(&lines[*index], "listener {", "#"))
+            .ok_or_else(|| "Screensaver listener start not found".to_string())?;
+
+        let end = (timeout_index..lines.len())
+            .find(|index| matches_line(&lines[*index], "}", "#"))
+            .ok_or_else(|| "Screensaver listener end not found".to_string())?;
+
+        for line in &mut lines[start..=end] {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            *line = if enabled {
+                uncomment_line(line, "#")
+            } else {
+                comment_line(line, "#")
+            };
+        }
+
+        Ok(())
+    })
+}
+
+pub fn screensaver_change(enabled: bool) -> Result<(), String> {
+    let paths = aurora_paths();
+    hypridle_screensaver(&paths, enabled)
+}
+
+pub fn screensaver_is_enabled() -> Result<bool, String> {
+    let paths = aurora_paths();
+    line_is_enabled(
+        &hypridle_path(&paths),
+        "on-timeout = aurora-launch-screensaver",
+        "#",
+    )
 }
 
 pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
@@ -967,6 +1067,15 @@ pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
 pub fn ghostty_blur_change(enabled: bool) -> Result<(), String> {
     let paths = aurora_paths();
     ghostty_blur(&paths, enabled)
+}
+
+pub fn ghostty_blur_is_enabled() -> Result<bool, String> {
+    let paths = aurora_paths();
+    line_is_enabled(
+        &ghostty_config_path(&paths),
+        "background-opacity = 0.2",
+        "#",
+    )
 }
 // tests
 #[cfg(test)]

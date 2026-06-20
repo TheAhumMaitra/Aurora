@@ -16,7 +16,7 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use aurora::load_css;
+use aurora::{hyprland_layout_change, load_css};
 use gtk4::prelude::*;
 use gtk4::{
     Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, ListBox, ListBoxRow,
@@ -28,12 +28,7 @@ use std::process::Command;
 const LAYOUTS: &[&str] = &["dwindle", "master", "scrolling", "monocle", "grid"];
 
 fn run_layout_command(layout: &str) {
-    let command = format!(r#"hl.config({{ general = {{ layout = "{}" }} }})"#, layout);
-
-    match Command::new("hyprctl")
-        .args(["eval", command.as_str()])
-        .spawn()
-    {
+    match hyprland_layout_change(layout) {
         Ok(_) => {
             println!("Layout `{layout}` applied");
             let _ = Command::new("notify-send")

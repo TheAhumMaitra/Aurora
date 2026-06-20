@@ -687,6 +687,23 @@ pub fn waybar_position_change(position: String) -> std::io::Result<()> {
 
     Ok(())
 }
+
+pub fn hyprland_layout_change(layout: &str) -> std::io::Result<()> {
+    let command = format!(r#"hl.config({{ general = {{ layout = "{}" }} }})"#, layout);
+
+    let status = Command::new("hyprctl")
+        .args(["eval", command.as_str()])
+        .status()?;
+
+    if !status.success() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("hyprctl exited with status {status}"),
+        ));
+    }
+
+    Ok(())
+}
 // load the `style.css` file for gtk apps
 pub fn load_css() {
     let provider = CssProvider::new();
@@ -747,8 +764,8 @@ pub fn load_config() -> Result<AuroraConfig, String> {
         ));
     }
 
-    let content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read aurora.toml: {e}"))?;
+    let content =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read aurora.toml: {e}"))?;
 
     toml::from_str(&content).map_err(|e| format!("Failed to parse aurora.toml: {e}"))
 }
@@ -785,8 +802,8 @@ fn edit_file(
     path: &Path,
     edit: impl FnOnce(&mut Vec<String>) -> Result<(), String>,
 ) -> Result<(), String> {
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
+    let content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
 
     let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
 
@@ -860,16 +877,16 @@ pub fn autostart_welcome_app(paths: &AuroraPaths, enabled: bool) -> Result<(), S
     })
 }
 
+pub fn welcome_app_change(enabled: bool) -> Result<(), String> {
+    let paths = aurora_paths();
+    autostart_welcome_app(&paths, enabled)
+}
+
 pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
     let path = ghostty_config_path(paths);
 
     edit_file(&path, |lines| {
-        toggle_line(
-            lines,
-            "config-file = ./colors.ghostty",
-            "#",
-            enabled,
-        )?;
+        toggle_line(lines, "config-file = ./colors.ghostty", "#", enabled)?;
 
         toggle_line(lines, "background = 000000", "#", !enabled)?;
         toggle_line(lines, "foreground = ffffff", "#", !enabled)?;
@@ -877,6 +894,11 @@ pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
 
         Ok(())
     })
+}
+
+pub fn ghostty_blur_change(enabled: bool) -> Result<(), String> {
+    let paths = aurora_paths();
+    ghostty_blur(&paths, enabled)
 }
 // tests
 #[cfg(test)]

@@ -21,11 +21,13 @@
 use aurora::apply_theme;
 use aurora::aurora_paths;
 use aurora::download_theme;
+use aurora::ghostty_blur_change;
 use aurora::list_themes;
+use aurora::welcome_app_change;
 
 use aurora::aurora_parse;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 use std::process::{Command, Stdio};
 use which::which;
@@ -52,9 +54,7 @@ enum Commands {
     /// Shows current Aurora's version and Aurora's cli version
     Version,
     /// Applies given theme globally
-    ApplyTheme {
-        name: String,
-    },
+    ApplyTheme { name: String },
     /// Lists all available themes
     ListThemes,
     /// Shows information about Aurora
@@ -62,19 +62,61 @@ enum Commands {
     /// Returns theme details
     ThemeInfo,
     ///Downloads a theme
-    DownloadTheme {
-        git_repo_url: String,
-    },
+    DownloadTheme { git_repo_url: String },
     ///Update all external themes
     UpdateThemes,
     ///Refresh the system
     Refresh,
     ///Run specified script
-    Runscript {
-        binary_name: String,
-    },
+    Runscript { binary_name: String },
     /// Reload Aurora with updated configuration
-    Reload
+    Reload,
+    /// Change Ghostty settings
+    Ghostty {
+        #[command(subcommand)]
+        command: GhosttyCommands,
+    },
+    /// Change Aurora settings
+    Settings {
+        #[command(subcommand)]
+        command: SettingsCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum GhosttyCommands {
+    /// Turn Ghostty blur on or off
+    Blur { state: ToggleState },
+}
+
+#[derive(Subcommand)]
+enum SettingsCommands {
+    /// Start the welcome app on Hyprland startup
+    WelcomeApp { state: BooleanState },
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum ToggleState {
+    On,
+    Off,
+}
+
+impl ToggleState {
+    fn enabled(self) -> bool {
+        matches!(self, Self::On)
+    }
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum BooleanState {
+    True,
+    False,
+}
+
+impl BooleanState {
+    fn enabled(self) -> bool {
+        matches!(self, Self::True)
+    }
 }
 
 fn main() {
@@ -124,6 +166,30 @@ fn main() {
         Commands::Reload => match aurora_parse() {
             Ok(_) => println!("Aurora refreshed successfully."),
             Err(e) => eprintln!("Aurora error: {e}"),
+        },
+        Commands::Ghostty { command } => match command {
+            GhosttyCommands::Blur { state } => match ghostty_blur_change(state.enabled()) {
+                Ok(_) => println!(
+                    "Ghostty blur {}.",
+                    state.to_possible_value().unwrap().get_name()
+                ),
+                Err(err) => {
+                    eprintln!("Failed to change Ghostty blur: {err}");
+                    std::process::exit(1);
+                }
+            },
+        },
+        Commands::Settings { command } => match command {
+            SettingsCommands::WelcomeApp { state } => match welcome_app_change(state.enabled()) {
+                Ok(_) => println!(
+                    "Welcome app autostart set to {}.",
+                    state.to_possible_value().unwrap().get_name()
+                ),
+                Err(err) => {
+                    eprintln!("Failed to change welcome app autostart: {err}");
+                    std::process::exit(1);
+                }
+            },
         },
         Commands::UpdateThemes => {
             let paths = aurora_paths();

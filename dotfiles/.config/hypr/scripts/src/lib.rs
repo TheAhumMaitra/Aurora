@@ -150,21 +150,43 @@ struct VsCodeOptions {
     theme_name: String,
 }
 
+fn theme_debug(message: impl AsRef<str>) {
+    println!("[theme-switcher] {}", message.as_ref());
+}
+
 // apply the selected theme
 pub fn apply_theme(theme_name: &str) {
+    theme_debug(format!("Starting theme switch for `{theme_name}`"));
+
     let paths = aurora_paths();
     let aurora_data = paths.home.join(".local/share/Aurora");
     let hypr_theme_file = paths.config.join("hypr/Theme/theme.lua");
+    theme_debug(format!(
+        "Using config directory: {}",
+        paths.config.display()
+    ));
+    theme_debug(format!(
+        "Using themes directory: {}",
+        paths.themes.display()
+    ));
 
     // resolve theme directory and load its `config.toml` (if present)
     let theme_dir = paths.themes.join(theme_name);
+    theme_debug(format!("Resolved theme directory: {}", theme_dir.display()));
+    theme_debug("Reading theme config.toml");
     let config: Option<Config> = read_theme_config(&theme_dir);
+    if config.is_some() {
+        theme_debug("Loaded theme config.toml");
+    } else {
+        theme_debug("No readable config.toml found; using directory name as theme name");
+    }
 
     // prefer the theme's declared name from config when available
     let display_name = config
         .as_ref()
         .map(|c| c.name.clone())
         .unwrap_or_else(|| theme_name.to_string());
+    theme_debug(format!("Theme display name: {display_name}"));
 
     let folders = [
         "waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty",
@@ -173,15 +195,21 @@ pub fn apply_theme(theme_name: &str) {
     let message = format!("{display_name} is applied!");
 
     // Empty the current theme configuration for Hyprland
+    theme_debug(format!(
+        "Clearing Hyprland theme file: {}",
+        hypr_theme_file.display()
+    ));
     fs::write(&hypr_theme_file, "").expect("Failed to empty theme configuration");
 
     // reset any gtk theme configurations
+    theme_debug("Resetting GNOME gtk-theme setting");
     Command::new("gsettings")
         .args(["reset", "org.gnome.desktop.interface", "gtk-theme"])
         .status()
         .expect("failed to reset gtk-theme");
 
     // set gtk colorscheme preference as dark always
+    theme_debug("Setting GNOME color-scheme to prefer-dark");
     Command::new("gsettings")
         .args([
             "set",
@@ -193,24 +221,39 @@ pub fn apply_theme(theme_name: &str) {
         .expect("Failed to set preference of gtk colorscheme");
 
     if let Some(config) = &config {
+        theme_debug("Applying optional GTK, VS Code, and Zed settings from config.toml");
         apply_gtk_options(&paths, config);
         apply_vscode_options(&paths, config);
         apply_zed_options(&paths, config);
+    } else {
+        theme_debug("Skipping optional app settings because config.toml was not loaded");
     }
 
     // write selected theme directory into the theme name log file
     // Ensure the directory exists
+    theme_debug(format!(
+        "Ensuring Aurora data directory exists: {}",
+        aurora_data.display()
+    ));
     fs::create_dir_all(&aurora_data).expect("Failed to create logs directory");
 
     // Now write the file
     let theme_name_log_file = aurora_data.join("theme_name.log");
 
+    theme_debug(format!(
+        "Writing selected theme log: {}",
+        theme_name_log_file.display()
+    ));
     fs::write(&theme_name_log_file, theme_name)
         .expect("Failed to write theme name into the theme logs file.");
     // write theme logs
     let theme_log_file = aurora_data.join("theme.log");
 
     if let Some(config) = &config {
+        theme_debug(format!(
+            "Writing theme metadata log: {}",
+            theme_log_file.display()
+        ));
         let authors = config.authors.join(", ");
         let wallpaper_sources = match &config.wallpapers_sources {
             Some(sources) => sources.join(", "),
@@ -228,6 +271,8 @@ pub fn apply_theme(theme_name: &str) {
         );
 
         fs::write(&theme_log_file, information_about_theme).expect("Failed to write theme info");
+    } else {
+        theme_debug("Skipping theme metadata log because config.toml was not loaded");
     }
 
     println!("Applying theme : {}", display_name);
@@ -240,24 +285,29 @@ pub fn apply_theme(theme_name: &str) {
 
                 let script_path = theme_dir.join(script);
 
+                theme_debug(format!(
+                    "Running theme script with `{interpreter}`: {}",
+                    script_path.display()
+                ));
                 Command::new(interpreter)
                     .arg(script_path)
                     .spawn()
                     .expect("Failed to run script"); //if it is failed
             } else {
                 //skip if no script variable found in settings category file is available
-                println!("No script in config, skipping...");
+                theme_debug("No script in config.toml settings; skipping theme script");
             }
         } else {
             //skip if no settings category exists in config file
-            println!("No settings in config, skipping script...");
+            theme_debug("No settings table in config.toml; skipping theme script");
         }
     } else {
         //skip if no readable/valid configuration file is available
-        println!("No valid config.toml found, skipping script...");
+        theme_debug("No valid config.toml found; skipping theme script");
     }
 
     //Send the message for selected theme is applied
+    theme_debug("Sending desktop notification");
     Command::new("notify-send")
         .args([message])
         .output()
@@ -268,26 +318,42 @@ pub fn apply_theme(theme_name: &str) {
         let source = paths.themes.join(theme_name).join(folder);
         let target = paths.config.join(folder);
 
+        theme_debug(format!(
+            "Checking theme folder `{folder}`: {}",
+            source.display()
+        ));
         if source.exists() {
+            theme_debug(format!("Copying `{folder}` into {}", target.display()));
             match copy_theme_path(&source, &target) {
-                Ok(_) => println!("Applied {}", folder),
-                Err(e) => eprintln!("Copy error in {}: {}", folder, e),
+                Ok(_) => theme_debug(format!("Applied `{folder}`")),
+                Err(e) => eprintln!("[theme-switcher] Copy error in {folder}: {e}"),
             }
         } else {
-            println!("No theme directory found for {}", folder);
+            theme_debug(format!("No theme directory found for `{folder}`; skipping"));
         }
     }
 
     let custom_css_source = theme_dir.join("custom.css");
     let custom_css_target = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/custom.css");
+    theme_debug(format!(
+        "Checking custom CSS: {}",
+        custom_css_source.display()
+    ));
     if custom_css_source.exists() {
+        theme_debug(format!(
+            "Copying custom CSS into {}",
+            custom_css_target.display()
+        ));
         match copy_theme_path(&custom_css_source, &custom_css_target) {
-            Ok(_) => println!("Copied custom.css"),
-            Err(e) => eprintln!("Copy error in custom.css: {}", e),
+            Ok(_) => theme_debug("Copied custom.css"),
+            Err(e) => eprintln!("[theme-switcher] Copy error in custom.css: {e}"),
         }
+    } else {
+        theme_debug("No custom.css found for this theme; skipping");
     }
 
     // Run refresh script for refreshing the system
+    theme_debug("Running refresh_system");
     Command::new("refresh_system")
         .spawn()
         .expect("Failed to refresh the system.");
@@ -298,7 +364,7 @@ pub fn apply_theme(theme_name: &str) {
     wallpaper.push("default.png");
 
     if wallpaper.exists() {
-        println!("Setting wallpaper: {:?}", wallpaper);
+        theme_debug(format!("Setting wallpaper: {}", wallpaper.display()));
 
         //use awww to apply the wallpaper
         Command::new("awww")
@@ -313,8 +379,10 @@ pub fn apply_theme(theme_name: &str) {
             .spawn()
             .ok();
     } else {
-        println!("No default.jpg found for this theme");
+        theme_debug("No default.png found for this theme; skipping wallpaper");
     }
+
+    theme_debug(format!("Finished theme switch for `{display_name}`"));
 }
 
 fn apply_gtk_options(paths: &AuroraPaths, config: &Config) {

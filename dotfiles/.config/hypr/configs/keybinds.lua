@@ -22,20 +22,21 @@
 
 -- See https://wiki.hypr.land/Configuring/Keywords/
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
-local terminal = "kitty"
-local secondary_terminal = "ghostty"
-local fileManager = "nautilus"
-local menu = "rofi"
-local browser = "zen-browser"
-local editor = "nvim"
-
+local apps = {
+	editor = "nvim",
+	menu = "rofi",
+	file_manager = "nautilus",
+	browser = "zen-browser",
+	terminal = "kitty",
+	secondary_terminal = "ghostty",
+}
 -- program binds
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(secondary_terminal))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + ALT + B", hl.dsp.exec_cmd(browser))
-hl.bind(mainMod .. " + ALT + V", hl.dsp.exec_cmd(editor))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu .. " -show drun"))
+hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(apps.terminal))
+hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(apps.secondary_terminal))
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(apps.file_manager))
+hl.bind(mainMod .. " + ALT + B", hl.dsp.exec_cmd(apps.browser))
+hl.bind(mainMod .. " + ALT + V", hl.dsp.exec_cmd(apps.editor))
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(apps.menu .. " -show drun"))
 hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("wlogout"))
 
 -- Aurora's custom gui programs
@@ -134,7 +135,7 @@ hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 -- rofi menus
 
 -- launch rofi based  emoji menu
-hl.bind(mainMod .. " + ALT + E", hl.dsp.exec_cmd(menu .. " -modi emoji -show emoji"))
+hl.bind(mainMod .. " + ALT + E", hl.dsp.exec_cmd(apps.menu .. " -modi emoji -show emoji"))
 
 --launch rofi based clipboard manager
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))

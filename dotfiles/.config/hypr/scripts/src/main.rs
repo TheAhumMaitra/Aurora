@@ -19,10 +19,12 @@
 // main CLI for Aurora
 
 use aurora::apply_theme;
-use aurora::aurora_paths;
 use aurora::aurora_parse;
+use aurora::aurora_paths;
 use aurora::download_theme;
 use aurora::ghostty_blur_change;
+use aurora::kitty_blur_change;
+use aurora::kitty_theme_change;
 use aurora::list_themes;
 use aurora::screensaver_change;
 use aurora::welcome_app_change;
@@ -88,6 +90,12 @@ enum Commands {
         command: GhosttyCommands,
     },
 
+    /// Change Kitty settings
+    Kitty {
+        #[command(subcommand)]
+        command: KittyCommands,
+    },
+
     /// Change Aurora settings
     Settings {
         #[command(subcommand)]
@@ -98,6 +106,15 @@ enum Commands {
 #[derive(Subcommand)]
 enum GhosttyCommands {
     /// Turn Ghostty blur on or off
+    Blur { state: ToggleState },
+}
+
+#[derive(Subcommand)]
+enum KittyCommands {
+    /// Turn Kitty theme management on or off
+    Theme { state: ToggleState },
+
+    /// Turn Kitty blur theme on or off (only applies when theme is on)
     Blur { state: ToggleState },
 }
 
@@ -229,6 +246,29 @@ fn main() {
                 ),
                 Err(err) => {
                     eprintln!("Failed to change Ghostty blur: {err}");
+                    std::process::exit(1);
+                }
+            },
+        },
+
+        Commands::Kitty { command } => match command {
+            KittyCommands::Theme { state } => match kitty_theme_change(state.enabled()) {
+                Ok(_) => println!(
+                    "Kitty theme management {}.",
+                    state.to_possible_value().unwrap().get_name()
+                ),
+                Err(err) => {
+                    eprintln!("Failed to change Kitty theme: {err}");
+                    std::process::exit(1);
+                }
+            },
+            KittyCommands::Blur { state } => match kitty_blur_change(state.enabled()) {
+                Ok(_) => println!(
+                    "Kitty blur theme {}.",
+                    state.to_possible_value().unwrap().get_name()
+                ),
+                Err(err) => {
+                    eprintln!("Failed to change Kitty blur theme: {err}");
                     std::process::exit(1);
                 }
             },

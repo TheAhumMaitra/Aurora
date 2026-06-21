@@ -189,7 +189,7 @@ pub fn apply_theme(theme_name: &str) {
     theme_debug(format!("Theme display name: {display_name}"));
 
     let folders = [
-        "waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty",
+        "waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty", "kitty"
     ]; //directories want to be copied
 
     let message = format!("{display_name} is applied!");
@@ -806,11 +806,20 @@ pub struct AuroraConfig {
     pub ghostty: GhosttyConfig,
 
     #[serde(default)]
+    pub kitty: KittyConfig,
+
+    #[serde(default)]
     pub settings: SettingsSec,
 }
 
 #[derive(Debug, Deserialize, Default)]
 pub struct GhosttyConfig {
+    #[serde(default)]
+    pub blur: bool,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct KittyConfig {
     #[serde(default)]
     pub blur: bool,
 }
@@ -857,8 +866,14 @@ pub fn aurora_parse() -> Result<(), String> {
 
     config.ghostty.apply(&paths)?;
     config.settings.apply(&paths)?;
+    config.kitty.apply(&paths)?;
 
     Ok(())
+}
+impl KittyConfig {
+    pub fn apply(&self, paths: &AuroraPaths) -> Result<(), String> {
+        kitty_blur(paths, self.blur)
+    }
 }
 
 impl GhosttyConfig {
@@ -950,6 +965,10 @@ fn line_is_enabled(path: &Path, target: &str, comment_prefix: &str) -> Result<bo
 
 fn ghostty_config_path(paths: &AuroraPaths) -> PathBuf {
     paths.config.join("ghostty/config.ghostty")
+}
+
+fn kitty_config_path(paths: &AuroraPaths) -> PathBuf {
+    paths.config.join("kitty/kitty.conf")
 }
 
 fn autostart_path(paths: &AuroraPaths) -> PathBuf {
@@ -1062,6 +1081,37 @@ pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
 
         Ok(())
     })
+}
+
+pub fn kitty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
+    let path = kitty_config_path(paths);
+
+    edit_file(&path, |lines| {
+        // Disable theme colors when blur is enabled
+        toggle_line(lines, "include ./colors.conf", "#", enabled)?;
+
+        // Enable custom blur colors when blur is enabled
+        toggle_line(lines, "foreground #dddddd", "#", !enabled)?;
+        toggle_line(lines, "background #000000", "#", !enabled)?;
+        toggle_line(lines, "background_opacity 0.3", "#", !enabled)?;
+
+        Ok(())
+    })
+}
+
+pub fn kitty_blur_change(enabled: bool) -> Result<(), String> {
+    let paths = aurora_paths();
+    kitty_blur(&paths, enabled)
+}
+
+pub fn kitty_blur_is_enabled() -> Result<bool, String> {
+    let paths = aurora_paths();
+
+    line_is_enabled(
+        &kitty_config_path(&paths),
+        "background_opacity 0.3",
+        "#",
+    )
 }
 
 pub fn ghostty_blur_change(enabled: bool) -> Result<(), String> {

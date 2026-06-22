@@ -211,18 +211,270 @@ row:selected {
 .setting-button {
   background: @surface;
   color: @theme_fg_color;
-  border-radius: 8px;
-  padding: 7px 14px;
-  min-width: 82px;
+  border: 1px solid alpha(@border, 0.55);
+  border-radius: 5px;
   font-weight: bold;
 }
 
 .setting-button:hover {
   background: @accent;
   color: @theme_bg_color;
+  border-color: @accent;
 }
 
 .settings-empty {
   padding: 40px;
   font-weight: bold;
+}
+
+.app-entry {
+  background: @surface-alt;
+  color: @theme_fg_color;
+  border: 1px solid alpha(@border, 0.5);
+  outline: none;
+  font-weight: bold;
+  margin: 5px;
+  border-radius: 20px;
+  padding: 8px 12px;
+}
+
+.app-entry:focus {
+  border-color: @active-accent;
+  border-width: 2px;
+}
+
+.app-entry:hover {
+  border-color: alpha(@active-accent, 0.6);
+}
+
+.app-entry.valid {
+  border-color: @success_color;
+  background: alpha(@success_color, 0.08);
+}
+
+.app-entry.error {
+  border-color: @urgent-background;
+  background: alpha(@urgent-background, 0.08);
+}
+
+/* ── Create App Entry – vibrant classes ─────────────────── */
+
+window.create-app-window {
+  background-color: @theme_bg_color;
+  border: 2px solid alpha(@active-accent, 0.35);
+  border-radius: 12px;
+}
+
+.app-header {
+  font-size: 22px;
+  font-weight: 900;
+  color: @active-accent;
+  margin: 4px 0 2px 0;
+}
+
+.chrome-warn {
+  color: @warning_color;
+  font-weight: bold;
+  font-size: 12px;
+  margin: 2px 0;
+}
+
+.field-label {
+  color: @theme_fg_color;
+  font-size: 13px;
+  font-weight: bold;
+  margin: 2px 0 0 4px;
+}
+
+.status-indicator {
+  font-size: 14px;
+  color: @muted;
+  margin: 0 2px;
+}
+
+.status-indicator.valid {
+  color: @success_color;
+}
+
+.status-indicator.error {
+  color: @urgent-background;
+}
+
+.status-message {
+  font-size: 13px;
+  font-weight: bold;
+  color: @muted;
+  margin: 2px 0;
+}
+
+.status-message.msg-ready {
+  color: @success_color;
+}
+
+.status-message.msg-error {
+  color: @urgent-background;
+}
+
+.submit-button {
+  background: @accent_bg_color;
+  color: @theme_bg_color;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 28px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.submit-button:hover {
+  background: @active-accent;
+  color: @theme_bg_color;
+}
+
+.submit-button:disabled {
+  background: @surface;
+  color: @muted;
+}
+
+
+/* ── Home App ─────────────────────────────────────────────── */
+
+.home-window {
+  background-color: @theme_bg_color;
+  border: 2px solid alpha(@active-accent, 0.3);
+  border-radius: 12px;
+}
+
+.home-header {
+  font-size: 22px;
+  font-weight: 900;
+  color: @active-accent;
+  margin: 2px 0;
+}
+
+.home-count {
+  color: @muted;
+  font-weight: bold;
+  font-size: 12px;
+  margin: 0 0 6px 0;
+}
+
+.home-list {
+  background: @surface-alt;
+  border-radius: 8px;
+  border: 1px solid alpha(@border, 0.3);
+}
+
+.home-row {
+  background: @surface;
+  border-radius: 8px;
+  margin: 4px;
+  border: 1px solid alpha(@border, 0.25);
+}
+
+.home-row:hover {
+  background: alpha(@active-accent, 0.08);
+  border-color: alpha(@active-accent, 0.4);
+}
+
+.home-app-name {
+  color: @theme_fg_color;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.home-app-url {
+  color: alpha(@theme_fg_color, 0.6);
+  font-size: 11px;
+}
+
+.home-remove-btn {
+  background: alpha(@urgent-background, 0.15);
+  color: @urgent-background;
+  border: 1px solid alpha(@urgent-background, 0.4);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.home-remove-btn:hover {
+  background: @urgent-background;
+  color: @theme_bg_color;
+  border-color: @urgent-background;
+}
+
+.home-create-btn {
+  background: @accent_bg_color;
+  color: @theme_bg_color;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 28px;
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.home-create-btn:hover {
+  background: @active-accent;
+  color: @theme_bg_color;
+}
+
+.home-empty {
+  color: @muted;
+  font-size: 13px;
+  padding: 40px 20px;
+}
+
+/* ── App entries home ──────────────────────────────────────── */
+
+.home-window {
+  background-color: @theme_bg_color;
+  border: 2px solid alpha(@active-accent, 0.3);
+  border-radius: 16px;
+}
+
+.home-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: @active-accent;
+  margin: 0;
+}
+
+.home-subtitle {
+  color: alpha(@theme_fg_color, 0.65);
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.home-web-btn {
+  background: @accent_bg_color;
+  color: @theme_bg_color;
+  border: none;
+  border-radius: 20px;
+  padding: 18px 24px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.home-web-btn:hover {
+  background: @active-accent;
+  color: @theme_bg_color;
+}
+
+.home-action-btn {
+  background: @surface-alt;
+  color: @theme_fg_color;
+  border: 1px solid alpha(@border, 0.4);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-weight: bold;
+  font-size: 15px;
+  transition: all 200ms ease;
+}
+
+.home-action-btn:hover {
+  background: alpha(@active-accent, 0.12);
+  border-color: @active-accent;
+  color: @active-accent;
 }

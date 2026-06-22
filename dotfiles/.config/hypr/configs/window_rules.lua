@@ -143,3 +143,38 @@ hl.window_rule({
 	match = { class = "org.aurora.screensaver" },
 	fullscreen = true,
 })
+
+-- app entries manager
+hl.window_rule({
+	name = "Aurora App Entires Manager",
+	match = { class = "com.aurora.app_entries_home" },
+	float = true,
+})
+
+-- web app entries center
+hl.window_rule({
+	name = "Aurora Web App Entires Center",
+	match = { class = "com.aurora.web_app_entries_center" },
+	float = true,
+})
+
+-- web app entry creator
+hl.window_rule({
+	name = "Aurora Web App Entires Creator",
+	match = { class = "com.aurora.web_app_entry_creator" },
+	float = true,
+})
+
+-- web app entries center
+hl.window_rule({
+	name = "Aurora TUI App Entires Center",
+	match = { class = "com.aurora.tui_app_entries_center" },
+	float = true,
+})
+
+-- web app entry creator
+hl.window_rule({
+	name = "Aurora TUI App Entires Creator",
+	match = { class = "com.aurora.tui_app_entry_creator" },
+	float = true,
+})

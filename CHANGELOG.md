@@ -38,6 +38,11 @@ All notable changes to this project will be documented in this file.
 - Add config file for `git-cliff` ([b46cd36](b46cd36a6690b297948ccca81e5aedfc503b312b))
 - Remove unnecessary comment ([c0376d3](c0376d3ab92c1ee33cd7759915d675a2d8d7e304))
 - Update Cargo lock ([0abe26b](0abe26b611d0b5a7390a2503fab67cc975f68116))
+- Use pre made funcs ([9bf737f](9bf737f3e36aee1e8e0d9e7d7d9c0385e7fc4377))
+- Better to use dictionary ([fc30a6a](fc30a6a97c37ca5d5ce4aea0f3aa978c2cde3c5a))
+- Add better classes ([fc47c75](fc47c75ef9321232fdc5ccd926581fcf9aeec30a))
+- Update Cargo lock ([463c0e6](463c0e6b3d513b79061d47258bf4a578adf0d2ef))
+- Update Cargo lock ([27ea284](27ea284ddb69df23dc4366eff0eaf300678f0ab8))
 
 ### 🐛 Bug Fixes
 
@@ -84,6 +89,8 @@ All notable changes to this project will be documented in this file.
 - Update Cargo lock ([70ff44b](70ff44bc25eca6ee78ffab1537c23d1e09448165))
 - Fixed the problem which was not writing Zed's theme ([226615d](226615d32228ece3d5b05b9c1096171b7b085d1c))
 - Remove my external themes, they are not default ones ([82bd7e7](82bd7e72f8ec6bc7eb2f6a36c486af8714102044))
+- Add correct theme ([b6dea16](b6dea16182816e22792a6a2520390a3cee024cb6))
+- Change background color ([5e40b2f](5e40b2fe368cbacb782ac46e722b4915ae33c3f5))
 
 ### 💼 Other
 
@@ -118,6 +125,12 @@ All notable changes to this project will be documented in this file.
 - Upgraded `which` pacakge ([c8bf383](c8bf3830a4ede92aa426eb563acaf2a4655c6b5e))
 - Format ([1dc6a29](1dc6a2929dd4e8e029828ec2cc9e9df57342c674))
 - Add a `reload` command to update by using aurora's parser ([5a25ca4](5a25ca4e34a5e31c9b21524fc18672d2c07a1804))
+- Update CHANGELOG ([105eb7a](105eb7ad3f722ac7f02077a3ebfdc481df1437ab))
+- Add screensaver sub command to turn it on or off ([a958f19](a958f19a7aff5bbd4556aee08f09f0f0b38cbab6))
+- Shift `screensaver` sub command to `settings` ([bed8457](bed84574dd1d65676db77a6ddc140984b7221f75))
+- Add `kitty` sub command with it's sub command ([b47cd38](b47cd385f590daf082af09409f1fd33c0d7de154))
+- Add `ureq` ([9a185e0](9a185e0a378551cac01a6f5d8a97b6c663df9b28))
+- Update sysinfo ([280447d](280447d0850a23662980c5f8739d7e9d7020e860))
 
 ### 📚 Documentation
 
@@ -279,5 +292,30 @@ All notable changes to this project will be documented in this file.
 - Avioid starting screensaver when hyprlock is active ([84f3e4e](84f3e4e94910a3302a2e0387eeaf76c75d660091))
 - Add a new window rule for xdg desktop portal GTK ([7787c81](7787c81d51304c27a6b5e4613fe6ecf189e19988))
 - Add support for Aurora's configuration file and now it does supports ghostty's options ([9b66e2c](9b66e2c1df3638aba2fb4591fc21cc16b143c0e5))
+- Add support for Settings sec in Aurora's config with key of enabling welcome app and created reusable functions to make it simple ;) ([848140a](848140a8c4c3ef272d74b17e79153430eeadad8f))
+- Add support for live Ghostty changes also for Aurora's settings ([7e3a9de](7e3a9de4d3b901a28ea1ea884cec15db8efea165))
+- Add reusable funcs and there is func now to switch layouts also ([57d267b](57d267b14d3df3a5177894754719dadf0f427c79))
+- Add debug info when switching from cli ([dbb9e44](dbb9e44aa453f6265950a74aad393b8de8e70d7e))
+- Added some helper funcs and added support to off or on screensaver in settings sec ([8517b6a](8517b6a606a1d3029261b5ea82d6b84ac0a8fd51))
+- Add support for kitty and add support for Kitty's blur in AUrora's config ([c7a3ae1](c7a3ae1c4a55daba815ed14086461af174684c84))
+- Add a better approch for Kitty's theming ([362dd69](362dd697be76b0e57800e1907dfc05324663a360))
+- Add Kitty SUpport for Catpuccin Mocha ([21e0f03](21e0f036a4dd5fea876f646da0530cb8c6ed67d5))
+- Add Kitty Support for Dracula ([4ac0f7e](4ac0f7e324682207f42cd2203b45c6cb5757dced))
+- Add Kitty Support for Everforest ([b05fd07](b05fd07081f0a58ed5edabd1f97498384f2d6eba))
+- Add Kitty Support for Gruvbox ([567c960](567c9607758a67b584bb888c7a142d2735b7182c))
+- Add Kitty Support for Nord ([45e9482](45e9482e364029c5b09148d061bb92c4b6ad9f3f))
+- Add Kitty Support for Rose Pine ([10097c2](10097c282dfed76da4ec9201df8f659f3a2a21d0))
+- Add Kitty Support for Tokyo Night ([dcb3d27](dcb3d2732665948ac0997bacb25799d475a51cdb))
+- Add Kitty support for Aurora Default ([0df62ca](0df62ca6cd60428b500a11bfec4a1c2f989e4a2c))
+- Add Kitty Support for Aurora Glassy ([a937b83](a937b830d6995807ed16162e15442075b18ac611))
+- Add App Manager ([5aaf930](5aaf930e202af0d7526b009999c22adb8cfa8fea))
+- Add TUI App Entries Center ([626a5d9](626a5d9708149673272a88c2bd4983951bfd594b))
+- Add TUI App entry creator ([4e31959](4e3195924fc80d94514507cd367a7e00b523f73e))
+- Add web app entries center ([c00edc9](c00edc90ee8754973af8b66eca069c3d7c3477d3))
+- Add Web Dekstop App entries creator ([693394a](693394a717ae093caa514bcae29b70296edf1025))
+- Add helpers for app entires creators ([1843585](184358511a770d50083df865d4a166519a8b9067))
+- Add good styling for app enties manager, web app entries creator and center (same for tui) ([53a8255](53a825548145fbc19321d541003c0de96258b279))
+- Add new keybind to open app entries manager ([9dbfc77](9dbfc775598cb271c1d3ec61492c47c3a74181b2))
+- Add new window rules to make app entries creator and manager float ([d77aadd](d77aadd3f284970e386cf73e8efaa304307e3324))
 
 <!-- generated by git-cliff -->

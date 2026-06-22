@@ -772,6 +772,196 @@ pub fn hyprland_layout_change(layout: &str) -> std::io::Result<()> {
 
     Ok(())
 }
+// bin helpers ----------------------------------------------------------------
+
+/// Check for Chromium-based browser binary and return its path.
+/// Checks in order: google-chrome-stable, google-chrome.
+pub fn check_chrome() -> Result<String, String> {
+    for name in &["google-chrome-stable", "google-chrome"] {
+        if let Ok(path) = which::which(name) {
+            return Ok(path.to_string_lossy().to_string());
+        }
+    }
+    Err("Google Chrome is not installed. Install google-chrome-stable first.".to_string())
+}
+
+/// Download a PNG icon from `url` and save it to
+/// `~/.local/share/Aurora/icons/<app_name>`.
+/// The app_name is sanitised (lowercased, spaces → hyphens, special chars removed).
+/// Returns the absolute path to the saved icon file.
+pub fn download_icon(url: &str, app_name: &str) -> Result<PathBuf, String> {
+    let home =
+        dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
+    let icons_dir = home.join(".local/share/Aurora/icons");
+    fs::create_dir_all(&icons_dir)
+        .map_err(|e| format!("Failed to create icons directory: {e}"))?;
+
+    let safe_name: String = app_name
+        .to_lowercase()
+        .replace(' ', "-")
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '-')
+        .collect();
+    let icon_path = icons_dir.join(&safe_name);
+
+    let response = ureq::get(url)
+        .call()
+        .map_err(|e| format!("Failed to download icon from {url}: {e}"))?;
+
+    let body = response
+        .into_body()
+        .read_to_vec()
+        .map_err(|e| format!("Failed to read icon data: {e}"))?;
+
+    // Basic PNG header check
+    if body.len() < 8 || body[..8] != [137, 80, 78, 71, 13, 10, 26, 10] {
+        return Err("Downloaded file is not a valid PNG image".to_string());
+    }
+
+    fs::write(&icon_path, &body).map_err(|e| format!("Failed to write icon file: {e}"))?;
+
+    Ok(icon_path)
+}
+
+/// Create (or overwrite) a `.desktop` entry in `~/.local/share/applications/`
+/// that launches the given URL as a Chrome app window.
+///
+/// `icon_path` – absolute path to the PNG icon file.
+pub fn create_desktop_entry(app_name: &str, url: &str, icon_path: &str) -> Result<(), String> {
+    let home =
+        dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
+    let apps_dir = home.join(".local/share/applications");
+    fs::create_dir_all(&apps_dir)
+        .map_err(|e| format!("Failed to create applications directory: {e}"))?;
+
+    let chrome_path = check_chrome()?;
+    let desktop_path = apps_dir.join(format!("{}.desktop", app_name));
+
+    let content = format!(
+        "[Desktop Entry]\n\
+         Type=Application\n\
+         Name={}\n\
+         Exec={} --app=\"{}\"\n\
+         Icon={}\n\
+         Terminal=false\n\
+         Categories=Network;WebBrowser;\n\
+         StartupNotify=true\n",
+        app_name, chrome_path, url, icon_path
+    );
+
+    fs::write(&desktop_path, &content)
+        .map_err(|e| format!("Failed to write desktop entry: {e}"))?;
+
+    Ok(())
+}
+
+/// A lightweight description of a web app stored on disk.
+#[derive(Debug, Clone)]
+pub struct WebAppEntry {
+    pub name: String,
+    pub url: String,
+    pub icon_path: String,
+    pub desktop_path: PathBuf,
+}
+
+/// Scan `~/.local/share/applications/` for `.desktop` files created by the
+/// "Create Web App" tool (i.e. `Exec=... --app="<url>"`).
+/// Returns a vector of `WebAppEntry` sorted by name.
+pub fn list_web_apps() -> Vec<WebAppEntry> {
+    let home = match dirs::home_dir() {
+        Some(h) => h,
+        None => return Vec::new(),
+    };
+    let apps_dir = home.join(".local/share/applications");
+    let mut entries = Vec::new();
+
+    let Ok(read_dir) = fs::read_dir(&apps_dir) else {
+        return entries;
+    };
+
+    for entry in read_dir.flatten() {
+        let path = entry.path();
+        if !path.extension().map_or(false, |e| e == "desktop") {
+            continue;
+        }
+        let Ok(content) = fs::read_to_string(&path) else {
+            continue;
+        };
+
+        // Parse the desktop file manually (no external deps needed)
+        let mut name = None;
+        let mut exec = None;
+        let mut icon = None;
+
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if let Some(val) = trimmed.strip_prefix("Name=") {
+                name = Some(val.to_string());
+            }
+            if let Some(val) = trimmed.strip_prefix("Exec=") {
+                exec = Some(val.to_string());
+            }
+            if let Some(val) = trimmed.strip_prefix("Icon=") {
+                icon = Some(val.to_string());
+            }
+        }
+
+        let Some(exec_val) = exec else { continue };
+        // Must be a Chrome web-app entry
+        if !exec_val.contains("--app=") {
+            continue;
+        }
+
+        // Extract the URL from --app="..."
+        let url = exec_val
+            .split("--app=")
+            .nth(1)
+            .and_then(|s| s.trim_matches('"').trim_matches('\'').split_whitespace().next())
+            .unwrap_or("")
+            .to_string();
+
+        let name = name.unwrap_or_else(|| {
+            path.file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string()
+        });
+
+        let icon_path = icon.unwrap_or_default();
+
+        entries.push(WebAppEntry {
+            name,
+            url,
+            icon_path,
+            desktop_path: path,
+        });
+    }
+
+    entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    entries
+}
+
+/// Remove a web app's `.desktop` file AND its icon from the icons directory.
+pub fn remove_web_app(app: &WebAppEntry) -> Result<(), String> {
+    // Remove .desktop file
+    if let Err(e) = fs::remove_file(&app.desktop_path) {
+        return Err(format!("Failed to remove desktop entry: {e}"));
+    }
+
+    // Remove icon if it lives inside Aurora's icon directory
+    if !app.icon_path.is_empty() {
+        let home = dirs::home_dir().ok_or_else(|| "HOME not found".to_string())?;
+        let aurora_icons = home.join(".local/share/Aurora/icons");
+        if let Ok(canonical_icon) = fs::canonicalize(&app.icon_path) {
+            if canonical_icon.starts_with(&aurora_icons) {
+                let _ = fs::remove_file(&app.icon_path);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 // load the `style.css` file for gtk apps
 pub fn load_css() {
     let provider = CssProvider::new();
@@ -788,6 +978,152 @@ pub fn load_css() {
     } else {
         eprintln!("Warning: Could not connect to a display.");
     }
+}
+
+// TUI app helpers ---------------------------------------------------------------
+
+/// A lightweight description of a terminal app stored on disk.
+#[derive(Debug, Clone)]
+pub struct TuiAppEntry {
+    pub name: String,
+    pub command: String,
+    pub icon_path: String,
+    pub desktop_path: PathBuf,
+}
+
+/// Check for the TERMINAL environment variable and return its value.
+pub fn check_terminal() -> Result<String, String> {
+    std::env::var("TERMINAL")
+        .map_err(|_| "TERMINAL environment variable is not set.".to_string())
+}
+
+/// Create (or overwrite) a `.desktop` entry in `~/.local/share/applications/`
+/// that launches the given command in the user's terminal emulator.
+///
+/// `icon_path` – absolute path to the PNG icon file.
+pub fn create_tui_desktop_entry(app_name: &str, command: &str, icon_path: &str) -> Result<(), String> {
+    let home = dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
+    let apps_dir = home.join(".local/share/applications");
+    fs::create_dir_all(&apps_dir)
+        .map_err(|e| format!("Failed to create applications directory: {e}"))?;
+
+    let terminal = check_terminal()?;
+    let desktop_path = apps_dir.join(format!("{}.desktop", app_name));
+
+    let content = format!(
+        "[Desktop Entry]\n\
+         Type=Application\n\
+         Name={}\n\
+         Exec={} -e {}\n\
+         Icon={}\n\
+         Terminal=false\n\
+         Categories=System;TerminalEmulator;\n\
+         StartupNotify=true\n\
+         X-Aurora-TuiApp=true\n",
+        app_name, terminal, command, icon_path
+    );
+
+    fs::write(&desktop_path, &content)
+        .map_err(|e| format!("Failed to write desktop entry: {e}"))?;
+
+    Ok(())
+}
+
+/// Scan `~/.local/share/applications/` for `.desktop` files created by the
+/// "Create TUI App" tool (i.e. `X-Aurora-TuiApp=true`).
+/// Returns a vector of `TuiAppEntry` sorted by name.
+pub fn list_tui_apps() -> Vec<TuiAppEntry> {
+    let home = match dirs::home_dir() {
+        Some(h) => h,
+        None => return Vec::new(),
+    };
+
+    let apps_dir = home.join(".local/share/applications");
+    let mut entries = Vec::new();
+
+    let Ok(read_dir) = fs::read_dir(apps_dir) else {
+        return entries;
+    };
+
+    for entry in read_dir.flatten() {
+        let path = entry.path();
+        if !path.is_file() || path.extension().map_or(true, |e| e != "desktop") {
+            continue;
+        }
+
+        let Ok(content) = fs::read_to_string(&path) else {
+            continue;
+        };
+
+        if !content.contains("X-Aurora-TuiApp=true") {
+            continue;
+        }
+
+        let mut name = None;
+        let mut exec = None;
+        let mut icon = None;
+
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if let Some(val) = trimmed.strip_prefix("Name=") {
+                name = Some(val.to_string());
+            }
+            if let Some(val) = trimmed.strip_prefix("Exec=") {
+                exec = Some(val.to_string());
+            }
+            if let Some(val) = trimmed.strip_prefix("Icon=") {
+                icon = Some(val.to_string());
+            }
+        }
+
+        let Some(exec_val) = exec else { continue };
+        // Extract command from terminal -e <command>
+        let command = exec_val
+            .split(" -e ")
+            .nth(1)
+            .map(|s| s.trim().to_string())
+            .unwrap_or_default();
+
+        let name = name.unwrap_or_else(|| {
+            path.file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string()
+        });
+
+        let icon_path = icon.unwrap_or_default();
+
+        entries.push(TuiAppEntry {
+            name,
+            command,
+            icon_path,
+            desktop_path: path,
+        });
+    }
+
+    entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    entries
+}
+
+/// Remove a TUI app's `.desktop` file AND its icon from the icons directory.
+pub fn remove_tui_app(app: &TuiAppEntry) -> Result<(), String> {
+    // Remove .desktop file
+    if let Err(e) = fs::remove_file(&app.desktop_path) {
+        return Err(format!("Failed to remove desktop entry: {e}"));
+    }
+
+    // Remove icon if it lives inside Aurora's icon directory
+    if !app.icon_path.is_empty() {
+        let home = dirs::home_dir().ok_or_else(|| "HOME not found".to_string())?;
+        let aurora_icons = home.join(".local/share/Aurora/icons");
+        if let Ok(canonical_icon) = fs::canonicalize(&app.icon_path) {
+            if canonical_icon.starts_with(&aurora_icons) {
+                let _ = fs::remove_file(&app.icon_path);
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub fn download_theme(repo_url: String) {

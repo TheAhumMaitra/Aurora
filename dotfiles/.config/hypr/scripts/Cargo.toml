@@ -10,7 +10,7 @@ repository = "https://github.com/TheAhumMaitra/Aurora"
 documentation = "https://aurorawiki.vercel.app"
 
 [dependencies]
-sysinfo = "0.39.3"
+sysinfo = "0.39.5"
 gtk4 = "0.11.3"
 urlencoding = "2.1"
 whoami = "2.1.2"

@@ -13,7 +13,7 @@ use gtk4 as gtk;
 
 fn main() {
     let app = Application::builder()
-        .application_id("com.aurora.tui")
+        .application_id("com.aurora.tui_app_entries_center")
         .build();
 
     app.connect_activate(|app| {

@@ -61,7 +61,7 @@ fn set_entry_state(entry: &Entry, valid: bool) {
 
 fn main() {
     let app = Application::builder()
-        .application_id("com.aurora.create_app_entry")
+        .application_id("com.aurora.web_app_entry_creator")
         .build();
 
     app.connect_activate(|app| {

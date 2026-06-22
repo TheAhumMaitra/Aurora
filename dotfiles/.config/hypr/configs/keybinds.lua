@@ -47,6 +47,9 @@ hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("keybinds_help"))
 -- launch theme switcher
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 
+-- open app entries manager
+hl.bind(mainMod.. " + A", hl.dsp.exec_cmd("app_entries_home"))
+
 -- launch waybar position switcher
 hl.bind(mainMod .. " + ALT + W", hl.dsp.exec_cmd("waybar_position_switcher"))
 -- launch custom settings

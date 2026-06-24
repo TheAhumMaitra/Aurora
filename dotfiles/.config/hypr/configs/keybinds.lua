@@ -48,7 +48,7 @@ hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("keybinds_help"))
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 
 -- open app entries manager
-hl.bind(mainMod.. " + A", hl.dsp.exec_cmd("app_entries_home"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("app_entries_home"))
 
 -- launch waybar position switcher
 hl.bind(mainMod .. " + ALT + W", hl.dsp.exec_cmd("waybar_position_switcher"))
@@ -61,6 +61,35 @@ hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("search"))
 -- launch layout switcher (which will switch Hyprland layouts)
 hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("layout_switcher"))
 -- Aurora's special scripts
+
+-- Different modes
+hl.bind("SUPER + F1", function()
+	local game_mode = (hl.get_config("animations.enabled") == false)
+
+	if game_mode then
+		hl.exec_cmd("hyprctl reload")
+		return
+	end
+
+	hl.config({
+		general = {
+			gaps_in = 0,
+			gaps_out = 0, -- Disable gaps
+			border_size = 0,
+		},
+
+		animations = {
+			enabled = false, -- Disable animations
+		},
+
+		-- Disable blur, shadow and window rounding
+		decoration = {
+			shadow = { enabled = false },
+			blur = { enabled = false },
+			rounding = 0,
+		},
+	})
+end)
 
 -- on/off (toggle) waybar
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))

@@ -20,8 +20,7 @@ use aurora::load_css;
 use gtk::gdk;
 use gtk::prelude::*;
 use gtk::{
-    Align, Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label,
-    Orientation,
+    Align, Application, ApplicationWindow, Box as GtkBox, EventControllerKey, Label, Orientation,
 };
 use gtk4 as gtk;
 
@@ -80,7 +79,7 @@ fn main() {
         btn_box.set_hexpand(true);
 
         let web_btn = gtk::Button::builder()
-            .label("Web Apps")
+            .label("󰖟  Web Apps")
             .halign(Align::Fill)
             .hexpand(true)
             .build();
@@ -89,13 +88,12 @@ fn main() {
 
         let win_c = window.clone();
         web_btn.connect_clicked(move |_| {
-            let _ = std::process::Command::new("web_app_entries_center")
-                .spawn();
+            let _ = std::process::Command::new("web_app_entries_center").spawn();
             win_c.close();
         });
 
         let tui_btn = gtk::Button::builder()
-            .label("Terminal Apps")
+            .label("  Terminal Apps")
             .halign(Align::Fill)
             .hexpand(true)
             .build();
@@ -104,8 +102,7 @@ fn main() {
 
         let win_c2 = window.clone();
         tui_btn.connect_clicked(move |_| {
-            let _ = std::process::Command::new("tui_app_entries_center")
-                .spawn();
+            let _ = std::process::Command::new("tui_app_entries_center").spawn();
             win_c2.close();
         });
 

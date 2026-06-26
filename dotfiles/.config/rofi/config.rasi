@@ -1,6 +1,11 @@
 configuration {
     modes: [ window, run, drun, emoji ];
     display-drun: "";
+    display-run: "";
+    display-combi: "";
+    display-ssh: "";
+    display-window: "";
+    display-emoji: "";
     show-icons: true;
     icon-theme: "Papirus";
     font: "JetBrainsMono Nerd Font 11";

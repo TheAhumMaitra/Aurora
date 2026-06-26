@@ -39,6 +39,9 @@ hl.bind(mainMod .. " + ALT + V", hl.dsp.exec_cmd(apps.editor))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(apps.menu .. " -show drun"))
 hl.bind(mainMod .. " + ALT + P", hl.dsp.exec_cmd("wlogout"))
 
+-- small floating terminals
+hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd(apps.terminal .. ' --class "com.aurora.kitty_mini_terminal"'))
+
 -- Aurora's custom gui programs
 
 -- open keybinds help menu
@@ -227,7 +230,7 @@ hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(mainMod .. " + ALT + E", hl.dsp.exec_cmd(apps.menu .. " -modi emoji -show emoji"))
 
 --launch rofi based clipboard manager
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu -p '' | cliphist decode | wl-copy"))
 
 -- to take a screenshot (hyprshot launch)
 hl.bind(mainMod .. " + ALT + Z", hl.dsp.exec_cmd("hyprshot -m output"))

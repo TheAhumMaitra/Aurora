@@ -178,3 +178,11 @@ hl.window_rule({
 	match = { class = "com.aurora.tui_app_entry_creator" },
 	float = true,
 })
+
+-- mini terminal
+hl.window_rule({
+	name = "Aurora's small kitty terminal",
+	match = { class = "com.aurora.kitty_mini_terminal" },
+	float = true,
+	size = { "monitor_w * 0.6", "monitor_h * 0.6" },
+})

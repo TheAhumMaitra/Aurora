@@ -66,6 +66,9 @@ hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("layout_switcher"))
 
 -- starship config switcher
 hl.bind(mainMod .. "+ SHIFT + A", hl.dsp.exec_cmd("starship_switcher"))
+
+-- rofi flavour switcher
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("rofi_config_switcher"))
 -- Aurora's special scripts
 
 -- keybind to shufttle between layouts

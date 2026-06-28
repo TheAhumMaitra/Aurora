@@ -193,3 +193,10 @@ hl.window_rule({
 	match = { class = "com.aurora.starship_switcher" },
 	float = true,
 })
+
+-- rofi configuration switcher
+hl.window_rule({
+	name = "Aurora's Rofi Config switcher",
+	match = { class = "com.aurora.rofi_config_switcher" },
+	float = true,
+})

@@ -200,3 +200,10 @@ hl.window_rule({
 	match = { class = "com.aurora.rofi_config_switcher" },
 	float = true,
 })
+
+-- waybar flavour changer
+hl.window_rule({
+	name = "Aurora's Waybar Flavour Changer",
+	match = { class = "com.aurora.waybar_config_switcher" },
+	float = true,
+})

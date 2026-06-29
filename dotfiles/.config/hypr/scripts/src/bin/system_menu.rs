@@ -21,40 +21,46 @@ use std::process::Command;
 /// ─── Main menu: each entry is a clickable category ───────────────────────
 /// Selecting one opens its submenu (or runs a command directly).
 const ENTRIES: &[(&str, &[&str])] = &[
-    ("  Power",               &["__sub_power__"]),
-    ("  Utilities",           &["__sub_utilities__"]),
-    ("  Settings",           &["settings"]),
-    ("  System",              &["__sub_system__"]),
+    ("  Power", &["__sub_power__"]),
+    ("  Utilities", &["__sub_utilities__"]),
+    ("  Settings", &["settings"]),
+    ("  System", &["__sub_system__"]),
 ];
 
 // ─── Submenu entries ─────────────────────────────────────────────────────
 
 const POWER_ENTRIES: &[(&str, &[&str])] = &[
-    ("  Lock",                &["hyprlock"]),
-    ("  Logout",              &["hyprctl dispatch exit"]),
-    ("  Suspend",             &["systemctl suspend"]),
-    ("  Reboot",              &["systemctl reboot"]),
-    ("  Shutdown",            &["systemctl poweroff"]),
+    ("  Lock", &["hyprlock"]),
+    ("  Logout", &["hyprshutdown -vt 3"]),
+    ("  Suspend", &["systemctl suspend"]),
+    ("  Reboot", &["systemctl reboot"]),
+    ("  Shutdown", &["systemctl poweroff"]),
 ];
 
 const UTILITIES_ENTRIES: &[(&str, &[&str])] = &[
-    ("  Theme Switcher",      &["theme_switcher"]),
-    ("  Starship Switcher",   &["starship_switcher"]),
-    ("  Rofi Flavour",        &["rofi_config_switcher"]),
-    ("  Waybar Position",     &["waybar_position_switcher"]),
-    ("  Layout Switcher",     &["layout_switcher"]),
-    ("  Keybinds Help",       &["keybinds_help"]),
-    ("  App Entries",         &["app_entries_home"]),
-    ("  Search",              &["search"]),
+    ("  Theme Switcher", &["theme_switcher"]),
+    ("  Starship Switcher", &["starship_switcher"]),
+    ("  Rofi Flavour", &["rofi_config_switcher"]),
+    ("  Waybar Position", &["waybar_position_switcher"]),
+    ("  Layout Switcher", &["layout_switcher"]),
+    ("  Keybinds Help", &["keybinds_help"]),
+    ("  App Entries", &["app_entries_home"]),
+    ("  Search", &["search"]),
 ];
 
 const SYSTEM_ENTRIES: &[(&str, &[&str])] = &[
-    ("  Refresh System",      &["refresh_system"]),
-    ("  Screenshot",          &["hyprshot -m output"]),
-    ("  Screen Recorder",     &["screenrecorder"]),
-    ("  Wallpaper (Theme)",   &["waytrogen_line_change_for_theme", "waytrogen"]),
-    ("  Wallpaper (Global)",  &["waytrogen_line_change_for_global_wallpapers", "waytrogen"]),
-    ("  Toggle Waybar",       &["waybar_toggle"]),
+    ("  Refresh System", &["refresh_system"]),
+    ("  Screenshot", &["hyprshot -m output"]),
+    ("  Screen Recorder", &["screenrecorder"]),
+    (
+        "  Wallpaper (Theme)",
+        &["waytrogen_line_change_for_theme", "waytrogen"],
+    ),
+    (
+        "  Wallpaper (Global)",
+        &["waytrogen_line_change_for_global_wallpapers", "waytrogen"],
+    ),
+    ("  Toggle Waybar", &["waybar_toggle"]),
 ];
 
 fn main() {
@@ -66,9 +72,9 @@ fn main() {
 
     // Route to the correct submenu or run a command directly.
     match selection.as_str() {
-        "  Power"     => show_submenu("Power Menu", POWER_ENTRIES),
+        "  Power" => show_submenu("Power Menu", POWER_ENTRIES),
         "  Utilities" => show_submenu("Utilities Menu", UTILITIES_ENTRIES),
-        "  System"    => show_submenu("System Menu", SYSTEM_ENTRIES),
+        "  System" => show_submenu("System Menu", SYSTEM_ENTRIES),
         // Settings and everything else run as commands
         s => {
             if let Some(action) = ENTRIES.iter().find(|(label, _)| *label == s) {

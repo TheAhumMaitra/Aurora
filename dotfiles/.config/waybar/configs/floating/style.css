@@ -38,12 +38,6 @@ window#waybar {
   color: @foreground;
 }
 
-/* .modules-left,
-.modules-center,
-.modules-right {
-  margin: 8px;
-} */
-
 #workspaces,
 #window,
 #clock,
@@ -59,13 +53,13 @@ window#waybar {
 #custom-bluetooth {
   background: alpha(@background, 0.82);
   border-radius: 14px;
-min-height: 28px;
-margin: 3px;
-padding: 0 12px;
+  min-height: 28px;
+  margin: 3px;
+  padding: 0 12px;
 }
 
 #workspaces {
-  padding: 4px;
+  padding: 7px;
 }
 
 #workspaces button {

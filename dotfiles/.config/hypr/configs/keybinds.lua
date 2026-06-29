@@ -69,6 +69,9 @@ hl.bind(mainMod .. "+ SHIFT + A", hl.dsp.exec_cmd("starship_switcher"))
 
 -- rofi flavour switcher
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("rofi_config_switcher"))
+
+-- rofi system menu
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("system_menu"))
 -- Aurora's special scripts
 
 -- keybind to shufttle between layouts
@@ -168,6 +171,9 @@ hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd(" waytrogen_line_change_for_g
 
 -- refresh waybar
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("waybar_refresh"))
+
+-- waybar flavour changer
+hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("waybar_config_switcher"))
 
 -- crucial keybinds
 

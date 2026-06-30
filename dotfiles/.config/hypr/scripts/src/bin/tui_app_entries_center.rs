@@ -1,13 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use aurora::{load_css, list_tui_apps, remove_tui_app};
+use aurora::{list_tui_apps, load_css, remove_tui_app};
 use gtk::gdk;
 use gtk::prelude::*;
 use gtk::{
-    Align, Application, ApplicationWindow, Box as GtkBox, Button,
-    EventControllerKey, Label, ListBox, ListBoxRow, Orientation,
-    ScrolledWindow,
+    Align, Application, ApplicationWindow, Box as GtkBox, Button, EventControllerKey, Label,
+    ListBox, ListBoxRow, Orientation, ScrolledWindow,
 };
 use gtk4 as gtk;
 
@@ -43,10 +42,7 @@ fn main() {
         header.add_css_class("home-header");
         root.append(&header);
 
-        let count_label = Label::builder()
-            .label("")
-            .halign(Align::Center)
-            .build();
+        let count_label = Label::builder().label("").halign(Align::Center).build();
         count_label.add_css_class("home-count");
         root.append(&count_label);
 
@@ -66,10 +62,7 @@ fn main() {
         let list_box_c = list_box.clone();
         let count_clone = count_label.clone();
 
-        fn refresh_list(
-            list_box: &ListBox,
-            count_label: &Label,
-        ) {
+        fn refresh_list(list_box: &ListBox, count_label: &Label) {
             while let Some(child) = list_box.first_child() {
                 list_box.remove(&child);
             }
@@ -91,9 +84,11 @@ fn main() {
                 return;
             }
 
-            count_label.set_label(
-                &format!("{} app{}", apps.len(), if apps.len() == 1 { "" } else { "s" })
-            );
+            count_label.set_label(&format!(
+                "{} app{}",
+                apps.len(),
+                if apps.len() == 1 { "" } else { "s" }
+            ));
 
             for app_data in apps {
                 let row_box = GtkBox::new(Orientation::Horizontal, 8);
@@ -162,8 +157,7 @@ fn main() {
 
         let wc = window.clone();
         create_btn.connect_clicked(move |_| {
-            let _ = std::process::Command::new("tui_app_entry_creator")
-                .spawn();
+            let _ = std::process::Command::new("tui_app_entry_creator").spawn();
             wc.close();
         });
 

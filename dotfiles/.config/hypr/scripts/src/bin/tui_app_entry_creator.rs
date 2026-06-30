@@ -5,18 +5,26 @@ use aurora::{check_terminal, create_tui_desktop_entry, download_icon, load_css};
 use gtk::gdk;
 use gtk::prelude::*;
 use gtk::{
-    Align, Application, ApplicationWindow, Box as GtkBox, Button, Entry,
-    EventControllerKey, Label, Orientation,
+    Align, Application, ApplicationWindow, Box as GtkBox, Button, Entry, EventControllerKey, Label,
+    Orientation,
 };
 use gtk4 as gtk;
 
 fn validate_url(raw: &str) -> bool {
     let s = raw.trim();
-    if s.is_empty() { return false; }
-    let after = if let Some(rest) = s.strip_prefix("https://") { rest }
-    else if let Some(rest) = s.strip_prefix("http://") { rest }
-    else { return false; };
-    if after.is_empty() || after.contains(' ') { return false; }
+    if s.is_empty() {
+        return false;
+    }
+    let after = if let Some(rest) = s.strip_prefix("https://") {
+        rest
+    } else if let Some(rest) = s.strip_prefix("http://") {
+        rest
+    } else {
+        return false;
+    };
+    if after.is_empty() || after.contains(' ') {
+        return false;
+    }
     after.contains('.') || after.eq_ignore_ascii_case("localhost")
 }
 
@@ -36,8 +44,11 @@ fn validate_command(raw: &str) -> bool {
 fn set_entry_state(entry: &Entry, valid: bool) {
     entry.remove_css_class("valid");
     entry.remove_css_class("error");
-    if valid { entry.add_css_class("valid"); }
-    else { entry.add_css_class("error"); }
+    if valid {
+        entry.add_css_class("valid");
+    } else {
+        entry.add_css_class("error");
+    }
 }
 
 fn main() {
@@ -87,7 +98,9 @@ fn main() {
             .wrap(true)
             .build();
         terminal_warn.add_css_class("chrome-warn");
-        if !terminal_ok { terminal_warn.set_label("TERMINAL environment variable is not set"); }
+        if !terminal_ok {
+            terminal_warn.set_label("TERMINAL environment variable is not set");
+        }
         main_box.append(&terminal_warn);
 
         // App Name field
@@ -355,9 +368,7 @@ fn main() {
                 status_c.set_label("Creating desktop entry...");
                 match create_tui_desktop_entry(&name_c, &command_c, &icon_path) {
                     Ok(()) => {
-                        status_c.set_label(
-                            &format!("Created '{}' successfully!", name_c),
-                        );
+                        status_c.set_label(&format!("Created '{}' successfully!", name_c));
                         status_c.remove_css_class("msg-error");
                         status_c.add_css_class("msg-ready");
                         submit_c.set_sensitive(true);

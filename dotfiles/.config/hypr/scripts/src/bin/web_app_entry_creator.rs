@@ -20,8 +20,8 @@ use aurora::{check_chrome, create_desktop_entry, download_icon, load_css};
 use gtk::gdk;
 use gtk::prelude::*;
 use gtk::{
-    Align, Application, ApplicationWindow, Box as GtkBox, Button, Entry,
-    EventControllerKey, Label, Orientation,
+    Align, Application, ApplicationWindow, Box as GtkBox, Button, Entry, EventControllerKey, Label,
+    Orientation,
 };
 use gtk4 as gtk;
 
@@ -30,11 +30,19 @@ use gtk4 as gtk;
 /// Validate a generic URL (must have http/https scheme and a valid host).
 fn validate_url(raw: &str) -> bool {
     let s = raw.trim();
-    if s.is_empty() { return false; }
-    let after = if let Some(rest) = s.strip_prefix("https://") { rest }
-    else if let Some(rest) = s.strip_prefix("http://") { rest }
-    else { return false; };
-    if after.is_empty() || after.contains(' ') { return false; }
+    if s.is_empty() {
+        return false;
+    }
+    let after = if let Some(rest) = s.strip_prefix("https://") {
+        rest
+    } else if let Some(rest) = s.strip_prefix("http://") {
+        rest
+    } else {
+        return false;
+    };
+    if after.is_empty() || after.contains(' ') {
+        return false;
+    }
     after.contains('.') || after.eq_ignore_ascii_case("localhost")
 }
 
@@ -54,10 +62,12 @@ fn validate_name(raw: &str) -> bool {
 fn set_entry_state(entry: &Entry, valid: bool) {
     entry.remove_css_class("valid");
     entry.remove_css_class("error");
-    if valid { entry.add_css_class("valid"); }
-    else { entry.add_css_class("error"); }
+    if valid {
+        entry.add_css_class("valid");
+    } else {
+        entry.add_css_class("error");
+    }
 }
-
 
 fn main() {
     let app = Application::builder()
@@ -106,9 +116,10 @@ fn main() {
             .wrap(true)
             .build();
         chrome_warn.add_css_class("chrome-warn");
-        if !chrome_ok { chrome_warn.set_label("Google Chrome is not installed"); }
+        if !chrome_ok {
+            chrome_warn.set_label("Google Chrome is not installed");
+        }
         main_box.append(&chrome_warn);
-
 
         // ── App Name field ──────────────────────────────────
         let name_label = Label::builder()
@@ -385,9 +396,7 @@ fn main() {
                 status_c.set_label("Creating desktop entry...");
                 match create_desktop_entry(&name_c, &url_c, &icon_path) {
                     Ok(()) => {
-                        status_c.set_label(
-                            &format!("Created '{}' successfully!", name_c),
-                        );
+                        status_c.set_label(&format!("Created '{}' successfully!", name_c));
                         status_c.remove_css_class("msg-error");
                         status_c.add_css_class("msg-ready");
                         submit_c.set_sensitive(true);

@@ -153,7 +153,11 @@ fn build_ui(app: &Application) {
     let index = index_by_name();
 
     for (name, path) in resolved_config_paths() {
-        let display = if path.exists() { name.clone() } else { format!("{name} (missing)") };
+        let display = if path.exists() {
+            name.clone()
+        } else {
+            format!("{name} (missing)")
+        };
 
         let row = ListBoxRow::new();
         row.add_css_class("section-row-theme");

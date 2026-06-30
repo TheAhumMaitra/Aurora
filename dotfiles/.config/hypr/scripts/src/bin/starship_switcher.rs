@@ -34,6 +34,10 @@ const CONFIGS: &[(&str, &str)] = &[
     ("Default", ".config/starship/configs/default.toml"),
     ("Colorvoid", ".config/starship/configs/colorvoid.toml"),
     ("Jetpack", ".config/starship/configs/jetpack.toml"),
+    (
+        "Minimal Arch Coffee",
+        ".config/starship/configs/minimal.toml",
+    ),
 ];
 
 fn resolved_config_paths() -> Vec<(&'static str, PathBuf)> {
@@ -189,4 +193,3 @@ fn main() {
     app.connect_activate(build_ui);
     app.run();
 }
-

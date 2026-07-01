@@ -9,7 +9,7 @@ license = "GPL-3.0-or-later"
 wallpapers_sources = ["https://github.com/AngelJumbo/gruvbox-wallpapers"]
 
 [gtk]
-theme_name = "Yaru-olive-dark"
+theme_name = "Gruvbox"
 icon_theme = "Yaru-wartybrown-dark"
 
 [vscode]

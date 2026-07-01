@@ -13,7 +13,7 @@ script = "activate.sh"
 interpreter = "bash"
 
 [gtk]
-theme_name = "Yaru-purple-dark"
+theme_name = "Dracula"
 icon_theme = "Yaru-purple"
 
 [vscode]

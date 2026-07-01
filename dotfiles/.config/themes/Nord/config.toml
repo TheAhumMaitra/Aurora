@@ -9,7 +9,7 @@ license = "GPL-3.0-or-later"
 wallpapers_sources = ["https://github.com/linuxdotexe/nordic-wallpapers"]
 
 [gtk]
-theme_name = "Yaru-blue-dark"
+theme_name = "Nordic"
 icon_theme = "Yaru-blue-dark"
 
 [vscode]

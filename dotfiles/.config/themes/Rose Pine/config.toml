@@ -10,8 +10,8 @@ license = "GPL-3.0-or-later"
 wallpapers_sources = ["https://github.com/rose-pine/wallpapers"]
 
 [gtk]
-theme_name = "Yaru-blue-dark"
-icon_theme = "Yaru-blue-dark"
+theme_name = "Rose-Pine"
+icon_theme = "Yaru-purple-dark"
 
 [vscode]
 publisher = "mvllow"

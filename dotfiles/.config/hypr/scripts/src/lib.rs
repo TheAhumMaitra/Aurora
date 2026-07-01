@@ -220,6 +220,13 @@ pub fn apply_theme(theme_name: &str) {
         .status()
         .expect("Failed to set preference of gtk colorscheme");
 
+    // Install any bundled GTK theme/icon materials from the theme directory
+    if let Some(config) = &config {
+        apply_materials(&paths, theme_name, config);
+    } else {
+        theme_debug("Skipping materials install because config.toml was not loaded");
+    }
+
     if let Some(config) = &config {
         theme_debug("Applying optional GTK, VS Code, and Zed settings from config.toml");
         apply_gtk_options(&paths, config);
@@ -438,6 +445,97 @@ fn apply_gsettings_theme(gtk_theme_name: Option<&str>, gtk_icon_theme_name: Opti
             ])
             .status()
             .expect("Failed to set icon-theme");
+    }
+}
+
+/// Install bundled GTK theme and icon materials from the theme's `materials/` directory.
+///
+/// Expected directory structure inside a theme:
+///   materials/gtk/theme/<name>/  →  installed to ~/.local/share/themes/<name>/
+///   materials/gtk/icon/<name>/   →  installed to ~/.local/share/icons/<name>/
+fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
+    let theme_dir = paths.themes.join(theme_name);
+    let materials_dir = theme_dir.join("materials");
+
+    if !materials_dir.exists() {
+        theme_debug("No materials/ directory found; skipping materials install");
+        return;
+    }
+
+    let local_share = paths.home.join(".local/share");
+
+    // ── GTK theme ──────────────────────────────────────────────────────────
+    let gtk_theme_dir = materials_dir.join("gtk/theme");
+    if gtk_theme_dir.exists() {
+        theme_debug(format!(
+            "Scanning GTK theme materials: {}",
+            gtk_theme_dir.display()
+        ));
+        if let Ok(entries) = fs::read_dir(&gtk_theme_dir) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let source = entry.path();
+                let target = local_share.join("themes").join(&name);
+
+                if !source.is_dir() {
+                    continue;
+                }
+
+                theme_debug(format!(
+                    "Installing GTK theme `{name}` → {}",
+                    target.display()
+                ));
+                if target.exists() {
+                    fs::remove_dir_all(&target).ok();
+                }
+                if let Err(e) = copy_theme_path(&source, &target) {
+                    eprintln!(
+                        "[theme-switcher] Failed to install GTK theme `{name}`: {e}"
+                    );
+                } else {
+                    theme_debug(format!("Installed GTK theme `{name}`"));
+                }
+            }
+        }
+    } else {
+        theme_debug("No gtk/theme materials found; skipping");
+    }
+
+    // ── GTK icon theme ─────────────────────────────────────────────────────
+    let gtk_icon_dir = materials_dir.join("gtk/icon");
+    if gtk_icon_dir.exists() {
+        theme_debug(format!(
+            "Scanning GTK icon theme materials: {}",
+            gtk_icon_dir.display()
+        ));
+        if let Ok(entries) = fs::read_dir(&gtk_icon_dir) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let source = entry.path();
+                let target = local_share.join("icons").join(&name);
+
+                if !source.is_dir() {
+                    continue;
+                }
+
+                theme_debug(format!(
+                    "Installing GTK icon theme `{name}` → {}",
+                    target.display()
+                ));
+                if target.exists() {
+                    fs::remove_dir_all(&target).ok();
+                }
+                if let Err(e) = copy_theme_path(&source, &target) {
+                    eprintln!(
+                        "[theme-switcher] Failed to install icon theme `{name}`: {e}"
+                    );
+                } else {
+                    theme_debug(format!("Installed icon theme `{name}`"));
+                }
+            }
+        }
+    } else {
+        theme_debug("No gtk/icon materials found; skipping");
     }
 }
 
@@ -790,11 +888,9 @@ pub fn check_chrome() -> Result<String, String> {
 /// The app_name is sanitised (lowercased, spaces → hyphens, special chars removed).
 /// Returns the absolute path to the saved icon file.
 pub fn download_icon(url: &str, app_name: &str) -> Result<PathBuf, String> {
-    let home =
-        dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
+    let home = dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
     let icons_dir = home.join(".local/share/Aurora/icons");
-    fs::create_dir_all(&icons_dir)
-        .map_err(|e| format!("Failed to create icons directory: {e}"))?;
+    fs::create_dir_all(&icons_dir).map_err(|e| format!("Failed to create icons directory: {e}"))?;
 
     let safe_name: String = app_name
         .to_lowercase()
@@ -828,8 +924,7 @@ pub fn download_icon(url: &str, app_name: &str) -> Result<PathBuf, String> {
 ///
 /// `icon_path` – absolute path to the PNG icon file.
 pub fn create_desktop_entry(app_name: &str, url: &str, icon_path: &str) -> Result<(), String> {
-    let home =
-        dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
+    let home = dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
     let apps_dir = home.join(".local/share/applications");
     fs::create_dir_all(&apps_dir)
         .map_err(|e| format!("Failed to create applications directory: {e}"))?;
@@ -916,7 +1011,12 @@ pub fn list_web_apps() -> Vec<WebAppEntry> {
         let url = exec_val
             .split("--app=")
             .nth(1)
-            .and_then(|s| s.trim_matches('"').trim_matches('\'').split_whitespace().next())
+            .and_then(|s| {
+                s.trim_matches('"')
+                    .trim_matches('\'')
+                    .split_whitespace()
+                    .next()
+            })
             .unwrap_or("")
             .to_string();
 
@@ -993,15 +1093,18 @@ pub struct TuiAppEntry {
 
 /// Check for the TERMINAL environment variable and return its value.
 pub fn check_terminal() -> Result<String, String> {
-    std::env::var("TERMINAL")
-        .map_err(|_| "TERMINAL environment variable is not set.".to_string())
+    std::env::var("TERMINAL").map_err(|_| "TERMINAL environment variable is not set.".to_string())
 }
 
 /// Create (or overwrite) a `.desktop` entry in `~/.local/share/applications/`
 /// that launches the given command in the user's terminal emulator.
 ///
 /// `icon_path` – absolute path to the PNG icon file.
-pub fn create_tui_desktop_entry(app_name: &str, command: &str, icon_path: &str) -> Result<(), String> {
+pub fn create_tui_desktop_entry(
+    app_name: &str,
+    command: &str,
+    icon_path: &str,
+) -> Result<(), String> {
     let home = dirs::home_dir().ok_or_else(|| "Could not determine HOME directory".to_string())?;
     let apps_dir = home.join(".local/share/applications");
     fs::create_dir_all(&apps_dir)
@@ -1150,8 +1253,11 @@ pub struct AuroraConfig {
 
 #[derive(Debug, Deserialize, Default)]
 pub struct GhosttyConfig {
+    #[serde(default = "default_true")]
+    pub theme: bool,
+
     #[serde(default)]
-    pub blur: bool,
+    pub theme_blur: bool,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -1222,7 +1328,7 @@ impl KittyConfig {
 
 impl GhosttyConfig {
     pub fn apply(&self, paths: &AuroraPaths) -> Result<(), String> {
-        ghostty_blur(paths, self.blur)
+        ghostty_theme(paths, self.theme, self.theme_blur)
     }
 }
 
@@ -1413,15 +1519,21 @@ pub fn screensaver_is_enabled() -> Result<bool, String> {
     )
 }
 
-pub fn ghostty_blur(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
+pub fn ghostty_theme(paths: &AuroraPaths, theme: bool, theme_blur: bool) -> Result<(), String> {
     let path = ghostty_config_path(paths);
 
     edit_file(&path, |lines| {
-        toggle_line(lines, "config-file = ./colors.ghostty", "#", enabled)?;
+        toggle_line(lines, "config-file = ./colors.ghostty", "#", theme)?;
 
-        toggle_line(lines, "background = 000000", "#", !enabled)?;
-        toggle_line(lines, "foreground = ffffff", "#", !enabled)?;
-        toggle_line(lines, "background-opacity = 0.2", "#", !enabled)?;
+        if theme {
+            toggle_line(lines, "background = 000000", "#", true)?;
+            toggle_line(lines, "foreground = ffffff", "#", true)?;
+            toggle_line(lines, "background-opacity = 0.2", "#", true)?;
+        } else {
+            toggle_line(lines, "background = 000000", "#", false)?;
+            toggle_line(lines, "foreground = ffffff", "#", false)?;
+            toggle_line(lines, "background-opacity = 0.2", "#", theme_blur)?;
+        }
 
         Ok(())
     })
@@ -1508,12 +1620,28 @@ pub fn kitty_blur_change(blur: bool) -> Result<(), String> {
     kitty_theme(&paths, theme, blur)
 }
 
-pub fn ghostty_blur_change(enabled: bool) -> Result<(), String> {
+pub fn ghostty_theme_change(theme: bool) -> Result<(), String> {
     let paths = aurora_paths();
-    ghostty_blur(&paths, enabled)
+    let theme_blur = ghostty_theme_blur_is_enabled().unwrap_or(false);
+    ghostty_theme(&paths, theme, theme_blur)
 }
 
-pub fn ghostty_blur_is_enabled() -> Result<bool, String> {
+pub fn ghostty_theme_blur_change(blur: bool) -> Result<(), String> {
+    let paths = aurora_paths();
+    let theme = ghostty_theme_is_enabled().unwrap_or(true);
+    ghostty_theme(&paths, theme, blur)
+}
+
+pub fn ghostty_theme_is_enabled() -> Result<bool, String> {
+    let paths = aurora_paths();
+    line_is_enabled(
+        &ghostty_config_path(&paths),
+        "config-file = ./colors.ghostty",
+        "#",
+    )
+}
+
+pub fn ghostty_theme_blur_is_enabled() -> Result<bool, String> {
     let paths = aurora_paths();
     line_is_enabled(
         &ghostty_config_path(&paths),

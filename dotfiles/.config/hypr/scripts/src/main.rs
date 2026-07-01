@@ -22,7 +22,8 @@ use aurora::apply_theme;
 use aurora::aurora_parse;
 use aurora::aurora_paths;
 use aurora::download_theme;
-use aurora::ghostty_blur_change;
+use aurora::ghostty_theme_blur_change;
+use aurora::ghostty_theme_change;
 use aurora::kitty_blur_change;
 use aurora::kitty_theme_change;
 use aurora::list_themes;
@@ -105,7 +106,10 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum GhosttyCommands {
-    /// Turn Ghostty blur on or off
+    /// Turn Ghostty theme management on or off
+    Theme { state: ToggleState },
+
+    /// Turn Ghostty blur theme on or off (only applies when theme is on)
     Blur { state: ToggleState },
 }
 
@@ -239,9 +243,19 @@ fn main() {
         },
 
         Commands::Ghostty { command } => match command {
-            GhosttyCommands::Blur { state } => match ghostty_blur_change(state.enabled()) {
+            GhosttyCommands::Theme { state } => match ghostty_theme_change(state.enabled()) {
                 Ok(_) => println!(
-                    "Ghostty blur {}.",
+                    "Ghostty theme {}.",
+                    state.to_possible_value().unwrap().get_name()
+                ),
+                Err(err) => {
+                    eprintln!("Failed to change Ghostty theme: {err}");
+                    std::process::exit(1);
+                }
+            },
+            GhosttyCommands::Blur { state } => match ghostty_theme_blur_change(state.enabled()) {
+                Ok(_) => println!(
+                    "Ghostty blur theme {}.",
                     state.to_possible_value().unwrap().get_name()
                 ),
                 Err(err) => {

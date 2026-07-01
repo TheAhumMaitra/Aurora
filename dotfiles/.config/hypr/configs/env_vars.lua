@@ -29,6 +29,16 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_THEME", "Nordzy-cursors-white")
 
 -- set default softwares
-hl.env("EDITOR", "nvim")
-hl.env("BROWSER", "zen-browser")
-hl.env("FILE_MANAGER", "nautilus")
+local editor = "nvim"
+local menu = "rofi"
+local file_manager = "nemo"
+local browser = "zen-browser"
+local primary_terminal = "kitty"
+local secondary_terminal = "ghostty"
+
+hl.env("EDITOR", editor)
+hl.env("TERMINAL", primary_terminal)
+hl.env("secondary_terminal", secondary_terminal)
+hl.env("MENU", menu)
+hl.env("BROWSER", browser)
+hl.env("FILE_MANAGER", file_manager)

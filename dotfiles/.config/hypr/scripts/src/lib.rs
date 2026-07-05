@@ -220,7 +220,7 @@ pub fn apply_theme(theme_name: &str) {
         .status()
         .expect("Failed to set preference of gtk colorscheme");
 
-    // Install any bundled GTK theme/icon materials from the theme directory
+    // Install any bundled GTK theme/icon materials from the theme's gtk/ directory
     if let Some(config) = &config {
         apply_materials(&paths, theme_name, config);
     } else {
@@ -392,34 +392,19 @@ pub fn apply_theme(theme_name: &str) {
     theme_debug(format!("Finished theme switch for `{display_name}`"));
 }
 
-fn apply_gtk_options(paths: &AuroraPaths, config: &Config) {
-    let Some(gtk) = &config.gtk else {
-        return;
-    };
-
-    let gtk_theme_name = gtk
-        .theme_name
-        .as_deref()
-        .map(str::trim)
-        .filter(|value| !value.is_empty());
-    let gtk_icon_theme_name = gtk
-        .icon_theme
-        .as_deref()
-        .map(str::trim)
-        .filter(|value| !value.is_empty());
-
-    if gtk_theme_name.is_none() && gtk_icon_theme_name.is_none() {
-        return;
-    }
+fn apply_gtk_options(paths: &AuroraPaths, _config: &Config) {
+    // Both GTK and icon themes are always installed as "current"
+    // via the cache → current mechanism in apply_materials.
+    let current = "current";
 
     for settings_path in [
         paths.config.join("gtk-3.0/settings.ini"),
         paths.config.join("gtk-4.0/settings.ini"),
     ] {
-        write_gtk_settings(&settings_path, gtk_theme_name, gtk_icon_theme_name);
+        write_gtk_settings(&settings_path, Some(current), Some(current));
     }
 
-    apply_gsettings_theme(gtk_theme_name, gtk_icon_theme_name);
+    apply_gsettings_theme(Some(current), Some(current));
 }
 
 fn apply_gsettings_theme(gtk_theme_name: Option<&str>, gtk_icon_theme_name: Option<&str>) {
@@ -448,95 +433,177 @@ fn apply_gsettings_theme(gtk_theme_name: Option<&str>, gtk_icon_theme_name: Opti
     }
 }
 
-/// Install bundled GTK theme and icon materials from the theme's `materials/` directory.
+/// Install bundled GTK theme and icon materials from the theme directory.
 ///
-/// Expected directory structure inside a theme:
-///   materials/gtk/theme/<name>/  →  installed to ~/.local/share/themes/<name>/
-///   materials/gtk/icon/<name>/   →  installed to ~/.local/share/icons/<name>/
+/// Checks both new layout (gtk/theme/, icon/) and legacy layout
+/// (materials/gtk/theme/, materials/gtk/icon/).
+///
+/// Extraction flow:
+///   archive  →  ~/.local/share/Aurora/cache/gtk/theme/current/  (temp cache)
+///               →  ~/.local/share/themes/current/                 (final)
+///
+/// If the tar.xz contains a single top-level folder (e.g. Catppuccin Mocha/),
+/// it is unwrapped and its *contents* go into themes/current/ — NOT themes/current/Catppuccin Mocha/.
+/// If the archive has loose files/folders at top level they go straight into current/.
+///
+/// Any gtk.theme_name or gtk.icon_theme values in config.toml are ignored;
+/// the installed material is always exposed as current.
 fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
     let theme_dir = paths.themes.join(theme_name);
-    let materials_dir = theme_dir.join("materials");
-
-    if !materials_dir.exists() {
-        theme_debug("No materials/ directory found; skipping materials install");
-        return;
-    }
-
     let local_share = paths.home.join(".local/share");
+    let cache_base = local_share.join("Aurora/cache");
+    let current_name = "current";
 
-    // ── GTK theme ──────────────────────────────────────────────────────────
-    let gtk_theme_dir = materials_dir.join("gtk/theme");
-    if gtk_theme_dir.exists() {
-        theme_debug(format!(
-            "Scanning GTK theme materials: {}",
-            gtk_theme_dir.display()
-        ));
-        if let Ok(entries) = fs::read_dir(&gtk_theme_dir) {
-            for entry in entries.flatten() {
-                let name = entry.file_name().to_string_lossy().to_string();
-                let source = entry.path();
-                let target = local_share.join("themes").join(&name);
+    // ── GTK theme: check new (gtk/theme/) first, then legacy (materials/gtk/theme/) ─
+    let gtk_new = theme_dir.join("gtk/theme");
+    let gtk_old = theme_dir.join("materials/gtk/theme");
+    let gtk_source = if gtk_new.exists() { &gtk_new } else { &gtk_old };
+    let gtk_cache = cache_base.join("gtk/theme").join(current_name);
+    let gtk_live = local_share.join("themes").join(current_name);
 
-                if !source.is_dir() {
-                    continue;
-                }
+    if gtk_source.exists() {
+        if gtk_cache.exists() { fs::remove_dir_all(&gtk_cache).ok(); }
+        if gtk_live.exists() { fs::remove_dir_all(&gtk_live).ok(); }
+        fs::create_dir_all(&gtk_cache).ok();
+        fs::create_dir_all(&gtk_live).ok();
 
-                theme_debug(format!(
-                    "Installing GTK theme `{name}` → {}",
-                    target.display()
-                ));
-                if target.exists() {
-                    fs::remove_dir_all(&target).ok();
+        if let Some(extracted) = extract_first_archive(gtk_source, current_name, &cache_base.join("gtk/theme")) {
+            // Unwrap single top-level folder if present
+            let src = match fs::read_dir(&extracted) {
+                Ok(mut entries) => {
+                    let mut items: Vec<_> = entries.flatten().collect();
+                    if items.len() == 1 && items[0].path().is_dir() {
+                        items[0].path()
+                    } else {
+                        extracted.clone()
+                    }
                 }
-                if let Err(e) = copy_theme_path(&source, &target) {
-                    eprintln!(
-                        "[theme-switcher] Failed to install GTK theme `{name}`: {e}"
-                    );
-                } else {
-                    theme_debug(format!("Installed GTK theme `{name}`"));
+                _ => extracted.clone(),
+            };
+
+            if let Ok(entries) = fs::read_dir(&src) {
+                for entry in entries.flatten() {
+                    let dst = gtk_live.join(entry.file_name());
+                    if dst.exists() { fs::remove_dir_all(&dst).ok(); }
+                    if let Err(e) = copy_theme_path(&entry.path(), &dst) {
+                        eprintln!("[theme-switcher] Failed to install GTK theme: {e}");
+                        break;
+                    }
                 }
+                theme_debug("Installed GTK theme to `themes/current`");
             }
         }
     } else {
         theme_debug("No gtk/theme materials found; skipping");
     }
 
-    // ── GTK icon theme ─────────────────────────────────────────────────────
-    let gtk_icon_dir = materials_dir.join("gtk/icon");
-    if gtk_icon_dir.exists() {
-        theme_debug(format!(
-            "Scanning GTK icon theme materials: {}",
-            gtk_icon_dir.display()
-        ));
-        if let Ok(entries) = fs::read_dir(&gtk_icon_dir) {
-            for entry in entries.flatten() {
-                let name = entry.file_name().to_string_lossy().to_string();
-                let source = entry.path();
-                let target = local_share.join("icons").join(&name);
+    // ── Icon theme: check new (icon/) first, then legacy (materials/gtk/icon/) ──
+    let icon_new = theme_dir.join("icon");
+    let icon_old = theme_dir.join("materials/gtk/icon");
+    let icon_source = if icon_new.exists() { &icon_new } else { &icon_old };
+    let icon_cache = cache_base.join("icons").join(current_name);
+    let icon_live = local_share.join("icons").join(current_name);
 
-                if !source.is_dir() {
-                    continue;
-                }
+    if icon_source.exists() {
+        if icon_cache.exists() { fs::remove_dir_all(&icon_cache).ok(); }
+        if icon_live.exists() { fs::remove_dir_all(&icon_live).ok(); }
+        fs::create_dir_all(&icon_cache).ok();
+        fs::create_dir_all(&icon_live).ok();
 
-                theme_debug(format!(
-                    "Installing GTK icon theme `{name}` → {}",
-                    target.display()
-                ));
-                if target.exists() {
-                    fs::remove_dir_all(&target).ok();
+        if let Some(extracted) = extract_first_archive(icon_source, current_name, &cache_base.join("icons")) {
+            let src = match fs::read_dir(&extracted) {
+                Ok(mut entries) => {
+                    let mut items: Vec<_> = entries.flatten().collect();
+                    if items.len() == 1 && items[0].path().is_dir() {
+                        items[0].path()
+                    } else {
+                        extracted.clone()
+                    }
                 }
-                if let Err(e) = copy_theme_path(&source, &target) {
-                    eprintln!(
-                        "[theme-switcher] Failed to install icon theme `{name}`: {e}"
-                    );
-                } else {
-                    theme_debug(format!("Installed icon theme `{name}`"));
+                _ => extracted.clone(),
+            };
+
+            if let Ok(entries) = fs::read_dir(&src) {
+                for entry in entries.flatten() {
+                    let dst = icon_live.join(entry.file_name());
+                    if dst.exists() { fs::remove_dir_all(&dst).ok(); }
+                    if let Err(e) = copy_theme_path(&entry.path(), &dst) {
+                        eprintln!("[theme-switcher] Failed to install icon theme: {e}");
+                        break;
+                    }
                 }
+                theme_debug("Installed icon theme to `icons/current`");
             }
         }
     } else {
-        theme_debug("No gtk/icon materials found; skipping");
+        theme_debug("No icon materials found; skipping");
     }
+}
+
+/// Scan `dir` for the first .tar.xz archive, extract it to
+/// `target_base/<name>/`, and return the path to the extracted directory on success.
+fn extract_first_archive(dir: &Path, name: &str, target_base: &Path) -> Option<PathBuf> {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return None;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+
+        let fname = entry.file_name().to_string_lossy().to_string();
+        let lower = fname.to_lowercase();
+
+        if !lower.ends_with(".tar.xz") && !lower.ends_with(".txz") {
+            theme_debug(format!("Skipping unsupported archive format: {fname}"));
+            continue;
+        }
+
+        let final_target = target_base.join(name);
+        if final_target.exists() {
+            fs::remove_dir_all(&final_target).ok();
+        }
+        fs::create_dir_all(target_base).ok();
+
+        theme_debug(format!("Extracting `{fname}` to `{}`", final_target.display()));
+
+        let result = extract_tar_cmd(&path, &final_target);
+
+        match result {
+            Ok(()) => theme_debug(format!("Extracted to cache `{}`", final_target.display())),
+            Err(e) => {
+                eprintln!("[theme-switcher] Failed to extract `{fname}`: {e}");
+                return None;
+            }
+        }
+
+        return Some(final_target);
+    }
+
+    None
+}
+
+
+/// Extract a tar archive using the system `tar` command.
+/// GNU tar auto-detects compression since v1.27+, so just use `-xf`.
+fn extract_tar_cmd(archive: &Path, target: &Path) -> Result<(), String> {
+    fs::create_dir_all(target)
+        .map_err(|e| format!("Failed to create target dir: {e}"))?;
+    let status = Command::new("tar")
+        .arg("-xf")
+        .arg(archive)
+        .arg("-C")
+        .arg(target)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map_err(|e| format!("Failed to run tar: {e}"))?;
+    if !status.success() {
+        return Err(format!("tar exited with status: {status}"));
+    }
+    Ok(())
 }
 
 fn ensure_ini_setting(lines: &mut Vec<String>, key: &str, value: Option<&str>) {
@@ -743,6 +810,7 @@ fn write_vscode_settings(settings_path: &Path, theme_name: &str) -> std::io::Res
 
     Ok(())
 }
+
 fn copy_theme_path(source: &Path, target: &Path) -> std::io::Result<()> {
     if source.is_file() {
         if should_copy(source, target)? {

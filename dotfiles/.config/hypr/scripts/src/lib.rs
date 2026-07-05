@@ -118,6 +118,7 @@ struct Config {
     wallpapers_sources: Option<Vec<String>>,
     license: Option<String>,
     settings: Option<Settings>,
+    #[allow(dead_code)]
     gtk: Option<GtkOptions>,
     vscode: Option<VsCodeOptions>,
     zed: Option<ZedOptions>,
@@ -138,6 +139,7 @@ struct ZedOptions {
 
 // get options inside of the theme configuration file's settings GTK (we only need required options)
 #[derive(Deserialize, Debug)]
+#[allow(dead_code)]
 struct GtkOptions {
     theme_name: Option<String>,
     icon_theme: Option<String>,
@@ -470,8 +472,8 @@ fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
         if let Some(extracted) = extract_first_archive(gtk_source, current_name, &cache_base.join("gtk/theme")) {
             // Unwrap single top-level folder if present
             let src = match fs::read_dir(&extracted) {
-                Ok(mut entries) => {
-                    let mut items: Vec<_> = entries.flatten().collect();
+                Ok(entries) => {
+                    let items: Vec<_> = entries.flatten().collect();
                     if items.len() == 1 && items[0].path().is_dir() {
                         items[0].path()
                     } else {
@@ -512,8 +514,8 @@ fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
 
         if let Some(extracted) = extract_first_archive(icon_source, current_name, &cache_base.join("icons")) {
             let src = match fs::read_dir(&extracted) {
-                Ok(mut entries) => {
-                    let mut items: Vec<_> = entries.flatten().collect();
+                Ok(entries) => {
+                    let items: Vec<_> = entries.flatten().collect();
                     if items.len() == 1 && items[0].path().is_dir() {
                         items[0].path()
                     } else {

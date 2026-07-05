@@ -12,7 +12,7 @@ script = "default.lua"
 interpreter = "lua"
 
 [gtk]
-theme_name = "Yaru-dark"
+theme_name = "Material-Black"
 icon_theme = "Yaru-grey"
 
 [vscode]

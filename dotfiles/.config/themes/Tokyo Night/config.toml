@@ -8,7 +8,7 @@ authors = [
 wallpapers_source = ["https://github.com/tokyo-night/wallpapers","https://github.com/atraxsrc/tokyonight-wallpapers", ""]
 
 [gtk]
-theme_name = "Yaru-blue-dark"
+theme_name = "Tokyo-Night"
 icon_theme = "Yaru-blue"
 
 [vscode]

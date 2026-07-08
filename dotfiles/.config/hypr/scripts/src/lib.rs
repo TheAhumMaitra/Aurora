@@ -16,6 +16,8 @@
 //      You should have received a copy of the GNU General Public License
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Aurora's robust theme switcher :)
+
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::fs;
@@ -394,19 +396,27 @@ pub fn apply_theme(theme_name: &str) {
     theme_debug(format!("Finished theme switch for `{display_name}`"));
 }
 
-fn apply_gtk_options(paths: &AuroraPaths, _config: &Config) {
-    // Both GTK and icon themes are always installed as "current"
-    // via the cache → current mechanism in apply_materials.
+fn apply_gtk_options(paths: &AuroraPaths, config: &Config) {
+    // GTK themes installed via apply_materials are exposed as "current".
+    // Yaru-based icon themes ship system-wide, so only the icon theme
+    // uses the real Yaru name; GTK theme remains "current" as before.
     let current = "current";
+
+    let icon_theme = config
+        .gtk
+        .as_ref()
+        .and_then(|g| g.icon_theme.as_deref())
+        .filter(|n| n.starts_with("Yaru"))
+        .unwrap_or(current);
 
     for settings_path in [
         paths.config.join("gtk-3.0/settings.ini"),
         paths.config.join("gtk-4.0/settings.ini"),
     ] {
-        write_gtk_settings(&settings_path, Some(current), Some(current));
+        write_gtk_settings(&settings_path, Some(current), Some(icon_theme));
     }
 
-    apply_gsettings_theme(Some(current), Some(current));
+    apply_gsettings_theme(Some(current), Some(icon_theme));
 }
 
 fn apply_gsettings_theme(gtk_theme_name: Option<&str>, gtk_icon_theme_name: Option<&str>) {

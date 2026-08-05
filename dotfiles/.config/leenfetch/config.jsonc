@@ -7,8 +7,6 @@
     "flags": {
         "ascii_distro": "auto",
         "ascii_colors": "distro",
-        "custom_ascii_path": "",
-
 
         "battery_display": "barinfo",
         "color_blocks": "●",
@@ -26,10 +24,10 @@
         "cpu_speed": true,
 
         // Which temperature unit to use for CPU temperature.
-        "cpu_temp": "C",
+        // "cpu_temp": "C",
 
         // Show the CPU temperature.
-        "cpu_show_temp": false,
+        //"cpu_show_temp": false,
 
         // Show the version of your desktop environment.
         "de_version": true,

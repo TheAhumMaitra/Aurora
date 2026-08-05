@@ -16,11 +16,10 @@
 #       You should have received a copy of the GNU General Public License
 #       along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
-
 if status is-interactive
-# Commands to run in interactive sessions can go here
+    # Commands to run in interactive sessions can go here
 end
 
 starship init fish | source
 mise activate fish | source
-leenfetch --config ~/.config/leenfetch/minmal/config.jsonc --custom_ascii_path ~/.config/leenfetch/ASCIIs/Aurora.ascii
+leenfetch --config ~/.config/leenfetch/minmal/config.jsonc --custom_logo_path ~/.config/leenfetch/ASCIIs/Aurora.ascii

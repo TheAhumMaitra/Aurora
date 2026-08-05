@@ -42,10 +42,6 @@
         // options: true or false
         "cpu_speed": true,
 
-        // Which temperature unit to use for CPU temperature.
-        // Options: "C", "F"
-        "cpu_temp": "C",
-
         // Show the CPU temperature.
         // options: true or false
         "cpu_show_temp": false,

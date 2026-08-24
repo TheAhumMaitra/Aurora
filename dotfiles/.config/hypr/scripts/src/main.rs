@@ -24,6 +24,7 @@ use aurora::aurora_paths;
 use aurora::download_theme;
 use aurora::ghostty_theme_blur_change;
 use aurora::ghostty_theme_change;
+use aurora::horror_survey_game;
 use aurora::kitty_blur_change;
 use aurora::kitty_theme_change;
 use aurora::list_themes;
@@ -102,6 +103,12 @@ enum Commands {
         #[command(subcommand)]
         command: SettingsCommands,
     },
+
+    /// Play one of Aurora's little games
+    Game {
+        #[command(subcommand)]
+        command: GamesCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -129,6 +136,21 @@ enum SettingsCommands {
 
     /// Turn Aurora screensaver on or off
     Screensaver { state: ToggleState },
+}
+
+#[derive(Subcommand)]
+enum GamesCommands {
+    /// Horror and dread themed games
+    Horror {
+        #[command(subcommand)]
+        command: HorrorCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum HorrorCommands {
+    /// The "Are your windows closed?" horror survey
+    Survey,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -309,6 +331,18 @@ fn main() {
                     eprintln!("Failed to change Aurora screensaver: {err}");
                     std::process::exit(1);
                 }
+            },
+        },
+
+        Commands::Game { command } => match command {
+            GamesCommands::Horror { command } => match command {
+                HorrorCommands::Survey => match horror_survey_game() {
+                    Ok(_) => println!("You step back from the window, still breathing."),
+                    Err(err) => {
+                        eprintln!("The survey went wrong: {err}");
+                        std::process::exit(1);
+                    }
+                },
             },
         },
     }

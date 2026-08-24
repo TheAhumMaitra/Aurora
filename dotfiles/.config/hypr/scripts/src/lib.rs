@@ -27,6 +27,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
 
+use getrandom;
 use gtk4 as gtk;
 use gtk4::CssProvider;
 use gtk4::gdk::Display;
@@ -193,7 +194,7 @@ pub fn apply_theme(theme_name: &str) {
     theme_debug(format!("Theme display name: {display_name}"));
 
     let folders = [
-        "waybar", "wlogout", "hypr", "rofi", "nvim", "btop", "zed", "ghostty", "kitty",
+        "waybar", "wlogout", "swaync", "hypr", "rofi", "nvim", "btop", "zed", "ghostty", "kitty",
     ]; //directories want to be copied
 
     let message = format!("{display_name} is applied!");
@@ -474,12 +475,18 @@ fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
     let gtk_live = local_share.join("themes").join(current_name);
 
     if gtk_source.exists() {
-        if gtk_cache.exists() { fs::remove_dir_all(&gtk_cache).ok(); }
-        if gtk_live.exists() { fs::remove_dir_all(&gtk_live).ok(); }
+        if gtk_cache.exists() {
+            fs::remove_dir_all(&gtk_cache).ok();
+        }
+        if gtk_live.exists() {
+            fs::remove_dir_all(&gtk_live).ok();
+        }
         fs::create_dir_all(&gtk_cache).ok();
         fs::create_dir_all(&gtk_live).ok();
 
-        if let Some(extracted) = extract_first_archive(gtk_source, current_name, &cache_base.join("gtk/theme")) {
+        if let Some(extracted) =
+            extract_first_archive(gtk_source, current_name, &cache_base.join("gtk/theme"))
+        {
             // Unwrap single top-level folder if present
             let src = match fs::read_dir(&extracted) {
                 Ok(entries) => {
@@ -496,7 +503,9 @@ fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
             if let Ok(entries) = fs::read_dir(&src) {
                 for entry in entries.flatten() {
                     let dst = gtk_live.join(entry.file_name());
-                    if dst.exists() { fs::remove_dir_all(&dst).ok(); }
+                    if dst.exists() {
+                        fs::remove_dir_all(&dst).ok();
+                    }
                     if let Err(e) = copy_theme_path(&entry.path(), &dst) {
                         eprintln!("[theme-switcher] Failed to install GTK theme: {e}");
                         break;
@@ -512,17 +521,27 @@ fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
     // ── Icon theme: check new (icon/) first, then legacy (materials/gtk/icon/) ──
     let icon_new = theme_dir.join("icon");
     let icon_old = theme_dir.join("materials/gtk/icon");
-    let icon_source = if icon_new.exists() { &icon_new } else { &icon_old };
+    let icon_source = if icon_new.exists() {
+        &icon_new
+    } else {
+        &icon_old
+    };
     let icon_cache = cache_base.join("icons").join(current_name);
     let icon_live = local_share.join("icons").join(current_name);
 
     if icon_source.exists() {
-        if icon_cache.exists() { fs::remove_dir_all(&icon_cache).ok(); }
-        if icon_live.exists() { fs::remove_dir_all(&icon_live).ok(); }
+        if icon_cache.exists() {
+            fs::remove_dir_all(&icon_cache).ok();
+        }
+        if icon_live.exists() {
+            fs::remove_dir_all(&icon_live).ok();
+        }
         fs::create_dir_all(&icon_cache).ok();
         fs::create_dir_all(&icon_live).ok();
 
-        if let Some(extracted) = extract_first_archive(icon_source, current_name, &cache_base.join("icons")) {
+        if let Some(extracted) =
+            extract_first_archive(icon_source, current_name, &cache_base.join("icons"))
+        {
             let src = match fs::read_dir(&extracted) {
                 Ok(entries) => {
                     let items: Vec<_> = entries.flatten().collect();
@@ -538,7 +557,9 @@ fn apply_materials(paths: &AuroraPaths, theme_name: &str, _config: &Config) {
             if let Ok(entries) = fs::read_dir(&src) {
                 for entry in entries.flatten() {
                     let dst = icon_live.join(entry.file_name());
-                    if dst.exists() { fs::remove_dir_all(&dst).ok(); }
+                    if dst.exists() {
+                        fs::remove_dir_all(&dst).ok();
+                    }
                     if let Err(e) = copy_theme_path(&entry.path(), &dst) {
                         eprintln!("[theme-switcher] Failed to install icon theme: {e}");
                         break;
@@ -579,7 +600,10 @@ fn extract_first_archive(dir: &Path, name: &str, target_base: &Path) -> Option<P
         }
         fs::create_dir_all(target_base).ok();
 
-        theme_debug(format!("Extracting `{fname}` to `{}`", final_target.display()));
+        theme_debug(format!(
+            "Extracting `{fname}` to `{}`",
+            final_target.display()
+        ));
 
         let result = extract_tar_cmd(&path, &final_target);
 
@@ -597,12 +621,10 @@ fn extract_first_archive(dir: &Path, name: &str, target_base: &Path) -> Option<P
     None
 }
 
-
 /// Extract a tar archive using the system `tar` command.
 /// GNU tar auto-detects compression since v1.27+, so just use `-xf`.
 fn extract_tar_cmd(archive: &Path, target: &Path) -> Result<(), String> {
-    fs::create_dir_all(target)
-        .map_err(|e| format!("Failed to create target dir: {e}"))?;
+    fs::create_dir_all(target).map_err(|e| format!("Failed to create target dir: {e}"))?;
     let status = Command::new("tar")
         .arg("-xf")
         .arg(archive)
@@ -1728,6 +1750,202 @@ pub fn ghostty_theme_blur_is_enabled() -> Result<bool, String> {
         "background-opacity = 0.2",
         "#",
     )
+}
+// horror survey game -----------------------------------------------------
+
+/// A small "window survey" that returns a different set of questions every
+/// time. It draws handfuls at random from a deep pool and whispers them
+/// back to you, so no two nights in the house ask quite the same thing.
+pub fn horror_survey_game() -> std::io::Result<()> {
+    let blood = "\x1b[38;5;88m";
+    let tint = "\x1b[38;5;67m";
+    let dim = "\x1b[38;5;238m";
+    let mist = "\x1b[38;5;245m";
+    let bone = "\x1b[38;5;255m";
+    let reset = "\x1b[0m";
+
+    println!("{}{}{}", blood, "\n  +-------------------------------+", reset);
+    println!("{}{}{}", blood, "  |  W I N D O W   S U R V E Y  |", reset);
+    println!("{}{}{}", blood, "  +-------------------------------+", reset);
+    println!();
+    println!("{}{}{}", bone, "   The knock is different tonight. It always is.", reset);
+    println!("{}{}{}", mist, "   The house asks questions it already knows the answer to,", reset);
+    println!("{}{}{}", mist, "   in an order you have never heard before. Answer 'y' or 'n'.", reset);
+    println!();
+
+    let mut seed = survey_seed();
+
+    // -- deep pool of mysteries -----------------------------------------
+    let mut pool: Vec<(&str, &str, &str)> = Vec::new();
+    pool.push(("Was the window you locked already latched when you checked it back?",
+        "It was. On the far side, something had been holding the latch shut for you.",
+        "It is ajar, and the space under the pane breathes a little thinner now."));
+    pool.push(("On the stairs you counted thirteen. The house says twelve. Which won?",
+        "The house gives in, and the bottom step slips away from under your foot.",
+        "You lose count. The top of the stairs keeps a small patience it has saved for you."));
+    pool.push(("The mirror fogged from a breath you did not take. Did you breathe into it?",
+        "You did not. The glass writes your initials in the fog anyway.",
+        "You admit it. The fog lets out its own relief, half a moment slower than yours."));
+    pool.push(("A floor under the house hums a tune nobody is singing. Could you place it?",
+        "You hum along, and the floor stops, and starts again, one note lower.",
+        "You do not know it, and it moves a room closer to the one you are in."));
+    pool.push(("The door you know you did not open stands open now. Do you close it?",
+        "It swings to, and the little bolt clicks on the far side of the night.",
+        "You leave it, and the thing it was holding steps quietly into the room."));
+    pool.push(("Somewhere in the dark a few seconds played backward. Did you hear it?",
+        "You heard it, and it hears you, and it rewinds to the exact breath you drew.",
+        "You pretend you did not. The second pass sounds a little louder."));
+    pool.push(("The dust on the sill kept a single footprint of its own. Which way is it pointing?",
+        "It points at you, then steps gently off the sill while you watch.",
+        "It points away, through the room, as if it had already gone past you."));
+    pool.push(("The phone is ringing somewhere that has no phone. Do you answer it?",
+        "You answer, and a small voice reads your name in a letter you were not taught yet.",
+        "You let it ring, and on the last ring it says your name anyway."));
+    pool.push(("There is something behind the shower curtain at the very end. Do you look?",
+        "You look, and it looks back, which is not the same as it being on your side.",
+        "You do not. It has begun counting in the dark, and you are the last number."));
+    pool.push(("A lamp with no bulb burned all night. Did you turn the socket off?",
+        "You do, and the dark settles into the bulb-shaped emptiness.",
+        "You leave it, and the light keeps its warm shape with no bulb at all."));
+    pool.push(("The window is closed, yet the cold leaves a handprint on the latch. Do you name it?",
+        "You do not. It leaves the way it came, through the glass, quietly.",
+        "You almost name it. The glass remembers it better than you do."));
+    pool.push(("The house listens in a way that holds its breath. Would it be listening to you?",
+        "It keeps the first vowel of your name up in the ceiling, unused, waiting.",
+        "It is listening to the empty chair instead, and to you only when you sit in it."));
+
+    survey_shuffle(&mut seed, &mut pool);
+    let count: usize = pool.len();
+    let shown: usize = if count >= 7 { 7 } else { count };
+
+    let mut echoes: u32 = 0;
+    let mut idx: usize = 0;
+    while idx < shown {
+        let (question, yes_text, no_text) = pool[idx];
+        let yes = read_survey_answer(question, tint, reset);
+        if yes {
+            println!("{}{}{}", dim, yes_text, reset);
+            echoes = echoes + 1;
+        } else {
+            println!("{}{}{}", mist, no_text, reset);
+        }
+        println!();
+        idx = idx + 1;
+    }
+
+    println!("{}{}{}", bone, "  The questions run out. The house clears its throat near your ear,", reset);
+    println!("{}{}{}", mist, "  and asks one final thing, in a voice like a closed drawer.", reset);
+
+    let mut finals: Vec<&str> = Vec::new();
+    finals.push("Would you draw the window shut against the outside?");
+    finals.push("Is there anything behind you that you would leave in the room?");
+    finals.push("Would you sit still and let the name be the answer?");
+    finals.push("Do you want the closing click to be yours?");
+    survey_shuffle(&mut seed, &mut finals);
+    let last = read_survey_answer(finals[0], tint, reset);
+
+    let mut verdicts: Vec<&str> = Vec::new();
+    if echoes >= 4 {
+        if last {
+            verdicts.push("You say yes into the quiet, and the quiet says it back. The name goes to the far side of the glass, where it was being kept all along.");
+            verdicts.push("The house asks once more, and then lets you belong to it. You are kept, the way a cold room keeps its own shape.");
+            verdicts.push("You answer, and the window answers from the inside out. Both of them are speaking now, and both of them are you.");
+        } else {
+            verdicts.push("You refuse the night, and it nods, and it steps back down the hall as if it had only ever been paying a visit.");
+            verdicts.push("The last answer stays on the sill, and the light holds on a little longer than the house can truly afford.");
+            verdicts.push("You say no, and the quiet reshapes itself around the yes it had been carrying, and it goes off to find another door.");
+        }
+    } else {
+        if last {
+            verdicts.push("The window takes your answer with politeness, and keeps the exact shape of it for the time the house grows curious again.");
+            verdicts.push("You speak into the quiet, and for a moment the quiet has a purpose. Outside waits, then quietly looks away.");
+            verdicts.push("You mean it, and the house settles it into the wall as if it had always known. On the whole, it always had.");
+        } else {
+            verdicts.push("You leave without saying much. The house folds the quiet back into itself, and turns the hall light on for you.");
+            verdicts.push("It lets you go, and the window stays closed, which is a kindness it saves for those who do not look too long.");
+            verdicts.push("You step out of the room, and the silence steps into the shape you left, relieved to have the room at last.");
+        }
+    }
+    let pick: usize = survey_pick(&mut seed, verdicts.len() as u64) as usize;
+    let verdict = verdicts[pick];
+
+    println!("{}{}{}", blood, verdict, reset);
+    println!("{}{}", mist, "   — The window is closed now. It was always closed. —");
+    println!("{}{}{}", bone, " [ press anything to leave ]", reset);
+
+    Ok(())
+}
+
+/// Ask a single yes/no survey question and return the honest answer.
+fn read_survey_answer(question: &str, tint: &str, reset: &str) -> bool {
+    loop {
+        println!("{}{}{}  \x1b[38;5;245m(y|n)\x1b[0m", tint, question, reset);
+        let mut input = String::new();
+        match std::io::stdin().read_line(&mut input) {
+            Ok(0) | Err(_) => {
+                println!("\x1b[38;5;245m  (The door lets you be.) You leave without an answer.\x1b[0m");
+                return false;
+            }
+            _ => (),
+        }
+        let answer = input.trim().to_lowercase();
+        if answer.starts_with("y") {
+            return true;
+        }
+        if answer.starts_with("n") {
+            return false;
+        }
+        println!("\x1b[38;5;124m  That is not an answer the house accepts. It waits. Try again.\x1b[0m");
+    }
+}
+
+/// Pull a well-mixed seed from the operating system's entropy source so that
+/// every visit to the house is different.
+fn survey_seed() -> u64 {
+    let mut bytes = [0u8; 8];
+    match getrandom::getrandom(&mut bytes) {
+        Ok(()) => {
+            let mut out: u64 = 0;
+            let mut shift: u64 = 0;
+            let mut i: usize = 0;
+            while i < 8 {
+                out = out | ((bytes[i] as u64) << shift);
+                shift = shift + 8;
+                i = i + 1;
+            }
+            if out == 0 {
+                out = 0x9E3779B97F4A7C15u64;
+            }
+            out
+        }
+        Err(_) => 0xB5B63E44C7B82FC9u64,
+    }
+}
+
+/// Advance a small mixed generator by one step and return the next value.
+fn survey_next(state: &mut u64) -> u64 {
+    let mut x: u64 = *state;
+    x = x ^ (x << 7);
+    x = x ^ (x >> 9);
+    x = x ^ (x << 8);
+    *state = x;
+    x
+}
+
+/// Next value in `[0, bound)`.
+fn survey_pick(state: &mut u64, bound: u64) -> u64 {
+    survey_next(state) % bound
+}
+
+/// Fisher–Yates shuffle using the internal generator.
+fn survey_shuffle<T>(state: &mut u64, items: &mut Vec<T>) {
+    let n: usize = items.len();
+    let mut i: usize = n;
+    while i > 1 {
+        i = i - 1;
+        let j: usize = survey_pick(state, (i as u64) + 1) as usize;
+        items.swap(i, j);
+    }
 }
 // tests
 #[cfg(test)]

@@ -160,6 +160,11 @@ hl.bind("SUPER + F1", function()
 	})
 end)
 
+--music controls bar
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("pgrep -x hyprwave >/dev/null && pkill -x hyprwave || hyprwave &"))
+hl.bind(mainMod .. " + P + LEFT", hl.dsp.exec_cmd("hyprwave-toggle prev"))
+hl.bind(mainMod .. " + P + RIGHT", hl.dsp.exec_cmd("hyprwave-toggle next"))
+
 -- on/off (toggle) waybar
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))
 

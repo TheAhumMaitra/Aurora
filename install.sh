@@ -784,11 +784,12 @@ install_packages() {
             qt6-virtualkeyboard
             qt6-multimedia
             qt6-multimedia-ffmpeg
+            hyprwave
         "
     [utils]="
             kitty
             cliphist
-            nautilus
+            nemo
             wl-clipboard
             hyprshot
             brightnessctl
@@ -1492,7 +1493,7 @@ check_existing_install() {
 
   # Check for Aurora scripts
   if [ -d "$HOME/.cargo/bin" ]; then
-    for script in keybinds_help refresh_system search settings theme_switcher waybar_refresh waybar_toggle welcome_app; do
+    for script in keybinds_help refresh_system search youtube-downloader settings theme_switcher waybar_refresh waybar_toggle welcome_app; do
       if [ -f "$HOME/.cargo/bin/$script" ]; then
         has_aurora=true
         aurora_items+=("Aurora script: $script")

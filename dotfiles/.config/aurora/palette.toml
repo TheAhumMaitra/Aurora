@@ -1,0 +1,43 @@
+# Aurora Command Palette configuration
+# Full reference: aurorawiki.vercel.app
+
+[palette]
+width = 640
+height = 380
+max_results = 10
+opacity = 0.92
+blur = true
+animations = true
+show_icons = true
+
+[search]
+fuzzy = true
+history = true
+favorites = true
+files = true
+
+[web]
+search_engine = "google"
+
+[shortcuts]
+toggle = "SUPER+SPACE"
+
+[[links]]
+name = "Aurora GitHub"
+url = "https://github.com/TheAhumMaitra/Aurora"
+keywords = ["aurora", "github", "source"]
+
+[[commands]]
+name = "Restart Waybar"
+description = "Restart the Waybar process"
+command = "waybar_refresh"
+keywords = ["waybar", "restart", "bar"]
+
+[[projects]]
+name = "Aurora"
+path = "~/Aurora"
+keywords = ["aurora", "rice"]
+
+[[aliases]]
+name = "wb"
+target = "waybar restart"

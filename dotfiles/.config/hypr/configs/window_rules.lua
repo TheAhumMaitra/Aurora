@@ -76,6 +76,11 @@ hl.window_rule({
 	float = true,
 })
 hl.window_rule({
+	name = "youtube-downloader",
+	match = { class = "com.aurora.youtube_downloader" },
+	float = true,
+})
+hl.window_rule({
 	name = "keybinds-help",
 	match = { class = "com.aurora.keybinds_help" },
 	float = true,
@@ -205,5 +210,12 @@ hl.window_rule({
 hl.window_rule({
 	name = "Aurora's Waybar Flavour Changer",
 	match = { class = "com.aurora.waybar_config_switcher" },
+	float = true,
+})
+
+-- Aurora's command pallate
+hl.window_rule({
+	name = "Command Pallate",
+	match = { class = "com.aurora.command_palette" },
 	float = true,
 })

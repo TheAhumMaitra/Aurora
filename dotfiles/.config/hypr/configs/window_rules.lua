@@ -219,3 +219,26 @@ hl.window_rule({
 	match = { class = "com.aurora.command_palette" },
 	float = true,
 })
+
+hl.window_rule({
+	name = "Aurora Workspace Overview",
+	match = { class = "com.aurora.workspace_overview" },
+	float = true,
+	pin = true,
+	size = { "monitor_w * 0.44", "monitor_h * 0.52" },
+})
+
+hl.window_rule({
+	name = "Aurora Quick Note",
+	match = { class = "com.aurora.quick_note" },
+	float = true,
+	pin = true,
+	size = { "monitor_w * 0.5", "monitor_h * 0.62" },
+})
+
+hl.window_rule({
+	name = "Aurora Focus Timer",
+	match = { class = "com.aurora.focus_timer" },
+	float = true,
+	pin = true,
+})

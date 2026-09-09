@@ -53,6 +53,15 @@ hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 -- launch command palette
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("command_palette"))
 
+-- launch workspace overview
+hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("workspace_overview"))
+
+-- launch quick note
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("quick_note"))
+
+-- launch focus timer
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("focus_timer"))
+
 -- open app entries manager
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("app_entries_home"))
 

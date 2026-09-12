@@ -36,6 +36,314 @@ window{
   margin: 5px;
   border-radius: 20px;
 }
+
+/* ── Aurora command palette ───────────────────────────────────────────── */
+
+window.palette-window {
+  background-color: @theme_bg_color;
+  border: 1px solid alpha(@accent, 0.7);
+  border-radius: 10px;
+}
+
+.palette-root {
+  background-color: @theme_bg_color;
+}
+
+.palette-searchbox {
+  min-height: 48px;
+  padding: 3px 12px;
+  background: alpha(@accent, 0.16);
+  border: 1px solid alpha(@active-accent, 0.38);
+  border-radius: 8px;
+  box-shadow: 0 5px 16px alpha(@accent, 0.22);
+}
+
+.palette-glyph {
+  color: @active-accent;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+entry.palette-entry {
+  min-height: 38px;
+  padding: 0 10px;
+  background: alpha(@surface-alt, 0.88);
+  color: @theme_fg_color;
+  border: 1px solid alpha(@accent, 0.58);
+  border-radius: 6px;
+  caret-color: @active-accent;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px alpha(@active-accent, 0.06);
+}
+
+entry.palette-entry:focus {
+  background: @surface-alt;
+  border: 2px solid @active-accent;
+  box-shadow: 0 0 0 3px alpha(@accent, 0.24);
+}
+
+entry.palette-entry selection {
+  background-color: @accent;
+  color: @active-accent;
+}
+
+entry.palette-entry placeholder {
+  color: alpha(@theme_fg_color, 0.62);
+}
+
+/* ── Workspace overview ────────────────────────────────────────────────── */
+
+window.workspace-overview-window,
+window.quick-note-window,
+window.focus-timer-window {
+  background: @theme_bg_color;
+  border: 1px solid alpha(@accent, 0.55);
+  border-radius: 8px;
+}
+
+.workspace-overview-root,
+.quick-note-root,
+.focus-root {
+  background: @theme_bg_color;
+}
+
+.overview-header {
+  padding: 18px;
+  background: alpha(@surface-alt, 0.72);
+  border-bottom: 1px solid alpha(@border, 0.45);
+}
+
+.overview-title,
+.quick-note-title,
+.focus-title {
+  color: @active-accent;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.overview-summary,
+.quick-note-subtitle,
+.focus-subtitle,
+.overview-status,
+.quick-note-status,
+.focus-state {
+  color: alpha(@theme_fg_color, 0.68);
+  font-size: 12px;
+}
+
+entry.overview-search,
+entry.focus-task {
+  min-height: 34px;
+  padding: 0 10px;
+  background: @surface;
+  color: @theme_fg_color;
+  border: 1px solid alpha(@accent, 0.5);
+  border-radius: 6px;
+}
+
+entry.overview-search:focus,
+entry.focus-task:focus {
+  border: 2px solid @active-accent;
+  box-shadow: 0 0 0 2px alpha(@accent, 0.2);
+}
+
+button.overview-refresh,
+button.quick-note-folder {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  background: alpha(@accent, 0.16);
+  color: @active-accent;
+  border: 1px solid alpha(@accent, 0.52);
+  border-radius: 6px;
+}
+
+button.overview-refresh:hover,
+button.quick-note-folder:hover {
+  background: alpha(@accent, 0.3);
+  border-color: @active-accent;
+}
+
+.overview-workspace-grid {
+  padding: 4px 0;
+}
+
+button.overview-workspace {
+  padding: 6px;
+  background: @surface;
+  color: @theme_fg_color;
+  border: 1px solid alpha(@border, 0.65);
+  border-radius: 6px;
+}
+
+picture.overview-thumbnail {
+  border-radius: 4px;
+  background: alpha(@border, 0.35);
+}
+
+.overview-workspace-label {
+  color: @theme_fg_color;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+button.overview-workspace.active .overview-workspace-label {
+  color: @active-accent;
+}
+
+button.overview-workspace:hover {
+  background: alpha(@accent, 0.18);
+  border-color: alpha(@active-accent, 0.75);
+}
+
+button.overview-workspace.active {
+  background: alpha(@accent, 0.34);
+  color: @active-accent;
+  border: 2px solid @active-accent;
+}
+
+.overview-section {
+  color: @theme_fg_color;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.overview-window-list {
+  padding-top: 8px;
+}
+
+button.overview-window-row {
+  min-height: 48px;
+  padding: 8px 10px;
+  background: @surface;
+  border: 1px solid alpha(@border, 0.5);
+  border-radius: 6px;
+}
+
+button.overview-window-row:hover {
+  background: alpha(@accent, 0.14);
+  border-color: alpha(@active-accent, 0.62);
+}
+
+.overview-window-title {
+  color: @theme_fg_color;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.overview-window-meta,
+.overview-empty {
+  color: alpha(@theme_fg_color, 0.62);
+  font-size: 11px;
+}
+
+.overview-status {
+  padding-top: 8px;
+}
+
+/* ── Quick note ────────────────────────────────────────────────────────── */
+
+.quick-note-header {
+  padding: 18px;
+  background: alpha(@surface-alt, 0.72);
+  border-bottom: 1px solid alpha(@border, 0.45);
+}
+
+.quick-note-scroll {
+  margin: 14px;
+  background: @surface;
+  border: 1px solid alpha(@border, 0.5);
+  border-radius: 6px;
+}
+
+textview.quick-note-editor,
+textview.quick-note-editor text {
+  background: @surface;
+  color: @theme_fg_color;
+  caret-color: @active-accent;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.quick-note-footer {
+  min-height: 36px;
+  padding: 0 18px;
+  border-top: 1px solid alpha(@border, 0.35);
+}
+
+/* ── Focus timer ───────────────────────────────────────────────────────── */
+
+.focus-root {
+  padding: 20px;
+}
+
+.focus-task {
+  margin-top: 4px;
+}
+
+.focus-presets {
+  min-height: 34px;
+}
+
+button.focus-preset,
+button.focus-reset {
+  background: alpha(@surface-alt, 0.9);
+  color: @theme_fg_color;
+  border: 1px solid alpha(@border, 0.62);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+button.focus-preset:hover,
+button.focus-reset:hover {
+  background: alpha(@accent, 0.16);
+  border-color: alpha(@active-accent, 0.72);
+}
+
+.focus-surface {
+  padding: 18px;
+  background: alpha(@accent, 0.12);
+  border: 1px solid alpha(@accent, 0.55);
+  border-radius: 8px;
+}
+
+.focus-clock {
+  color: @active-accent;
+  font-size: 48px;
+  font-weight: 800;
+}
+
+.focus-progress {
+  min-height: 8px;
+}
+
+progressbar.focus-progress trough {
+  min-height: 8px;
+  background: alpha(@surface, 0.9);
+  border-radius: 4px;
+}
+
+progressbar.focus-progress progress {
+  min-height: 8px;
+  background: @active-accent;
+  border-radius: 4px;
+}
+
+button.focus-start {
+  background: @accent;
+  color: @active-accent;
+  border: 1px solid @active-accent;
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-weight: 800;
+}
+
+button.focus-start:hover {
+  background: alpha(@accent, 0.76);
+}
 .welcome-label {
   font-size: 25px;
   font-weight: bold;

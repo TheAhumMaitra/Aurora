@@ -92,7 +92,7 @@ yaru-icon-theme (AUR)
 kitty
 neovim
 cliphist
-nautilus
+nemo
 wl-clipboard
 hyprshot
 network-manager-applet

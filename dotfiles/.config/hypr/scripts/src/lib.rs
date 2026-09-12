@@ -1382,6 +1382,9 @@ pub struct SettingsSec {
 
     #[serde(default = "default_screensaver")]
     pub screensaver: bool,
+
+    #[serde(default)]
+    pub dock: bool,
 }
 
 fn default_screensaver() -> bool {
@@ -1437,7 +1440,8 @@ impl GhosttyConfig {
 impl SettingsSec {
     pub fn apply(&self, paths: &AuroraPaths) -> Result<(), String> {
         autostart_welcome_app(paths, self.welcome_app)?;
-        hypridle_screensaver(paths, self.screensaver)
+        hypridle_screensaver(paths, self.screensaver)?;
+        autostart_dock(paths, self.dock)
     }
 }
 
@@ -1537,6 +1541,73 @@ pub fn autostart_welcome_app(paths: &AuroraPaths, enabled: bool) -> Result<(), S
     edit_file(&path, |lines| {
         toggle_line(lines, r#"hl.exec_cmd("welcome_app")"#, "--", !enabled)
     })
+}
+
+pub fn autostart_dock(paths: &AuroraPaths, enabled: bool) -> Result<(), String> {
+    let path = autostart_path(paths);
+
+    edit_file(&path, |lines| {
+        let dock_line = r#"hl.exec_cmd("nwg-dock-hyprland")"#.to_string();
+        let dock_commented = format!("-- {}", dock_line);
+
+        // If enabling: insert after swayosd if not already present.
+        if enabled {
+            let swayosd_idx = lines
+                .iter()
+                .position(|l| matches_line(l, r#"hl.exec_cmd("swayosd-server")"#, "--"))
+                .ok_or_else(|| "swayosd-server line not found in autostart.lua".to_string())?;
+
+            // Check if dock line already exists right after swayosd.
+            let already_after =
+                lines.get(swayosd_idx + 1).map(|l| l.trim() == dock_line).unwrap_or(false);
+            let already_anywhere = lines
+                .iter()
+                .any(|l| l.trim() == dock_line || l.trim() == dock_commented.trim());
+
+            if !already_anywhere {
+                let indent = leading_indent(&lines[swayosd_idx]);
+                lines.insert(swayosd_idx + 1, format!("{indent}{dock_line}"));
+            }
+            // If already present (anywhere), ensure it is uncommented.
+            if !already_after {
+                let dock_pos = lines
+                    .iter()
+                    .position(|l| matches_line(l, &dock_line, "--"))
+                    .ok_or_else(|| "dock line disappeared".to_string())?;
+                if lines[dock_pos].trim_start().starts_with("--") {
+                    lines[dock_pos] = format!(
+                        "{}{}",
+                        leading_indent(&lines[dock_pos]),
+                        dock_line
+                    );
+                }
+            }
+            return Ok(());
+        }
+
+        // If disabling: comment out the dock line if it exists.
+        let dock_pos = lines
+            .iter()
+            .position(|l| matches_line(l, &dock_line, "--"))
+            .ok_or_else(|| "dock line not found in autostart.lua".to_string())?;
+
+        lines[dock_pos] = comment_line(&lines[dock_pos], "--");
+        Ok(())
+    })
+}
+
+pub fn dock_change(enabled: bool) -> Result<(), String> {
+    let paths = aurora_paths();
+    autostart_dock(&paths, enabled)
+}
+
+pub fn dock_is_enabled() -> Result<bool, String> {
+    let paths = aurora_paths();
+    line_is_enabled(
+        &autostart_path(&paths),
+        r#"hl.exec_cmd("nwg-dock-hyprland")"#,
+        "--",
+    )
 }
 
 pub fn welcome_app_change(enabled: bool) -> Result<(), String> {

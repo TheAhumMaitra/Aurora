@@ -123,6 +123,7 @@ struct SearchSection {
     fuzzy: Option<bool>,
     history: Option<bool>,
     favorites: Option<bool>,
+    search_only: Option<bool>,
     files: Option<bool>,
     file_roots: Option<Vec<String>>,
 }
@@ -191,6 +192,7 @@ struct Config {
     fuzzy: bool,
     history: bool,
     favorites: bool,
+    search_only: bool,
     files: bool,
     file_roots: Vec<String>,
     engine_name: String,
@@ -214,6 +216,7 @@ fn default_config() -> Config {
         fuzzy: true,
         history: true,
         favorites: true,
+        search_only: false,
         files: true,
         file_roots: Vec::new(),
         engine_name: String::from("Google"),
@@ -292,6 +295,9 @@ fn read_config() -> Config {
                 if let Some(v) = s.favorites {
                     cfg.favorites = v
                 }
+                if let Some(v) = s.search_only {
+                    cfg.search_only = v
+                }
                 if let Some(v) = s.files {
                     cfg.files = v
                 }
@@ -354,7 +360,7 @@ fn write_sample_config() {
         "# Aurora Command Palette configuration\n# Full reference: aurorawiki.vercel.app\n\n\
          [palette]\nwidth = 640\nheight = 360\nmax_results = 10\nopacity = 0.92\n\
          blur = true\nanimations = true\nshow_icons = true\n\n\
-         [search]\nfuzzy = true\nhistory = true\nfavorites = true\nfiles = true\n\n\
+         [search]\nfuzzy = true\nhistory = true\nfavorites = true\n# Open as a compact input-only palette; results appear once you type.\nsearch_only = false\nfiles = true\n\n\
          [web]\nsearch_engine = \"google\"\n\n\
          [shortcuts]\ntoggle = \"SUPER+SPACE\"\n\n",
     );
@@ -473,7 +479,9 @@ struct Palette {
     window: ApplicationWindow,
     search: SearchEntry,
     list: ListBox,
+    scroll: ScrolledWindow,
     main_box: GtkBox,
+    hints_row: GtkBox,
     confirm_box: GtkBox,
     output_box: GtkBox,
     status_label: Label,
@@ -1050,6 +1058,48 @@ fn aurora_results() -> Vec<Result> {
     let mut survey = result("Play Horror Survey", "aurora game horror survey", GLYPH_SYSTEM, CAT_AURORA, "term:aurora game horror survey");
     set_keywords(&mut survey, &["game", "horror", "survey", "fun", "play"]);
     out.push(survey);
+
+    let mut overview = result(
+        "Workspace Overview",
+        "Navigate live Hyprland workspaces and windows",
+        GLYPH_WORKSPACE,
+        CAT_AURORA,
+        "run:workspace_overview",
+    );
+    set_keywords(
+        &mut overview,
+        &["workspace", "windows", "overview", "hyprland", "switch"],
+    );
+    overview.priority = 190;
+    out.push(overview);
+
+    let mut quick_note = result(
+        "Quick Note",
+        "Open the persistent Aurora scratchpad",
+        GLYPH_FILE,
+        CAT_AURORA,
+        "run:quick_note",
+    );
+    set_keywords(
+        &mut quick_note,
+        &["note", "scratchpad", "write", "markdown", "journal"],
+    );
+    quick_note.priority = 180;
+    out.push(quick_note);
+
+    let mut focus_timer = result(
+        "Focus Timer",
+        "Start a focused work session",
+        GLYPH_REMINDER,
+        CAT_AURORA,
+        "run:focus_timer",
+    );
+    set_keywords(
+        &mut focus_timer,
+        &["focus", "timer", "pomodoro", "productivity", "session"],
+    );
+    focus_timer.priority = 180;
+    out.push(focus_timer);
 
     out
 }
@@ -1901,7 +1951,11 @@ fn build_index(p: &Palette) -> Vec<Result> {
 fn empty_query_results(p: &mut Palette) -> Vec<Result> {
     let mut out = Vec::new();
 
-    if !p.favorites.is_empty() {
+    if p.config.search_only {
+        return out;
+    }
+
+    if p.config.favorites && !p.favorites.is_empty() {
         out.push(header_row("Favorites"));
         for (title, desc) in p.favorites.clone() {
             let mut r = result(&title, "Favorite action", GLYPH_STAR, CAT_FEATURED, &desc);
@@ -1914,7 +1968,7 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
         }
     }
 
-    if !p.history.is_empty() {
+    if p.config.history && !p.history.is_empty() {
         out.push(header_row("Recent"));
         let count = p.history.len().min(6);
         for (title, desc) in p.history[..count].to_vec() {
@@ -1949,7 +2003,7 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
     );
     cfg_entry.priority = 390;
     out.push(cfg_entry);
-    if !p.history.is_empty() {
+    if p.config.history && !p.history.is_empty() {
         let mut clear = result("Clear History", "Erase the action history", GLYPH_CLIPBOARD, CAT_FEATURED, "self:clear-history");
         clear.priority = 390;
         out.push(clear);
@@ -2318,6 +2372,48 @@ fn restart_waybar_helper() {
     }
 }
 
+// Hyprland's Lua bridge compiles the raw arguments of `hyprctl dispatch <args>`
+// back into Lua, so plain dispatcher strings like `workspace 5` no longer parse.
+// Translate the palette's dispatch actions into real Lua dispatcher expressions
+// (the same API the Lua config itself uses).
+fn hypr_dispatch_lua(desc: &str) -> Option<String> {
+    fn lua_value(value: &str) -> String {
+        if !value.is_empty() && value.chars().all(|c| c.is_ascii_digit()) {
+            value.to_string()
+        } else {
+            format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
+        }
+    }
+
+    let parts: Vec<&str> = desc.split_whitespace().collect();
+    match parts.as_slice() {
+        ["workspace", target] => {
+            Some(format!("hl.dsp.focus({{ workspace = {} }})", lua_value(target)))
+        }
+        ["movetoworkspace", target] => Some(format!(
+            "hl.dsp.window.move({{ workspace = {} }})",
+            lua_value(target)
+        )),
+        ["movetoworkspacesilent", target] => Some(format!(
+            "hl.dsp.window.move({{ workspace = {}, silent = true }})",
+            lua_value(target)
+        )),
+        ["killactive"] => Some(String::from("hl.dsp.window.close()")),
+        ["fullscreen", mode] => {
+            Some(format!("hl.dsp.window.fullscreen({{ mode = {mode} }})"))
+        }
+        ["togglefloating"] => Some(String::from("hl.dsp.window.float({ action = \"toggle\" })")),
+        ["pin"] => Some(String::from("hl.dsp.window.pin({})")),
+        ["centerwindow"] => Some(String::from("hl.dsp.window.center()")),
+        ["cyclenext"] => Some(String::from("hl.dsp.focus({ direction = \"right\" })")),
+        ["cycleprev"] => Some(String::from("hl.dsp.focus({ direction = \"left\" })")),
+        ["resizeactive", x, y] => Some(format!(
+            "hl.dsp.window.resize({{ x = {x}, y = {y}, relative = true }})"
+        )),
+        _ => None,
+    }
+}
+
 fn run_descriptor(p: &mut Palette, desc: &str) {
     if desc.is_empty() {
         return;
@@ -2351,14 +2447,10 @@ fn run_descriptor(p: &mut Palette, desc: &str) {
         return;
     }
     if let Some(rest) = desc.strip_prefix("hypr:") {
-        let parts: Vec<&str> = rest.split_whitespace().collect();
-        let mut argv: Vec<&str> = Vec::new();
-        argv.push("hyprctl");
-        argv.push("dispatch");
-        for part in parts {
-            argv.push(part);
+        match hypr_dispatch_lua(rest) {
+            Some(lua) => spawn(&["hyprctl", "dispatch", &lua]),
+            None => eprintln!("command_palette: unsupported hypr dispatch: {rest}"),
         }
-        spawn(&argv);
         return;
     }
     if let Some(rest) = desc.strip_prefix("copy:") {
@@ -2673,6 +2765,23 @@ fn move_selection(p: &mut Palette, delta: i32) {
 }
 
 fn update_hints(p: &mut Palette) {
+    let compact_search = p.config.search_only
+        && p.mode == PaletteMode::Normal
+        && p.query.trim().is_empty()
+        && p.confirm_pending.is_none()
+        && !p.show_output;
+    p.scroll.set_visible(!compact_search);
+    p.hints_row.set_visible(!compact_search);
+    p.footer_label.set_visible(!compact_search);
+    p.window.set_default_size(
+        p.config.width as i32,
+        if compact_search { 72 } else { p.config.height as i32 },
+    );
+
+    if compact_search {
+        return;
+    }
+
     if p.confirm_pending.is_some() {
         p.footer_label.set_label("↵ Confirm      ⎋ Cancel");
         p.detail_label.set_label("This action needs your confirmation.");
@@ -3167,7 +3276,7 @@ fn build_ui(app: &Application) {
         query: String::new(),
         confirm_pending: None,
         show_output: false,
-        history: load_pairs(&history_path()),
+        history: if cfg.history { load_pairs(&history_path()) } else { Vec::new() },
         favorites: load_pairs(&favorites_path()),
         config: cfg,
         index: Vec::new(),
@@ -3183,7 +3292,9 @@ fn build_ui(app: &Application) {
         window,
         search,
         list,
+        scroll,
         main_box,
+        hints_row,
         confirm_box,
         output_box,
         status_label,

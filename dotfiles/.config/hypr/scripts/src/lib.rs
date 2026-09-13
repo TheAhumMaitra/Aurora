@@ -19,9 +19,9 @@
 // Aurora's robust theme switcher :)
 
 use serde::Deserialize;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use std::fs;
-use std::io::Read;
+use std::io::{Error, ErrorKind, Read};
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -29,8 +29,8 @@ use std::thread;
 
 use getrandom;
 use gtk4 as gtk;
-use gtk4::CssProvider;
 use gtk4::gdk::Display;
+use gtk4::CssProvider;
 
 pub struct AuroraPaths {
     pub home: PathBuf,
@@ -53,6 +53,80 @@ impl AuroraPaths {
 
 pub fn aurora_paths() -> AuroraPaths {
     AuroraPaths::new()
+}
+
+/// A reminder scheduled relative to the moment it is created.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Reminder {
+    pub minutes: u64,
+    pub task: String,
+}
+
+impl Reminder {
+    pub fn new(minutes: u64, task: impl Into<String>) -> Result<Self, String> {
+        let task = task.into();
+        if minutes == 0 {
+            return Err("Reminder duration must be at least one minute.".to_string());
+        }
+        if minutes > u32::MAX as u64 / 60 {
+            return Err("Reminder duration is too long for a desktop timer.".to_string());
+        }
+        if task.trim().is_empty() {
+            return Err("Reminder task cannot be empty.".to_string());
+        }
+
+        Ok(Self { minutes, task })
+    }
+
+    pub fn total_delay_seconds(&self) -> u64 {
+        self.minutes.saturating_mul(60)
+    }
+
+    pub fn early_delay_seconds(&self) -> Option<u64> {
+        self.notification_schedule()
+            .first()
+            .map(|(delay, _)| *delay)
+    }
+
+    /// Return advance notifications as `(seconds from now, title)` pairs.
+    /// The final reminder is represented by a zero-second delay.
+    pub fn notification_schedule(&self) -> Vec<(u64, &'static str)> {
+        let total = self.total_delay_seconds();
+        let mut schedule = if self.minutes > 60 {
+            vec![
+                (total - 30 * 60, "Reminder in 30 minutes"),
+                (total - 5 * 60, "Reminder in 5 minutes"),
+            ]
+        } else if self.minutes > 15 {
+            vec![(total - 10 * 60, "Reminder in 10 minutes")]
+        } else if self.minutes > 5 {
+            vec![(total - 5 * 60, "Reminder in 5 minutes")]
+        } else if self.minutes > 1 {
+            vec![(total - 60, "Reminder in 1 minute")]
+        } else {
+            vec![(total.saturating_sub(30), "Reminder in 30 seconds")]
+        };
+
+        schedule.push((total, "Reminder"));
+        schedule
+    }
+}
+
+/// Send a desktop notification through the notification daemon used by Aurora.
+pub fn send_notification(title: &str, body: &str) -> std::io::Result<()> {
+    Command::new("notify-send")
+        .args(["-a", "Aurora Reminder", title, body])
+        .status()
+        .and_then(|status| {
+            if status.success() {
+                Ok(())
+            } else {
+                Err(Error::new(
+                    ErrorKind::Other,
+                    format!("notify-send exited with {status}"),
+                ))
+            }
+        })
 }
 
 #[derive(Debug, Clone)]
@@ -1556,17 +1630,15 @@ pub fn autostart_dock(paths: &AuroraPaths, enabled: bool) -> Result<(), String> 
     let path = autostart_path(paths);
 
     edit_file(&path, |lines| {
-        let dock_line = r#"hl.exec_cmd("nwg-dock-hyprland -i 37 -x -c \"rofi -show drun\"")"#.to_string();
+        let dock_line =
+            r#"hl.exec_cmd("nwg-dock-hyprland -i 37 -x -c \"rofi -show drun\"")"#.to_string();
         let dock_old = r#"hl.exec_cmd("nwg-dock-hyprland")"#.to_string();
         let dock_commented = format!("-- {}", dock_line);
 
         // If enabling: insert after swayosd if not already present.
         if enabled {
             // First, check if the old command format exists and migrate it.
-            if let Some(old_idx) = lines
-                .iter()
-                .position(|l| matches_line(l, &dock_old, "--"))
-            {
+            if let Some(old_idx) = lines.iter().position(|l| matches_line(l, &dock_old, "--")) {
                 lines[old_idx] = format!("{}{}", leading_indent(&lines[old_idx]), dock_line);
                 return Ok(());
             }
@@ -1606,9 +1678,7 @@ pub fn autostart_dock(paths: &AuroraPaths, enabled: bool) -> Result<(), String> 
         // Check new format first, then old format.
         let dock_pos = lines
             .iter()
-            .position(|l| {
-                matches_line(l, &dock_line, "--") || matches_line(l, &dock_old, "--")
-            })
+            .position(|l| matches_line(l, &dock_line, "--") || matches_line(l, &dock_old, "--"))
             .ok_or_else(|| "dock line not found in autostart.lua".to_string())?;
 
         lines[dock_pos] = comment_line(&lines[dock_pos], "--");
@@ -2094,8 +2164,8 @@ fn survey_shuffle<T>(state: &mut u64, items: &mut Vec<T>) {
 #[cfg(test)]
 mod tests {
     use super::{
-        Config, copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings,
-        write_zed_settings,
+        copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings,
+        write_zed_settings, Config, Reminder,
     };
     use std::fs;
     use std::path::PathBuf;
@@ -2125,6 +2195,31 @@ mod tests {
         assert!(should_copy(&source, &target).unwrap());
 
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn reminder_schedule_adapts_to_duration() {
+        let short = Reminder::new(1, "short task").unwrap();
+        assert_eq!(
+            short.notification_schedule(),
+            vec![(30, "Reminder in 30 seconds"), (60, "Reminder")]
+        );
+
+        let medium = Reminder::new(20, "medium task").unwrap();
+        assert_eq!(
+            medium.notification_schedule(),
+            vec![(600, "Reminder in 10 minutes"), (1200, "Reminder")]
+        );
+
+        let long = Reminder::new(90, "long task").unwrap();
+        assert_eq!(
+            long.notification_schedule(),
+            vec![
+                (3600, "Reminder in 30 minutes"),
+                (5100, "Reminder in 5 minutes"),
+                (5400, "Reminder")
+            ]
+        );
     }
 
     #[test]

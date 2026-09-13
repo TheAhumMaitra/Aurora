@@ -96,6 +96,7 @@ const KEYBIND_CATEGORIES: &[KeybindCategory] = &[
             ("Open command palette", "SUPER + G"),
             ("Open workspace overview", "SUPER + O"),
             ("Open quick note", "SUPER + N"),
+            ("Open reminder", "SUPER + SHIFT + N"),
             ("Open focus timer", "SUPER + SHIFT + F"),
             ("Open Hyprland layout switcher", "SUPER + ALT + L"),
             ("Open settings", "SUPER + SHIFT + Z"),

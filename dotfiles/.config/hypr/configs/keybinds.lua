@@ -59,6 +59,9 @@ hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("workspace_overview"))
 -- launch quick note
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("quick_note"))
 
+-- launch reminder
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("reminder"))
+
 -- launch focus timer
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("focus_timer"))
 

@@ -22,7 +22,7 @@
 // desktop.  One key combo, type what you want, press Enter.
 //
 //   * Searchable providers: apps, themes, aurora commands, system actions,
-//     links, scripts, projects, workspaces, windows, files, reminders.
+//     links, scripts, projects, workspaces, windows, and files.
 //   * Modes: `>` shell, `?` web search, `/` files, URL detection, fuzzy search.
 //   * Keyboard first: ↑/↓ navigate, Enter run, Tab actions, Ctrl+Enter alt.
 //   * Theme-aware: uses Aurora's style.css + custom.css colours, applies
@@ -42,10 +42,9 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::rc::Rc;
-use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -68,7 +67,6 @@ const CAT_PROJECTS: &str = "Projects";
 const CAT_WORKSPACES: &str = "Workspaces";
 const CAT_WINDOWS: &str = "Windows";
 const CAT_FILES: &str = "Files";
-const CAT_REMINDERS: &str = "Reminders";
 const CAT_SETTINGS: &str = "Settings";
 const CAT_FEATURED: &str = "Palette";
 
@@ -85,7 +83,6 @@ const GLYPH_WORKSPACE: &str = "󰮄";
 const GLYPH_WINDOW: &str = "󰅫";
 const GLYPH_FOLDER: &str = "󰉋";
 const GLYPH_FILE: &str = "󰈙";
-const GLYPH_REMINDER: &str = "󰃰";
 const GLYPH_STAR: &str = "★";
 const GLYPH_RECENT: &str = "󰋙";
 const GLYPH_RELOAD: &str = "󰔄";
@@ -140,6 +137,14 @@ struct ShortcutsSection {
 }
 
 #[derive(Clone, Deserialize)]
+struct ApplicationsSection {
+    terminal: Option<String>,
+    file_manager: Option<String>,
+    browser: Option<String>,
+    editor: Option<String>,
+}
+
+#[derive(Clone, Deserialize)]
 struct LinkEntry {
     name: String,
     url: String,
@@ -174,6 +179,7 @@ struct PaletteConfig {
     search: Option<SearchSection>,
     web: Option<WebSection>,
     shortcuts: Option<ShortcutsSection>,
+    applications: Option<ApplicationsSection>,
     links: Option<Vec<LinkEntry>>,
     commands: Option<Vec<UserCommandEntry>>,
     projects: Option<Vec<ProjectEntry>>,
@@ -198,6 +204,10 @@ struct Config {
     engine_name: String,
     engine_url: String,
     toggle_shortcut: String,
+    terminal: String,
+    file_manager: String,
+    browser: String,
+    editor: String,
     links: Vec<LinkEntry>,
     commands: Vec<UserCommandEntry>,
     projects: Vec<ProjectEntry>,
@@ -222,6 +232,10 @@ fn default_config() -> Config {
         engine_name: String::from("Google"),
         engine_url: String::from("https://www.google.com/search?q="),
         toggle_shortcut: String::from("SUPER+SPACE"),
+        terminal: detect_application("TERMINAL", "kitty"),
+        file_manager: detect_application("FILE_MANAGER", "xdg-open"),
+        browser: detect_application("BROWSER", "xdg-open"),
+        editor: detect_application("EDITOR", "nvim"),
         links: Vec::new(),
         commands: Vec::new(),
         projects: Vec::new(),
@@ -318,6 +332,20 @@ fn read_config() -> Config {
                     cfg.toggle_shortcut = v
                 }
             }
+            if let Some(apps) = parsed.applications {
+                if let Some(v) = apps.terminal {
+                    cfg.terminal = v
+                }
+                if let Some(v) = apps.file_manager {
+                    cfg.file_manager = v
+                }
+                if let Some(v) = apps.browser {
+                    cfg.browser = v
+                }
+                if let Some(v) = apps.editor {
+                    cfg.editor = v
+                }
+            }
             if let Some(l) = parsed.links {
                 cfg.links = l
             }
@@ -362,6 +390,7 @@ fn write_sample_config() {
          blur = true\nanimations = true\nshow_icons = true\n\n\
          [search]\nfuzzy = true\nhistory = true\nfavorites = true\n# Open as a compact input-only palette; results appear once you type.\nsearch_only = false\nfiles = true\n\n\
          [web]\nsearch_engine = \"google\"\n\n\
+         # Optional overrides; otherwise $TERMINAL, $FILE_MANAGER, $BROWSER,\n+         # and $EDITOR are used.\n+         [applications]\n+# terminal = \"kitty\"\n+# file_manager = \"thunar\"\n+# browser = \"firefox\"\n+# editor = \"nvim\"\n+\n\
          [shortcuts]\ntoggle = \"SUPER+SPACE\"\n\n",
     );
     content.push_str(
@@ -471,6 +500,9 @@ struct Palette {
     monitors: Vec<MonitorInfo>,
     active_workspace: String,
     terminal: String,
+    file_manager: String,
+    browser: String,
+    editor: String,
     home: PathBuf,
     files: Vec<FileEntry>,
     file_stack: Vec<String>,
@@ -525,10 +557,6 @@ fn history_path() -> PathBuf {
 
 fn favorites_path() -> PathBuf {
     palette_dir().join("favorites.txt")
-}
-
-fn reminders_path() -> PathBuf {
-    palette_dir().join("reminders.txt")
 }
 
 fn config_path() -> PathBuf {
@@ -595,46 +623,6 @@ fn command_output(args: &[&str]) -> String {
     }
 }
 
-fn now_unix_secs() -> i64 {
-    let now = SystemTime::now();
-    now.duration_since(SystemTime::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)
-}
-
-/// `date -d "<spec>" +%s` — GNU date handles "today 19:00", "tomorrow 6",
-/// "+30 minutes", "7pm", ...
-fn epoch_from_date_spec(spec: &str) -> Option<i64> {
-    fn parse_digits(text: &str) -> Option<i64> {
-        let mut value: i64 = 0;
-        let mut seen = false;
-        for c in text.chars() {
-            if c >= '0' && c <= '9' {
-                value = value * 10 + (c as i64 - '0' as i64);
-                seen = true;
-            } else {
-                return None;
-            }
-        }
-        if seen {
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    match Command::new("date")
-        .args(["-d", spec, "+%s"])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-    {
-        Ok(mut child) => match child.wait_with_output() {
-            Ok(result) => parse_digits(String::from_utf8_lossy(&result.stdout).trim()),
-            Err(_) => None,
-        },
-        Err(_) => None,
-    }
-}
-
 fn expand_home(path: &str) -> String {
     let home = aurora_paths().home;
     if path.starts_with("~/") {
@@ -681,8 +669,11 @@ fn escape_markup(s: &str) -> String {
     out
 }
 
-fn detect_terminal() -> String {
-    std::env::var("TERMINAL").unwrap_or_else(|_| String::from("kitty"))
+fn detect_application(variable: &str, fallback: &str) -> String {
+    std::env::var(variable)
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| String::from(fallback))
 }
 
 fn base_name(path: &Path) -> String {
@@ -695,14 +686,19 @@ fn base_name(path: &Path) -> String {
 // ─── Fuzzy matching & ranking ──────────────────────────────────────────────
 
 fn token_score(word: &str, token: &str, fuzzy: bool) -> i32 {
+    let word = word.trim_matches(|c: char| !c.is_alphanumeric());
+    let token = token.trim_matches(|c: char| !c.is_alphanumeric());
+    if word.is_empty() || token.is_empty() {
+        return 0;
+    }
     if token == word {
-        return 1000;
+        return 1100;
     }
     if token.starts_with(word) {
-        return 600 + (word.len() as i32);
+        return 700 + (word.len() as i32 * 2);
     }
     if token.contains(word) {
-        return 350;
+        return 400 + word.len() as i32;
     }
     if !fuzzy {
         return 0;
@@ -720,7 +716,7 @@ fn token_score(word: &str, token: &str, fuzzy: bool) -> i32 {
         ti += 1;
     }
     if wi == wb.len() {
-        150 - ((tb.len() - wb.len()) as i32)
+        180 - ((tb.len() - wb.len()) as i32 * 2)
     } else {
         0
     }
@@ -734,6 +730,8 @@ fn rank_result(
     fuzzy: bool,
 ) -> i32 {
     let mut total: i32 = 0;
+    let title = r.title.to_lowercase();
+    let normalized_query = words.join(" ");
 
     for word in words {
         if word.is_empty() {
@@ -756,21 +754,42 @@ fn rank_result(
         }
         if best == 0 {
             for kw in &r.keywords {
-                if kw.to_lowercase() == *word {
-                    best = 250;
+                let keyword = kw.to_lowercase();
+                if keyword == *word {
+                    best = 320;
                     break;
                 }
-                if kw.to_lowercase().contains(word) {
-                    best = 200;
+                if keyword.contains(word) {
+                    best = 240;
                     break;
                 }
             }
         }
+        // A result must explain every query term. This prevents a strong
+        // match on one word from surfacing unrelated results for multi-word
+        // searches.
+        if best == 0 {
+            return 0;
+        }
         total += best;
     }
 
-    if total == 0 {
+    if total == 0 || words.is_empty() {
         return 0;
+    }
+
+    if title == normalized_query {
+        total += 900;
+    } else if title.starts_with(&normalized_query) {
+        total += 500;
+    } else if title.contains(&normalized_query) {
+        total += 250;
+    }
+    if words.len() > 1 && title.split_whitespace().eq(words.iter().copied()) {
+        total += 350;
+    }
+    if title.split_whitespace().any(|token| token == words[0]) {
+        total += 80;
     }
 
     for (title, desc) in favorites {
@@ -797,6 +816,9 @@ fn rank_result(
 
 fn looks_like_url(q: &str) -> bool {
     let lower = q.to_lowercase();
+    if lower.starts_with('/') || lower.starts_with("~/") || lower.contains('/') {
+        return false;
+    }
     if lower.starts_with("http://") || lower.starts_with("https://") || lower.starts_with("www.") {
         return true;
     }
@@ -822,49 +844,6 @@ fn normalize_url(q: &str) -> String {
         return String::from(q);
     }
     format!("https://{}", q)
-}
-
-/// "remind me to X at 7pm" → (task, date-spec)
-fn parse_reminder(q: &str) -> Option<(String, String)> {
-    let mut s = q.trim().to_lowercase().to_string();
-    if !s.starts_with("remind") {
-        return None;
-    }
-    for prefix in ["remind me to ", "remind me ", "remind "] {
-        if s.starts_with(prefix) {
-            s = String::from(s[prefix.len()..].trim());
-            break;
-        }
-    }
-    if s.is_empty() {
-        return None;
-    }
-
-    let markers = [(" tomorrow at ", "tomorrow "), (" at ", "today "), (" in ", "+")];
-    for (marker, prefix) in markers {
-        if let Some(i) = s.find(marker) {
-            let task = s[..i].trim();
-            if task.is_empty() {
-                return None;
-            }
-            let mut when = String::from(s[i + marker.len()..].trim());
-            while when.ends_with('.') || when.ends_with('!') {
-                when = String::from(&when[..when.len() - 1]);
-            }
-            if when.is_empty() {
-                return None;
-            }
-            let spec = if when == "noon" {
-                String::from("today 12:00")
-            } else if when == "midnight" {
-                String::from("today 00:00")
-            } else {
-                format!("{}{}", prefix, when)
-            };
-            return Some((String::from(task), spec));
-        }
-    }
-    None
 }
 
 /// "volume 70" / "brightness 45" → a control result.
@@ -1091,7 +1070,7 @@ fn aurora_results() -> Vec<Result> {
     let mut focus_timer = result(
         "Focus Timer",
         "Start a focused work session",
-        GLYPH_REMINDER,
+        GLYPH_ACTIVE,
         CAT_AURORA,
         "run:focus_timer",
     );
@@ -1138,7 +1117,7 @@ fn theme_results(p: &Palette) -> Vec<Result> {
         apply.secondaries.push((String::from("Preview Theme"), format!("open:{}", preview)));
         apply.secondaries.push((String::from("Set as Default"), format!("shell:aurora apply-theme {}", dir)));
         apply.secondaries.push((String::from("Open Theme Folder"), format!("open:{}", theme_root.display())));
-        apply.secondaries.push((String::from("Edit Theme"), format!("term:nvim {}", config_file)));
+        apply.secondaries.push((String::from("Edit Theme"), format!("edit:{}", config_file)));
         out.push(apply);
 
         let mut preview_result = result(
@@ -1157,7 +1136,7 @@ fn theme_results(p: &Palette) -> Vec<Result> {
             &config_file,
             GLYPH_SCRIPT,
             CAT_THEMES,
-            &format!("term:nvim {}", config_file),
+            &format!("edit:{}", config_file),
         );
         set_keywords(&mut edit, &[&dir, "theme", "edit", "config", "change"]);
         edit.priority = 250;
@@ -1655,7 +1634,7 @@ fn script_results() -> Vec<Result> {
             set_keywords(&mut r, &["script", &script_name, "run"]);
             r.priority = 170;
             r.secondaries.push((String::from("Run in Background"), format!("shell:{}", path.display())));
-            r.secondaries.push((String::from("Edit Script"), format!("term:nvim {}", path.display())));
+            r.secondaries.push((String::from("Edit Script"), format!("edit:{}", path.display())));
             out.push(r);
         }
     }
@@ -1730,7 +1709,7 @@ fn project_results(cfg: &Config) -> Vec<Result> {
                 open.priority = 190;
                 set_keywords(&mut open, &[&name.to_lowercase(), "project", "open", "folder", "repo"]);
                 open.secondaries.push((String::from("Open in File Manager"), format!("open:{}", display)));
-                open.secondaries.push((String::from("Edit in Editor"), format!("shell:code {}", display)));
+                open.secondaries.push((String::from("Edit in Editor"), format!("edit:{}", display)));
                 out.push(open);
                 seen.push(display.clone());
 
@@ -1983,15 +1962,6 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
     let mut settings = result("Open Aurora Settings", "settings", GLYPH_SETTINGS, CAT_SETTINGS, "run:settings");
     settings.priority = 420;
     out.push(settings);
-    let mut reminders = result(
-        "Today's Reminders",
-        "command_palette --list-reminders",
-        GLYPH_REMINDER,
-        CAT_REMINDERS,
-        "self:list-reminders",
-    );
-    reminders.priority = 400;
-    out.push(reminders);
     let mut theme = result("Browse Themes", "theme_switcher", GLYPH_THEME, CAT_THEMES, "run:theme_switcher");
     theme.priority = 400;
     out.push(theme);
@@ -2000,7 +1970,7 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
         "palette.toml",
         GLYPH_SETTINGS,
         CAT_FEATURED,
-        &format!("term:nvim {}", config_path().display()),
+        &format!("edit:{}", config_path().display()),
     );
     cfg_entry.priority = 390;
     out.push(cfg_entry);
@@ -2023,7 +1993,7 @@ fn control_menu_results() -> Vec<Result> {
         "Edit palette.toml",
         GLYPH_SETTINGS,
         CAT_FEATURED,
-        &format!("term:nvim {}", config_path().display()),
+        &format!("edit:{}", config_path().display()),
     ));
     out.push(result(
         "Open Aurora Scripts",
@@ -2203,7 +2173,7 @@ fn normal_search_results(p: &mut Palette, query: &str) -> Vec<Result> {
         return out;
     }
 
-    // URL / quick web-search / reminder / level shortcuts --------------------
+    // URL / quick web-search / level shortcuts -------------------------------
     if looks_like_url(&lower) {
         let target = normalize_url(&lower);
         let mut r = result(
@@ -2224,27 +2194,6 @@ fn normal_search_results(p: &mut Palette, query: &str) -> Vec<Result> {
         let mut out = Vec::new();
         out.push(web);
         return out;
-    }
-
-    if let Some((task, spec)) = parse_reminder(&lower) {
-        if let Some(epoch) = epoch_from_date_spec(&spec) {
-            let when = command_output(&["date", "-d", &spec, "+%a %d %b %H:%M"]);
-            let mut r = result(
-                &format!("Create Reminder: {}", task),
-                &format!("Notify on {}", when),
-                GLYPH_REMINDER,
-                CAT_REMINDERS,
-                &format!("reminder:{}|{}", epoch, task),
-            );
-            r.priority = 1000;
-            r.keywords.push(String::from("remind"));
-            r.keywords.push(String::from("reminder"));
-            r.keywords.push(String::from("later"));
-            r.keywords.push(String::from("todo"));
-            let mut out = Vec::new();
-            out.push(r);
-            return out;
-        }
     }
 
     if let Some(level) = parse_level_command(&lower) {
@@ -2332,6 +2281,10 @@ fn spawn_shell(cmd: &str) {
     {
         eprintln!("command_palette: failed to run `{cmd}`: {e}");
     }
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 fn spawn_in_terminal(terminal: &str, cmd: &str) {
@@ -2430,7 +2383,12 @@ fn run_descriptor(p: &mut Palette, desc: &str) {
         return;
     }
     if let Some(rest) = desc.strip_prefix("open:") {
-        spawn(&["xdg-open", rest]);
+        let application = if looks_like_url(rest) {
+            &p.browser
+        } else {
+            &p.file_manager
+        };
+        spawn(&[application.as_str(), rest]);
         return;
     }
     if let Some(rest) = desc.strip_prefix("termdir:") {
@@ -2439,6 +2397,10 @@ fn run_descriptor(p: &mut Palette, desc: &str) {
     }
     if let Some(rest) = desc.strip_prefix("term:") {
         spawn_in_terminal(&p.terminal, rest);
+        return;
+    }
+    if let Some(rest) = desc.strip_prefix("edit:") {
+        spawn_in_terminal(&p.terminal, &format!("{} {}", p.editor, shell_quote(rest)));
         return;
     }
     if let Some(rest) = desc.strip_prefix("theme:") {
@@ -2458,26 +2420,8 @@ fn run_descriptor(p: &mut Palette, desc: &str) {
         copy_to_clipboard(rest);
         return;
     }
-    if let Some(rest) = desc.strip_prefix("reminder:") {
-        if let Some(i) = rest.find('|') {
-            let epoch_text = rest[..i].trim();
-            let task = rest[i + 1..].trim();
-            if let Ok(epoch) = epoch_text.parse::<i64>() {
-                if epoch > now_unix_secs() {
-                    let mut pairs = load_pairs(&reminders_path());
-                    pairs.push((String::from(epoch_text), String::from(task)));
-                    save_pairs(&reminders_path(), &pairs);
-                    let when = command_output(&["date", "-d", epoch_text, "+%a %d %b %H:%M"]);
-                    notify("Reminder set", &format!("{}\n{}", task, when));
-                    ensure_reminder_daemon();
-                }
-            }
-        }
-        return;
-    }
     if let Some(rest) = desc.strip_prefix("self:") {
         match rest.trim() {
-            "list-reminders" => list_reminders(),
             "clear-history" => {
                 save_pairs(&history_path(), &Vec::new());
                 p.history = Vec::new();
@@ -2548,68 +2492,6 @@ fn record_history(p: &mut Palette, title: &str, desc: &str) {
         p.history.remove(0);
     }
     save_pairs(&history_path(), &p.history);
-}
-
-// ─── Reminders ─────────────────────────────────────────────────────────────
-
-fn reminder_pairs() -> Vec<(String, String)> {
-    load_pairs(&reminders_path())
-}
-
-fn list_reminders() {
-    let mut pairs = reminder_pairs();
-    pairs.sort_by(|a, b| a.0.cmp(&b.0));
-    if pairs.is_empty() {
-        println!("No upcoming reminders.");
-        return;
-    }
-    println!("Upcoming reminders:");
-    for (epoch, text) in pairs {
-        let when = command_output(&["date", "-d", &epoch, "+%a %d %b %H:%M"]);
-        println!("  • {} – {}", when, text);
-    }
-}
-
-/// Fire every reminder that is due (or overdue); used at palette startup and
-/// periodically by the background reminder daemon.
-fn fire_due_reminders() {
-    let now = now_unix_secs();
-    let pairs = reminder_pairs();
-    let mut due: Vec<(String, String)> = Vec::new();
-    let mut kept: Vec<(String, String)> = Vec::new();
-    for (epoch, text) in pairs {
-        if epoch.parse::<i64>().unwrap_or(0) <= now {
-            due.push((epoch, text));
-        } else {
-            kept.push((epoch, text));
-        }
-    }
-    if !due.is_empty() {
-        save_pairs(&reminders_path(), &kept);
-    }
-    for (_, text) in due {
-        notify("Reminder", &text);
-    }
-}
-
-fn reminder_daemon_loop() {
-    loop {
-        thread::sleep(Duration::from_secs(20));
-        fire_due_reminders();
-    }
-}
-
-fn ensure_reminder_daemon() {
-    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("command_palette"));
-    let probe = command_output(&["pgrep", "-f", "command_palette --reminder-daemon"]);
-    if probe.trim().is_empty() {
-        let _ = Command::new(&exe)
-            .arg("--reminder-daemon")
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn();
-    }
 }
 
 // ─── File index (stepped from the glib main loop, so the UI never freezes) ─
@@ -3152,7 +3034,7 @@ fn build_ui(app: &Application) {
     let (monitors, active_workspace) = detect_system_state();
     let active_theme = read_active_theme();
     let home = aurora_paths().home;
-    let terminal = detect_terminal();
+    let terminal = cfg.terminal.clone();
 
     let window = ApplicationWindow::builder()
         .application(app)
@@ -3273,6 +3155,9 @@ fn build_ui(app: &Application) {
     window.set_child(Some(&root));
 
     // ── initial state ───────────────────────────────────────────────────────
+    let file_manager = cfg.file_manager.clone();
+    let browser = cfg.browser.clone();
+    let editor = cfg.editor.clone();
     let mut p = Palette {
         results: Vec::new(),
         select_map: Vec::new(),
@@ -3289,6 +3174,9 @@ fn build_ui(app: &Application) {
         monitors,
         active_workspace,
         terminal,
+        file_manager,
+        browser,
+        editor,
         home,
         files: Vec::new(),
         file_stack: Vec::new(),
@@ -3409,10 +3297,6 @@ fn build_ui(app: &Application) {
         }
     });
 
-    // reminders: fire overdue ones and make sure the daemon is running
-    fire_due_reminders();
-    ensure_reminder_daemon();
-
     p_rc.borrow().window.present();
     p_rc.borrow().search.grab_focus();
 }
@@ -3431,8 +3315,6 @@ fn main() {
     let mut mode = "gui";
     for a in &args[1..] {
         match a.as_str() {
-            "--reminder-daemon" | "reminders-daemon" => mode = "daemon",
-            "--list-reminders" | "list-reminders" => mode = "list",
             "--clear-history" | "clear-history" => mode = "clear-history",
             "--clear-favorites" | "clear-favorites" => mode = "clear-favorites",
             _ => {}
@@ -3440,15 +3322,6 @@ fn main() {
     }
 
     match mode {
-        "daemon" => {
-            ensure_dirs();
-            fire_due_reminders();
-            reminder_daemon_loop();
-        }
-        "list" => {
-            ensure_dirs();
-            list_reminders();
-        }
         "clear-history" => {
             ensure_dirs();
             save_pairs(&history_path(), &Vec::new());

@@ -7,7 +7,7 @@ use gtk4::glib::{ControlFlow, SourceId};
 use gtk4::prelude::*;
 use gtk4::{
     Align, Application, ApplicationWindow, Box as GtkBox, Button, Entry, EventControllerKey, Label,
-    Orientation,
+    Orientation, Popover,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -19,6 +19,7 @@ struct ReminderUi {
     minutes: Entry,
     task: Entry,
     schedule: Button,
+    cancel: Button,
     status: Label,
 }
 
@@ -87,14 +88,15 @@ fn schedule_reminder(ui: &ReminderUi, timers: &Rc<RefCell<Vec<SourceId>>>) {
         true,
     );
     ui.schedule.set_label("Reschedule");
+    ui.cancel.set_sensitive(true);
 }
 
 fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Aurora Reminder")
-        .default_width(500)
-        .default_height(430)
+        .default_width(460)
+        .default_height(390)
         .decorated(false)
         .resizable(false)
         .build();
@@ -111,6 +113,8 @@ fn build_ui(app: &Application) {
         .wrap(true)
         .build();
     subtitle.add_css_class("home-subtitle");
+    let menu = Button::with_label("☰");
+    menu.add_css_class("reminder-menu");
 
     let minutes = Entry::builder()
         .placeholder_text("Remind me in minutes (e.g. 25)")
@@ -122,8 +126,21 @@ fn build_ui(app: &Application) {
         .build();
     task.add_css_class("app-entry");
 
+    let presets = GtkBox::new(Orientation::Horizontal, 6);
+    presets.add_css_class("reminder-presets");
+    for (label, minutes_value) in [("5 min", 5), ("15 min", 15), ("30 min", 30), ("1 hour", 60)] {
+        let preset = Button::with_label(label);
+        preset.add_css_class("reminder-preset");
+        let minutes = minutes.clone();
+        preset.connect_clicked(move |_| minutes.set_text(&minutes_value.to_string()));
+        presets.append(&preset);
+    }
+
     let schedule = Button::with_label("Schedule reminder");
     schedule.add_css_class("home-create-btn");
+    let cancel = Button::with_label("Cancel");
+    cancel.add_css_class("home-remove-btn");
+    cancel.set_sensitive(false);
     let status = Label::builder()
         .label("Choose a duration to see the notification schedule.")
         .halign(Align::Start)
@@ -135,9 +152,33 @@ fn build_ui(app: &Application) {
         minutes,
         task,
         schedule,
+        cancel,
         status,
     };
     let timers = Rc::new(RefCell::new(Vec::new()));
+    let current = Label::builder()
+        .label("No active reminder")
+        .halign(Align::Start)
+        .wrap(true)
+        .build();
+    current.add_css_class("reminder-current");
+    let popover_cancel = Button::with_label("Delete reminder");
+    popover_cancel.add_css_class("home-remove-btn");
+    let popover_edit = Button::with_label("Reschedule reminder");
+    popover_edit.add_css_class("reminder-popover-edit");
+    let popover_content = GtkBox::new(Orientation::Vertical, 8);
+    popover_content.add_css_class("reminder-popover");
+    popover_content.append(&current);
+    popover_content.append(&popover_edit);
+    popover_content.append(&popover_cancel);
+    let popover = Popover::new();
+    popover.set_child(Some(&popover_content));
+    popover.set_parent(&menu);
+    menu.connect_clicked({
+        let popover = popover.clone();
+        move |_| popover.popup()
+    });
+    menu.set_tooltip_text(Some("View current reminder"));
 
     for entry in [&ui.minutes, &ui.task] {
         let ui = ui.clone();
@@ -171,6 +212,49 @@ fn build_ui(app: &Application) {
         let timers = timers.clone();
         move |_| schedule_reminder(&ui, &timers)
     });
+    ui.cancel.connect_clicked({
+        let timers = timers.clone();
+        let ui = ui.clone();
+        move |_| {
+            cancel_timers(&timers);
+            ui.cancel.set_sensitive(false);
+            ui.schedule.set_label("Schedule reminder");
+            set_status(&ui.status, "Reminder cancelled.", false);
+        }
+    });
+    ui.schedule.connect_clicked({
+        let ui = ui.clone();
+        let current = current.clone();
+        move |_| {
+            current.set_label(&format!(
+                "Active: {} · {} minutes",
+                ui.task.text(),
+                ui.minutes.text()
+            ));
+        }
+    });
+    popover_cancel.connect_clicked({
+        let timers = timers.clone();
+        let ui = ui.clone();
+        let current = current.clone();
+        move |_| {
+            cancel_timers(&timers);
+            ui.cancel.set_sensitive(false);
+            ui.schedule.set_label("Schedule reminder");
+            current.set_label("No active reminder");
+            set_status(&ui.status, "Reminder deleted.", false);
+        }
+    });
+    popover_edit.connect_clicked({
+        let minutes = ui.minutes.clone();
+        let task = ui.task.clone();
+        let popover = popover.clone();
+        move |_| {
+            popover.popdown();
+            minutes.grab_focus();
+            task.set_position(-1);
+        }
+    });
 
     let root = GtkBox::new(Orientation::Vertical, 14);
     root.add_css_class("reminder-root");
@@ -181,7 +265,10 @@ fn build_ui(app: &Application) {
 
     let header = GtkBox::new(Orientation::Vertical, 5);
     header.add_css_class("reminder-header");
-    header.append(&title);
+    let title_row = GtkBox::new(Orientation::Horizontal, 8);
+    title_row.append(&title);
+    title_row.append(&menu);
+    header.append(&title_row);
     header.append(&subtitle);
     root.append(&header);
 
@@ -194,6 +281,7 @@ fn build_ui(app: &Application) {
     time_label.add_css_class("field-label");
     form.append(&time_label);
     form.append(&ui.minutes);
+    form.append(&presets);
     let task_label = Label::builder()
         .label("WHAT SHOULD WE REMIND YOU ABOUT?")
         .halign(Align::Start)
@@ -205,7 +293,12 @@ fn build_ui(app: &Application) {
 
     let footer = GtkBox::new(Orientation::Vertical, 8);
     footer.add_css_class("reminder-footer");
-    footer.append(&ui.schedule);
+    let actions = GtkBox::new(Orientation::Horizontal, 8);
+    actions.set_hexpand(true);
+    ui.schedule.set_hexpand(true);
+    actions.append(&ui.schedule);
+    actions.append(&ui.cancel);
+    footer.append(&actions);
     footer.append(&ui.status);
     root.append(&footer);
     window.set_child(Some(&root));

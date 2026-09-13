@@ -378,6 +378,15 @@ pub fn apply_theme(theme_name: &str) {
     if wallpaper.exists() {
         theme_debug(format!("Setting wallpaper: {}", wallpaper.display()));
 
+        let hypr_wallpaper = paths.config.join("hypr/default.png");
+        theme_debug(format!(
+            "Copying default wallpaper into {}",
+            hypr_wallpaper.display()
+        ));
+        if let Err(error) = copy_theme_path(&wallpaper, &hypr_wallpaper) {
+            eprintln!("[theme-switcher] Failed to copy default wallpaper: {error}");
+        }
+
         //use awww to apply the wallpaper
         Command::new("awww")
             .args([

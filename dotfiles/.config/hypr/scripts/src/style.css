@@ -96,7 +96,8 @@ entry.palette-entry placeholder {
 
 window.workspace-overview-window,
 window.quick-note-window,
-window.focus-timer-window {
+window.focus-timer-window,
+window.clock-window {
   background: @theme_bg_color;
   border: 1px solid alpha(@accent, 0.55);
   border-radius: 8px;
@@ -104,7 +105,8 @@ window.focus-timer-window {
 
 .workspace-overview-root,
 .quick-note-root,
-.focus-root {
+.focus-root,
+.clock-root {
   background: @theme_bg_color;
 }
 
@@ -344,6 +346,35 @@ button.focus-start {
 button.focus-start:hover {
   background: alpha(@accent, 0.76);
 }
+
+/* ── Clock ─────────────────────────────────────────────────────────────── */
+
+.clock-root {
+  padding: 20px;
+}
+
+.clock-surface {
+  padding: 18px 18px 26px 18px;
+  background: alpha(@accent, 0.12);
+  border: 1px solid alpha(@accent, 0.55);
+  border-radius: 8px;
+}
+
+.clock-display {
+  color: @active-accent;
+  font-size: 56px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-date {
+  color: alpha(@theme_fg_color, 0.82);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 0 6px 0;
+  border-top: 1px solid alpha(@border, 0.35);
+}
+
 .welcome-label {
   font-size: 25px;
   font-weight: bold;
@@ -403,22 +434,54 @@ button.focus-start:hover {
 }
 
 .settings-header {
-  padding: 18px;
+  padding: 20px 22px 16px;
   border-bottom: 1px solid alpha(@theme_fg_color, 0.08);
+  background: alpha(@surface-alt, 0.72);
+}
+
+.settings-root {
   background: @theme_bg_color;
 }
 
 .settings-title {
   font-weight: bolder;
-  font-size: 20px;
+  font-size: 24px;
   margin: 0;
+  color: @active-accent;
 }
 
 .settings-subtitle,
+.settings-status,
 .settings-category-description,
 .setting-description,
 .settings-empty {
   color: alpha(@theme_fg_color, 0.68);
+}
+
+.settings-subtitle {
+  font-size: 13px;
+}
+
+.settings-status {
+  font-size: 11px;
+  color: alpha(@active-accent, 0.82);
+}
+
+entry.settings-search,
+.settings-header entry {
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 0 11px;
+  background: alpha(@surface, 0.88);
+  color: @theme_fg_color;
+  border: 1px solid alpha(@border, 0.55);
+  border-radius: 7px;
+  caret-color: @active-accent;
+}
+
+.settings-header entry:focus {
+  border: 2px solid @active-accent;
+  box-shadow: 0 0 0 3px alpha(@accent, 0.2);
 }
 row {
     border: 1px solid alpha(@border, 0.55);
@@ -474,14 +537,14 @@ row:selected {
 }
 
 .settings-list {
-  padding: 14px;
+  padding: 16px;
 }
 
 .settings-category {
-  padding: 12px;
-  border-radius: 8px;
-  background: alpha(@surface-alt, 0.9);
-  border: 1px solid alpha(@border, 0.35);
+  padding: 14px;
+  border-radius: 10px;
+  background: alpha(@surface-alt, 0.82);
+  border: 1px solid alpha(@border, 0.42);
 }
 
 .settings-category-title {
@@ -495,7 +558,7 @@ row:selected {
 }
 
 .setting-row {
-  padding: 10px;
+  padding: 11px 12px;
   border-radius: 8px;
   background: alpha(@theme_fg_color, 0.05);
   border: 1px solid alpha(@theme_fg_color, 0.08);
@@ -514,13 +577,17 @@ row:selected {
 
 .setting-description {
   font-size: 12px;
+  line-height: 1.25;
 }
 
 .setting-button {
+  min-width: 72px;
+  min-height: 32px;
+  padding: 0 12px;
   background: @surface;
   color: @theme_fg_color;
   border: 1px solid alpha(@border, 0.55);
-  border-radius: 5px;
+  border-radius: 7px;
   font-weight: bold;
 }
 
@@ -533,6 +600,392 @@ row:selected {
 .settings-empty {
   padding: 40px;
   font-weight: bold;
+}
+
+/* ── Settings dashboard ───────────────────────────────────────────────── */
+
+window.settings-window {
+  border-radius: 18px;
+}
+
+window.settings-window:focus-visible {
+  outline: none;
+}
+
+.settings-root {
+  background: @theme_bg_color;
+  color: @theme_fg_color;
+}
+
+.settings-sidebar {
+  width: 210px;
+  min-width: 0;
+  padding: 12px 10px 10px;
+  background: alpha(@surface-alt, 0.62);
+  border-right: 1px solid alpha(@border, 0.34);
+}
+
+.settings-brand {
+  min-height: 38px;
+  padding: 0 10px 10px;
+}
+
+.settings-brand-mark {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px;
+  color: @theme_bg_color;
+  background: @active-accent;
+  border-radius: 9px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.settings-brand-name {
+  color: @theme_fg_color;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.settings-sidebar-label,
+.settings-section-kicker {
+  color: @muted;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+.settings-sidebar-label {
+  padding: 10px 12px 2px;
+}
+
+.settings-navigation {
+  background: transparent;
+}
+
+.settings-navigation-scroll {
+  min-height: 0;
+  background: transparent;
+}
+
+.settings-navigation > row {
+  min-height: 54px;
+  margin: 2px 0;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+
+.settings-navigation > row:hover {
+  background: alpha(@theme_fg_color, 0.06);
+  border-color: alpha(@border, 0.24);
+}
+
+.settings-navigation > row:selected {
+  background: alpha(@active-accent, 0.16);
+  border-color: alpha(@active-accent, 0.38);
+}
+
+.settings-nav-row {
+  min-height: 54px;
+  padding: 0 10px;
+}
+
+.settings-nav-icon {
+  min-width: 24px;
+  color: @muted;
+  font-size: 17px;
+}
+
+.settings-navigation > row:selected .settings-nav-icon,
+.settings-navigation > row:selected .settings-nav-title {
+  color: @active-accent;
+}
+
+.settings-nav-title {
+  color: @theme_fg_color;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.settings-nav-count {
+  color: @muted;
+  font-size: 10px;
+}
+
+.settings-sidebar-footer {
+  margin: 12px 8px 0;
+  padding: 12px 10px;
+  border-top: 1px solid alpha(@border, 0.28);
+}
+
+.settings-sidebar-status {
+  color: @active-accent;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.settings-sidebar-help {
+  color: alpha(@theme_fg_color, 0.52);
+  font-size: 10px;
+}
+
+.settings-main {
+  min-width: 0;
+  min-height: 0;
+  background: @theme_bg_color;
+}
+
+.settings-header {
+  padding: 12px 20px 10px;
+  background: alpha(@surface-alt, 0.34);
+  border-bottom: 1px solid alpha(@border, 0.22);
+}
+
+.settings-topbar {
+  min-height: 46px;
+}
+
+.settings-title {
+  margin: 0;
+  color: @theme_fg_color;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.settings-subtitle {
+  color: alpha(@theme_fg_color, 0.58);
+  font-size: 13px;
+}
+
+.settings-theme-pill {
+  min-height: 28px;
+  margin-left: auto;
+  padding: 5px 11px;
+  color: @success_color;
+  background: alpha(@success_color, 0.11);
+  border: 1px solid alpha(@success_color, 0.28);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+button.settings-close {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  color: @muted;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 20px;
+}
+
+button.settings-close:hover {
+  color: @urgent-background;
+  background: alpha(@urgent-background, 0.12);
+  border-color: alpha(@urgent-background, 0.28);
+}
+
+.settings-search-row {
+  min-height: 42px;
+}
+
+entry.settings-search {
+  min-height: 40px;
+  margin: 0;
+  padding: 0 13px;
+  color: @theme_fg_color;
+  background: alpha(@surface, 0.8);
+  border: 1px solid alpha(@border, 0.4);
+  border-radius: 10px;
+  caret-color: @active-accent;
+  font-size: 13px;
+}
+
+entry.settings-search:focus {
+  border: 2px solid @active-accent;
+  box-shadow: 0 0 0 3px alpha(@active-accent, 0.13);
+}
+
+.settings-search-hint {
+  min-width: 78px;
+  color: @muted;
+  font-size: 10px;
+}
+
+.settings-scroll {
+  min-height: 0;
+  background: @theme_bg_color;
+}
+
+.settings-content {
+  padding: 12px 20px 18px;
+}
+
+.settings-dashboard {
+  margin-bottom: 2px;
+}
+
+.settings-dashboard-hint {
+  color: @muted;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.settings-dashboard-row {
+  min-height: 64px;
+}
+
+.settings-status-card {
+  min-height: 54px;
+  padding: 8px 10px;
+  background: alpha(@surface-alt, 0.58);
+  border: 1px solid alpha(@border, 0.32);
+  border-radius: 10px;
+}
+
+.settings-status-card:hover {
+  background: alpha(@active-accent, 0.1);
+  border-color: alpha(@active-accent, 0.42);
+}
+
+.settings-card-kicker {
+  color: @muted;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.settings-card-value {
+  color: @active-accent;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.settings-card-detail {
+  color: alpha(@theme_fg_color, 0.54);
+  font-size: 10px;
+}
+
+.settings-quick-section {
+  margin-bottom: 2px;
+}
+
+.settings-section-title {
+  color: @theme_fg_color;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.settings-quick-actions {
+  min-height: 38px;
+}
+
+button.settings-quick-button {
+  min-height: 36px;
+  padding: 0 14px;
+  color: @theme_fg_color;
+  background: alpha(@surface-alt, 0.68);
+  border: 1px solid alpha(@border, 0.36);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+button.settings-quick-button:hover {
+  color: @active-accent;
+  background: alpha(@active-accent, 0.14);
+  border-color: alpha(@active-accent, 0.55);
+}
+
+.settings-category {
+  margin-top: 6px;
+  padding: 12px;
+  background: alpha(@surface-alt, 0.34);
+  border: 1px solid alpha(@border, 0.32);
+  border-radius: 14px;
+}
+
+.settings-category-icon {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 5px;
+  color: @active-accent;
+  background: alpha(@active-accent, 0.13);
+  border-radius: 9px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.settings-category-title {
+  color: @theme_fg_color;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.settings-category-description {
+  color: alpha(@theme_fg_color, 0.58);
+  font-size: 12px;
+}
+
+.settings-category-count {
+  color: @muted;
+  font-size: 10px;
+}
+
+.setting-row {
+  min-height: 50px;
+  padding: 8px 10px;
+  background: alpha(@surface, 0.54);
+  border: 1px solid alpha(@border, 0.22);
+  border-radius: 10px;
+}
+
+.setting-row:hover {
+  background: alpha(@surface, 0.9);
+  border-color: alpha(@active-accent, 0.42);
+}
+
+.setting-label {
+  color: @theme_fg_color;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.setting-description {
+  color: alpha(@theme_fg_color, 0.58);
+  font-size: 11px;
+}
+
+button.setting-button {
+  min-width: 72px;
+  min-height: 30px;
+  padding: 0 12px;
+  color: @theme_fg_color;
+  background: alpha(@surface-alt, 0.82);
+  border: 1px solid alpha(@border, 0.42);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+button.setting-button:hover,
+button.setting-button:focus {
+  color: @theme_bg_color;
+  background: @active-accent;
+  border-color: @active-accent;
+}
+
+.settings-empty {
+  min-height: 180px;
+  color: @muted;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .app-entry {

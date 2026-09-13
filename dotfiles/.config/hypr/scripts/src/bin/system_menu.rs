@@ -1,146 +1,357 @@
 // SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//    Copyright (C) 2026 Ahum Maitra
-
-//      This program is free software: you can redistribute it and/or modify
-//      it under the terms of the GNU General Public License as published by
-//      the Free Software Foundation, either version 3 of the License, or
-//      (at your option) any later version.
-
-//      This program is distributed in the hope that it will be useful,
-//      but WITHOUT ANY WARRANTY; without even the implied warranty of
-//      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//      GNU General Public License for more details.
-
-//      You should have received a copy of the GNU General Public License
-//      along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+use aurora::load_css;
+use gtk4::gdk::Key;
+use gtk4::prelude::*;
+use gtk4::{
+    Align, Application, ApplicationWindow, Box as GtkBox, Button, Entry, EventControllerKey, Label,
+    ListBox, ListBoxRow, Orientation, ScrolledWindow, Stack,
+};
 use std::process::Command;
 
-/// ─── Main menu: each entry is a clickable category ───────────────────────
-/// Selecting one opens its submenu (or runs a command directly).
-const ENTRIES: &[(&str, &[&str])] = &[
-    ("  Power", &["__sub_power__"]),
-    ("  Utilities", &["__sub_utilities__"]),
-    ("  Settings", &["settings"]),
-    ("  System", &["__sub_system__"]),
+struct Action {
+    icon: &'static str,
+    label: &'static str,
+    command: &'static str,
+}
+
+const CATEGORIES: &[(&str, &str)] = &[
+    ("Apps", ""),
+    ("Power", ""),
+    ("Capture", ""),
+    ("Utilities", ""),
+    ("Aurora", ""),
+    ("Help", ""),
 ];
 
-// ─── Submenu entries ─────────────────────────────────────────────────────
-
-const POWER_ENTRIES: &[(&str, &[&str])] = &[
-    ("  Lock", &["hyprlock"]),
-    ("  Logout", &["hyprshutdown -vt 3"]),
-    ("  Suspend", &["systemctl suspend"]),
-    ("  Reboot", &["systemctl reboot"]),
-    ("  Shutdown", &["systemctl poweroff"]),
+const POWER: &[Action] = &[
+    Action {
+        icon: "",
+        label: "Lock",
+        command: "hyprlock",
+    },
+    Action {
+        icon: "",
+        label: "Log out",
+        command: "hyprshutdown -vt 3",
+    },
+    Action {
+        icon: "",
+        label: "Suspend",
+        command: "systemctl suspend",
+    },
+    Action {
+        icon: "",
+        label: "Restart",
+        command: "systemctl reboot",
+    },
+    Action {
+        icon: "",
+        label: "Shutdown",
+        command: "systemctl poweroff",
+    },
 ];
 
-const UTILITIES_ENTRIES: &[(&str, &[&str])] = &[
-    ("  Theme Switcher", &["theme_switcher"]),
-    ("  Starship Switcher", &["starship_switcher"]),
-    ("  Rofi Flavour", &["rofi_config_switcher"]),
-    ("  Waybar Position", &["waybar_position_switcher"]),
-    ("  Layout Switcher", &["layout_switcher"]),
-    ("  Keybinds Help", &["keybinds_help"]),
-    ("  App Entries", &["app_entries_home"]),
-    ("  Search", &["search"]),
+const UTILITIES: &[Action] = &[
+    Action {
+        icon: "",
+        label: "Settings",
+        command: "settings",
+    },
+    Action {
+        icon: "",
+        label: "Theme switcher",
+        command: "theme_switcher",
+    },
+    Action {
+        icon: "",
+        label: "Keybinds",
+        command: "keybinds_help",
+    },
+    Action {
+        icon: "",
+        label: "Clock",
+        command: "clock",
+    },
+    Action {
+        icon: "",
+        label: "Reminder",
+        command: "reminder",
+    },
+    Action {
+        icon: "",
+        label: "Inbox",
+        command: "inbox",
+    },
+    Action {
+        icon: "",
+        label: "Focus timer",
+        command: "focus_timer",
+    },
+    Action {
+        icon: "",
+        label: "Workspace overview",
+        command: "workspace_overview",
+    },
+    Action {
+        icon: "",
+        label: "Layout switcher",
+        command: "layout_switcher",
+    },
+    Action {
+        icon: "",
+        label: "Search",
+        command: "search",
+    },
 ];
 
-const SYSTEM_ENTRIES: &[(&str, &[&str])] = &[
-    ("  Refresh System", &["refresh_system"]),
-    ("  Screenshot", &["hyprshot -m output"]),
-    ("  Screen Recorder", &["screenrecorder"]),
-    (
-        "  Wallpaper (Theme)",
-        &["waytrogen_line_change_for_theme", "waytrogen"],
-    ),
-    (
-        "  Wallpaper (Global)",
-        &["waytrogen_line_change_for_global_wallpapers", "waytrogen"],
-    ),
-    ("  Toggle Waybar", &["waybar_toggle"]),
+const CAPTURE: &[Action] = &[
+    Action {
+        icon: "",
+        label: "Screenshot",
+        command: "hyprshot -m output",
+    },
+    Action {
+        icon: "",
+        label: "Screenshot region",
+        command: "hyprshot -m region",
+    },
+    Action {
+        icon: "",
+        label: "Screen recorder",
+        command: "screenrecorder",
+    },
 ];
+
+const AURORA: &[Action] = &[
+    Action {
+        icon: "",
+        label: "Keybinds help",
+        command: "keybinds_help",
+    },
+    Action {
+        icon: "",
+        label: "Theme switcher",
+        command: "theme_switcher",
+    },
+    Action {
+        icon: "",
+        label: "Settings",
+        command: "settings",
+    },
+    Action {
+        icon: "",
+        label: "Reload Aurora",
+        command: "aurora reload",
+    },
+];
+
+const HELP: &[Action] = &[
+    Action {
+        icon: "",
+        label: "Keybinds help",
+        command: "keybinds_help",
+    },
+    Action {
+        icon: "",
+        label: "Aurora information",
+        command: "aurora information",
+    },
+];
+
+fn run(command: &str) {
+    let mut parts = command.split_whitespace();
+    let Some(program) = parts.next() else { return };
+    if let Err(error) = Command::new(program).args(parts).spawn() {
+        eprintln!("Could not launch {command}: {error}");
+    }
+}
+
+fn action_panel(
+    title: &'static str,
+    actions: &'static [Action],
+    _stack: &Stack,
+    window: &ApplicationWindow,
+) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    let heading = Label::builder().label(title).halign(Align::Start).build();
+    heading.add_css_class("unified-menu-panel-title");
+    panel.append(&heading);
+    for action in actions {
+        let content = GtkBox::new(Orientation::Horizontal, 8);
+        content.set_halign(Align::Start);
+        let icon = Label::with_mnemonic(action.icon);
+        icon.add_css_class("unified-menu-action-icon");
+        let label = Label::with_mnemonic(action.label);
+        label.set_halign(Align::Start);
+        content.append(&icon);
+        content.append(&label);
+
+        let button = Button::new();
+        button.set_child(Some(&content));
+        button.add_css_class("unified-menu-action");
+        let window = window.clone();
+        button.connect_clicked(move |_| {
+            run(action.command);
+            window.close();
+        });
+        panel.append(&button);
+    }
+    panel
+}
+
+fn focus_category(index: usize, list: &ListBox, scroll: &ScrolledWindow) {
+    let Some(row) = list.row_at_index(index as i32) else {
+        return;
+    };
+    list.select_row(Some(&row));
+    row.set_focusable(true);
+    row.grab_focus();
+
+    let adjustment = scroll.vadjustment();
+    let allocation = row.allocation();
+    let row_start = f64::from(allocation.y());
+    let row_end = row_start + f64::from(allocation.height());
+    let visible_start = adjustment.value();
+    let visible_end = visible_start + adjustment.page_size();
+    let target = if row_start < visible_start {
+        row_start
+    } else if row_end > visible_end {
+        row_end - adjustment.page_size()
+    } else {
+        return;
+    };
+    let max_value = adjustment.upper() - adjustment.page_size();
+    adjustment.set_value(target.clamp(adjustment.lower(), max_value.max(adjustment.lower())));
+}
 
 fn main() {
-    let selection = show_rofi_menu("System Menu", ENTRIES);
+    let app = Application::builder()
+        .application_id("com.aurora.system_menu")
+        .build();
+    app.connect_activate(|app| {
+        load_css();
+        let window = ApplicationWindow::builder()
+            .application(app)
+            .title("Aurora")
+            .default_width(360)
+            .default_height(500)
+            .decorated(false)
+            .resizable(false)
+            .build();
+        window.add_css_class("unified-menu-window");
 
-    if selection.is_empty() {
-        return;
-    }
+        let stack = Stack::new();
+        stack.set_transition_type(gtk4::StackTransitionType::SlideLeftRight);
 
-    // Route to the correct submenu or run a command directly.
-    match selection.as_str() {
-        "  Power" => show_submenu("Power Menu", POWER_ENTRIES),
-        "  Utilities" => show_submenu("Utilities Menu", UTILITIES_ENTRIES),
-        "  System" => show_submenu("System Menu", SYSTEM_ENTRIES),
-        // Settings and everything else run as commands
-        s => {
-            if let Some(action) = ENTRIES.iter().find(|(label, _)| *label == s) {
-                run_action(action.1);
-            }
+        let main = GtkBox::new(Orientation::Vertical, 10);
+        let search = Entry::builder()
+            .placeholder_text("Search anything...")
+            .hexpand(true)
+            .build();
+        search.add_css_class("unified-menu-search");
+        let list = ListBox::new();
+        list.set_selection_mode(gtk4::SelectionMode::Single);
+        list.add_css_class("unified-menu-list");
+        list.set_vexpand(true);
+        let list_scroll = ScrolledWindow::builder()
+            .child(&list)
+            .vexpand(true)
+            .hscrollbar_policy(gtk4::PolicyType::Never)
+            .vscrollbar_policy(gtk4::PolicyType::Automatic)
+            .build();
+        list_scroll.add_css_class("unified-menu-scroll");
+        for (label, icon) in CATEGORIES.iter() {
+            let row = ListBoxRow::new();
+            row.add_css_class("unified-menu-category-row");
+            row.set_focusable(true);
+            row.set_selectable(true);
+            row.set_activatable(true);
+            let button = Button::with_label(&format!("{icon}    {label}"));
+            button.add_css_class("unified-menu-category-item");
+            button.set_focusable(false);
+            let page = label.to_lowercase();
+            let stack = stack.clone();
+            let window = window.clone();
+            button.connect_clicked(move |_| {
+                if page == "apps" {
+                    if let Err(error) = Command::new("rofi").args(["-show", "drun"]).spawn() {
+                        eprintln!("Could not launch rofi: {error}");
+                    }
+                    window.close();
+                } else {
+                    stack.set_visible_child_name(&page);
+                }
+            });
+            row.set_child(Some(&button));
+            list.append(&row);
         }
-    }
-}
-
-/// Show a submenu via rofi and run whatever the user picks.
-fn show_submenu(prompt: &str, entries: &[(&str, &[&str])]) {
-    let selection = show_rofi_menu(prompt, entries);
-
-    if let Some(action) = entries.iter().find(|(label, _)| *label == selection) {
-        run_action(action.1);
-    }
-}
-
-/// Pipe entries into rofi -dmenu and return the selected label.
-fn show_rofi_menu<'a>(prompt: &str, entries: &[(&'a str, &[&str])]) -> String {
-    let mut input = String::new();
-    for (label, _) in entries {
-        input.push_str(label);
-        input.push('\n');
-    }
-
-    // rofi auto-loads ~/.config/rofi/config.rasi, so theme colours apply automatically.
-    let output = Command::new("rofi")
-        .args(["-dmenu", "-p", prompt, "-i"])
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::null())
-        .spawn()
-        .and_then(|mut child| {
-            use std::io::Write;
-            if let Some(ref mut stdin) = child.stdin {
-                let _ = stdin.write_all(input.as_bytes());
+        list.connect_row_activated(|_, row| {
+            if let Some(button) = row.child().and_downcast::<Button>() {
+                button.activate();
             }
-            child.wait_with_output()
         });
+        list.set_focusable(true);
+        main.append(&search);
+        main.append(&list_scroll);
+        stack.add_named(&main, Some("main"));
 
-    match output {
-        Ok(out) => String::from_utf8_lossy(&out.stdout).trim().to_string(),
-        Err(e) => {
-            eprintln!("Failed to launch rofi: {e}");
-            String::new()
-        }
-    }
-}
+        stack.add_named(
+            &action_panel("Power", POWER, &stack, &window),
+            Some("power"),
+        );
+        stack.add_named(
+            &action_panel("Utilities", UTILITIES, &stack, &window),
+            Some("utilities"),
+        );
+        stack.add_named(
+            &action_panel("Capture", CAPTURE, &stack, &window),
+            Some("capture"),
+        );
+        stack.add_named(
+            &action_panel("Aurora", AURORA, &stack, &window),
+            Some("aurora"),
+        );
+        stack.add_named(&action_panel("Help", HELP, &stack, &window), Some("help"));
 
-/// Run the commands for an action sequentially.
-fn run_action(cmds: &[&str]) {
-    for cmd in cmds {
-        let parts: Vec<&str> = cmd.split_whitespace().collect();
-        if parts.is_empty() {
-            continue;
-        }
-        let output = Command::new(parts[0])
-            .args(&parts[1..])
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn();
-
-        if let Err(e) = output {
-            eprintln!("Failed to execute `{cmd}`: {e}");
-        }
-    }
+        let root = GtkBox::new(Orientation::Vertical, 0);
+        root.add_css_class("system-menu-content");
+        root.set_margin_start(10);
+        root.set_margin_end(10);
+        root.set_margin_top(18);
+        root.set_margin_bottom(18);
+        root.append(&stack);
+        window.set_child(Some(&root));
+        let controller = EventControllerKey::new();
+        controller.connect_key_pressed({
+            let window = window.clone();
+            let stack = stack.clone();
+            let list = list.clone();
+            let list_scroll = list_scroll.clone();
+            let search = search.clone();
+            move |_, key, _, _| {
+                if key == Key::Escape {
+                    if stack.visible_child_name().as_deref() == Some("main") {
+                        window.close();
+                    } else {
+                        stack.set_visible_child_name("main");
+                    }
+                    return true.into();
+                }
+                if stack.visible_child_name().as_deref() == Some("main")
+                    && search.has_focus()
+                    && (key == Key::Down || key == Key::KP_Down)
+                {
+                    focus_category(0, &list, &list_scroll);
+                    return true.into();
+                }
+                false.into()
+            }
+        });
+        window.add_controller(controller);
+        window.present();
+        search.grab_focus();
+    });
+    app.run();
 }

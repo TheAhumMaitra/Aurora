@@ -97,6 +97,7 @@ entry.palette-entry placeholder {
 window.workspace-overview-window,
 window.quick-note-window,
 window.focus-timer-window,
+window.reminder-window,
 window.clock-window {
   background: @theme_bg_color;
   border: 1px solid alpha(@accent, 0.55);
@@ -106,6 +107,7 @@ window.clock-window {
 .workspace-overview-root,
 .quick-note-root,
 .focus-root,
+.reminder-root,
 .clock-root {
   background: @theme_bg_color;
 }
@@ -345,6 +347,289 @@ button.focus-start {
 
 button.focus-start:hover {
   background: alpha(@accent, 0.76);
+}
+
+/* ── Reminder ──────────────────────────────────────────────────────────── */
+
+.reminder-root {
+  background: @theme_bg_color;
+}
+
+.reminder-header {
+  padding: 2px 0 10px;
+  border-bottom: 1px solid alpha(@border, 0.35);
+}
+
+.reminder-form {
+  padding: 14px;
+  background: alpha(@surface-alt, 0.48);
+  border: 1px solid alpha(@border, 0.38);
+  border-radius: 10px;
+}
+
+.reminder-footer {
+  padding-top: 2px;
+}
+
+.reminder-presets {
+  margin: 3px 0 7px;
+}
+
+button.reminder-preset {
+  min-height: 28px;
+  padding: 0 10px;
+  color: @theme_fg_color;
+  background: alpha(@surface, 0.82);
+  border: 1px solid alpha(@border, 0.5);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+button.reminder-preset:hover {
+  color: @active-accent;
+  background: alpha(@accent, 0.2);
+  border-color: @active-accent;
+}
+
+.reminder-status {
+  min-height: 30px;
+  padding: 8px 10px;
+  background: alpha(@surface-alt, 0.72);
+  border: 1px solid alpha(@border, 0.38);
+  border-radius: 6px;
+}
+
+.reminder-popover {
+  min-width: 220px;
+  padding: 12px;
+  background: @theme_bg_color;
+  border: 1px solid alpha(@active-accent, 0.45);
+  border-radius: 8px;
+}
+
+.reminder-current {
+  color: @theme_fg_color;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.reminder-menu {
+  min-width: 34px;
+  min-height: 30px;
+  padding: 0;
+  color: @active-accent;
+  background: alpha(@surface-alt, 0.82);
+  border: 1px solid alpha(@border, 0.5);
+  border-radius: 7px;
+}
+
+.reminder-popover-edit {
+  min-height: 30px;
+  color: @theme_fg_color;
+  background: alpha(@accent, 0.18);
+  border: 1px solid alpha(@border, 0.45);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.reminder-status.reminder-warning {
+  color: @warning_color;
+  background: alpha(@warning_color, 0.10);
+  border-color: alpha(@warning_color, 0.45);
+}
+
+.reminder-status.reminder-success {
+  color: @success_color;
+  background: alpha(@success_color, 0.10);
+  border-color: alpha(@success_color, 0.45);
+}
+
+.inbox-kind-select {
+  min-height: 34px;
+  color: @theme_fg_color;
+  background: @surface-alt;
+  border: 1px solid alpha(@border, 0.5);
+  border-radius: 7px;
+}
+
+.inbox-row {
+  padding: 10px 12px;
+  margin: 4px;
+  background: @surface;
+  border: 1px solid alpha(@border, 0.35);
+  border-radius: 7px;
+}
+
+.inbox-row:hover {
+  background: alpha(@active-accent, 0.08);
+  border-color: alpha(@active-accent, 0.45);
+}
+
+.inbox-kind {
+  color: @active-accent;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.inbox-text {
+  color: @theme_fg_color;
+  font-size: 13px;
+}
+
+.system-menu-window {
+  background: @theme_bg_color;
+  border: 2px solid alpha(@active-accent, 0.42);
+  border-radius: 12px;
+}
+
+.unified-menu-window {
+  background: @theme_bg_color;
+  border: 2px solid alpha(@active-accent, 0.42);
+  border-radius: 12px;
+}
+
+.unified-menu-search {
+  min-height: 44px;
+  padding: 0 14px;
+  color: @theme_fg_color;
+  background: @surface;
+  border: 1px solid alpha(@active-accent, 0.58);
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.unified-menu-categories {
+  min-height: 32px;
+}
+
+button.unified-menu-category {
+  padding: 5px 10px;
+  color: @muted;
+  background: alpha(@surface-alt, 0.72);
+  border: 1px solid alpha(@border, 0.42);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+button.unified-menu-category:hover {
+  color: @theme_bg_color;
+  background: @active-accent;
+}
+
+.unified-menu-list {
+  background: transparent;
+}
+
+.unified-menu-scroll {
+  background: @theme_bg_color;
+  border: none;
+}
+
+.unified-menu-category-row {
+  margin: 1px 0;
+  padding: 0;
+  background: @theme_bg_color;
+}
+
+button.unified-menu-category-item {
+  min-height: 40px;
+  padding: 10px 18px;
+  color: @theme_fg_color;
+  background: @theme_bg_color;
+  border: none;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+}
+
+button.unified-menu-category-item:hover,
+button.unified-menu-category-item:focus {
+  color: @theme_bg_color;
+  background: @active-accent;
+}
+
+.unified-menu-panel-title {
+  color: @active-accent;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.unified-menu-empty {
+  color: @muted;
+  font-size: 12px;
+}
+
+.unified-menu-row {
+  margin: 3px 0;
+}
+
+button.unified-menu-action {
+  min-height: 44px;
+  padding: 0 14px;
+  color: @theme_fg_color;
+  background: @surface;
+  border: 1px solid alpha(@border, 0.36);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.unified-menu-action-icon {
+  min-width: 20px;
+  color: @active-accent;
+}
+
+button.unified-menu-action:hover,
+button.unified-menu-action:focus {
+  color: @theme_bg_color;
+  background: @active-accent;
+  border-color: @active-accent;
+}
+
+.system-menu-content {
+  background: @theme_bg_color;
+}
+
+button.system-menu-option {
+  min-width: 82px;
+  min-height: 74px;
+  color: @active-accent;
+  background: @surface;
+  border: 1px solid alpha(@border, 0.42);
+  border-radius: 10px;
+  font-size: 27px;
+}
+
+button.system-menu-option:hover,
+button.system-menu-option:focus {
+  color: @theme_bg_color;
+  background: @active-accent;
+  border-color: @active-accent;
+}
+
+.system-menu-option-label {
+  color: @theme_fg_color;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+button.system-menu-back {
+  min-height: 34px;
+  margin-top: 8px;
+  color: @muted;
+  background: alpha(@surface-alt, 0.72);
+  border: 1px solid alpha(@border, 0.42);
+  border-radius: 7px;
+  font-size: 22px;
+}
+
+button.system-menu-back:hover {
+  color: @active-accent;
+  border-color: @active-accent;
 }
 
 /* ── Clock ─────────────────────────────────────────────────────────────── */

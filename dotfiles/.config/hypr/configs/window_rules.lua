@@ -56,6 +56,12 @@ hl.window_rule({
 	float = true,
 })
 hl.window_rule({
+	name = "Aurora Control Center",
+	match = { class = "com.aurora.system_menu" },
+	float = true,
+	pin = true,
+})
+hl.window_rule({
 	name = "layout_switcher",
 	match = { class = "com.aurora.layout_switcher" },
 	float = true,
@@ -73,11 +79,6 @@ hl.window_rule({
 hl.window_rule({
 	name = "search",
 	match = { class = "com.aurora.search" },
-	float = true,
-})
-hl.window_rule({
-	name = "youtube-downloader",
-	match = { class = "com.aurora.youtube_downloader" },
 	float = true,
 })
 hl.window_rule({
@@ -241,4 +242,35 @@ hl.window_rule({
 	match = { class = "com.aurora.focus_timer" },
 	float = true,
 	pin = true,
+})
+
+hl.window_rule({
+	name = "Aurora Reminder",
+	match = { class = "com.aurora.reminder" },
+	float = true,
+	pin = true,
+})
+
+hl.window_rule({
+	name = "Aurora Inbox",
+	match = { class = "com.aurora.inbox" },
+	float = true,
+	pin = true,
+})
+
+hl.window_rule({
+	name = "Aurora Clock",
+	match = { class = "com.aurora.clock" },
+	float = true,
+	pin = true,
+})
+
+-- Aurora Dock
+hl.window_rule({
+	name = "Aurora Dock",
+	match = { class = "com.aurora.dock" },
+	float = true,
+	pin = true,
+	no_focus = false,
+	move = { "(monitor_w / 2) - (window_w / 2)", "monitor_h - window_h - 12" },
 })

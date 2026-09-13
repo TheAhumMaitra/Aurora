@@ -18,7 +18,7 @@
 
 // Aurora's robust theme switcher :)
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::fs;
 use std::io::{Error, ErrorKind, Read};
@@ -53,6 +53,125 @@ impl AuroraPaths {
 
 pub fn aurora_paths() -> AuroraPaths {
     AuroraPaths::new()
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct AuroraCommand {
+    pub id: &'static str,
+    pub name: &'static str,
+    pub category: &'static str,
+    pub keywords: &'static str,
+    pub command: &'static str,
+}
+
+pub fn command_registry() -> &'static [AuroraCommand] {
+    &[
+        AuroraCommand {
+            id: "app.entries",
+            name: "App Entries",
+            category: "Apps",
+            keywords: "launcher web tui",
+            command: "app_entries_home",
+        },
+        AuroraCommand {
+            id: "capture.screenshot",
+            name: "Screenshot",
+            category: "Capture",
+            keywords: "screen image",
+            command: "hyprshot -m output",
+        },
+        AuroraCommand {
+            id: "capture.region",
+            name: "Screenshot Region",
+            category: "Capture",
+            keywords: "screen area",
+            command: "hyprshot -m region",
+        },
+        AuroraCommand {
+            id: "capture.record",
+            name: "Screen Recording",
+            category: "Capture",
+            keywords: "screen video",
+            command: "screenrecorder",
+        },
+        AuroraCommand {
+            id: "system.refresh",
+            name: "Refresh System",
+            category: "System",
+            keywords: "reload waybar",
+            command: "refresh_system",
+        },
+        AuroraCommand {
+            id: "system.lock",
+            name: "Lock",
+            category: "Power",
+            keywords: "secure",
+            command: "hyprlock",
+        },
+        AuroraCommand {
+            id: "system.logout",
+            name: "Log Out",
+            category: "Power",
+            keywords: "exit session",
+            command: "hyprshutdown -vt 3",
+        },
+        AuroraCommand {
+            id: "system.suspend",
+            name: "Suspend",
+            category: "Power",
+            keywords: "sleep",
+            command: "systemctl suspend",
+        },
+        AuroraCommand {
+            id: "system.reboot",
+            name: "Restart",
+            category: "Power",
+            keywords: "reboot",
+            command: "systemctl reboot",
+        },
+        AuroraCommand {
+            id: "system.shutdown",
+            name: "Shutdown",
+            category: "Power",
+            keywords: "power off",
+            command: "systemctl poweroff",
+        },
+        AuroraCommand {
+            id: "aurora.settings",
+            name: "Settings",
+            category: "Aurora",
+            keywords: "configure",
+            command: "settings",
+        },
+        AuroraCommand {
+            id: "aurora.keybinds",
+            name: "Keybinds",
+            category: "Aurora",
+            keywords: "shortcuts keyboard",
+            command: "keybinds_help",
+        },
+        AuroraCommand {
+            id: "utility.search",
+            name: "Search",
+            category: "Utilities",
+            keywords: "find",
+            command: "search",
+        },
+        AuroraCommand {
+            id: "utility.layout",
+            name: "Layout Switcher",
+            category: "Utilities",
+            keywords: "windows tiling",
+            command: "layout_switcher",
+        },
+        AuroraCommand {
+            id: "files.home",
+            name: "Open Home",
+            category: "Files",
+            keywords: "nemo file manager",
+            command: "nemo",
+        },
+    ]
 }
 
 /// A reminder scheduled relative to the moment it is created.
@@ -127,6 +246,45 @@ pub fn send_notification(title: &str, body: &str) -> std::io::Result<()> {
                 ))
             }
         })
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InboxEntry {
+    pub text: String,
+    pub kind: String,
+    pub created_at: String,
+}
+
+pub fn inbox_entries_path() -> PathBuf {
+    aurora_paths().home.join(".local/share/Aurora/inbox.json")
+}
+
+pub fn load_inbox_entries() -> Vec<InboxEntry> {
+    fs::read_to_string(inbox_entries_path())
+        .ok()
+        .and_then(|content| serde_json::from_str(&content).ok())
+        .unwrap_or_default()
+}
+
+pub fn save_inbox_entry(text: &str, kind: &str) -> std::io::Result<()> {
+    let path = inbox_entries_path();
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let mut entries = load_inbox_entries();
+    entries.insert(
+        0,
+        InboxEntry {
+            text: text.trim().to_string(),
+            kind: kind.to_string(),
+            created_at: format!("{:?}", std::time::SystemTime::now()),
+        },
+    );
+    entries.truncate(100);
+    fs::write(
+        path,
+        serde_json::to_string_pretty(&entries).map_err(std::io::Error::other)?,
+    )
 }
 
 #[derive(Debug, Clone)]

@@ -22,6 +22,7 @@ use aurora::apply_theme;
 use aurora::aurora_parse;
 use aurora::aurora_paths;
 use aurora::download_theme;
+use aurora::dock_change;
 use aurora::ghostty_theme_blur_change;
 use aurora::ghostty_theme_change;
 use aurora::horror_survey_game;
@@ -133,6 +134,9 @@ enum KittyCommands {
 enum SettingsCommands {
     /// Start the welcome app on Hyprland startup
     WelcomeApp { state: BooleanState },
+
+    /// Start nwg-dock-hyprland on Hyprland startup
+    Dock { state: BooleanState },
 
     /// Turn Aurora screensaver on or off
     Screensaver { state: ToggleState },
@@ -329,6 +333,17 @@ fn main() {
                 ),
                 Err(err) => {
                     eprintln!("Failed to change Aurora screensaver: {err}");
+                    std::process::exit(1);
+                }
+            },
+
+            SettingsCommands::Dock { state } => match dock_change(state.enabled()) {
+                Ok(_) => println!(
+                    "Dock autostart set to {}.",
+                    state.to_possible_value().unwrap().get_name()
+                ),
+                Err(err) => {
+                    eprintln!("Failed to change dock autostart: {err}");
                     std::process::exit(1);
                 }
             },

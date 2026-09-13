@@ -1547,19 +1547,31 @@ pub fn autostart_dock(paths: &AuroraPaths, enabled: bool) -> Result<(), String> 
     let path = autostart_path(paths);
 
     edit_file(&path, |lines| {
-        let dock_line = r#"hl.exec_cmd("nwg-dock-hyprland")"#.to_string();
+        let dock_line = r#"hl.exec_cmd("nwg-dock-hyprland -i 37 -x -c \"rofi -show drun\"")"#.to_string();
+        let dock_old = r#"hl.exec_cmd("nwg-dock-hyprland")"#.to_string();
         let dock_commented = format!("-- {}", dock_line);
 
         // If enabling: insert after swayosd if not already present.
         if enabled {
+            // First, check if the old command format exists and migrate it.
+            if let Some(old_idx) = lines
+                .iter()
+                .position(|l| matches_line(l, &dock_old, "--"))
+            {
+                lines[old_idx] = format!("{}{}", leading_indent(&lines[old_idx]), dock_line);
+                return Ok(());
+            }
+
             let swayosd_idx = lines
                 .iter()
                 .position(|l| matches_line(l, r#"hl.exec_cmd("swayosd-server")"#, "--"))
                 .ok_or_else(|| "swayosd-server line not found in autostart.lua".to_string())?;
 
             // Check if dock line already exists right after swayosd.
-            let already_after =
-                lines.get(swayosd_idx + 1).map(|l| l.trim() == dock_line).unwrap_or(false);
+            let already_after = lines
+                .get(swayosd_idx + 1)
+                .map(|l| l.trim() == dock_line)
+                .unwrap_or(false);
             let already_anywhere = lines
                 .iter()
                 .any(|l| l.trim() == dock_line || l.trim() == dock_commented.trim());
@@ -1575,20 +1587,19 @@ pub fn autostart_dock(paths: &AuroraPaths, enabled: bool) -> Result<(), String> 
                     .position(|l| matches_line(l, &dock_line, "--"))
                     .ok_or_else(|| "dock line disappeared".to_string())?;
                 if lines[dock_pos].trim_start().starts_with("--") {
-                    lines[dock_pos] = format!(
-                        "{}{}",
-                        leading_indent(&lines[dock_pos]),
-                        dock_line
-                    );
+                    lines[dock_pos] = format!("{}{}", leading_indent(&lines[dock_pos]), dock_line);
                 }
             }
             return Ok(());
         }
 
         // If disabling: comment out the dock line if it exists.
+        // Check new format first, then old format.
         let dock_pos = lines
             .iter()
-            .position(|l| matches_line(l, &dock_line, "--"))
+            .position(|l| {
+                matches_line(l, &dock_line, "--") || matches_line(l, &dock_old, "--")
+            })
             .ok_or_else(|| "dock line not found in autostart.lua".to_string())?;
 
         lines[dock_pos] = comment_line(&lines[dock_pos], "--");
@@ -1605,7 +1616,7 @@ pub fn dock_is_enabled() -> Result<bool, String> {
     let paths = aurora_paths();
     line_is_enabled(
         &autostart_path(&paths),
-        r#"hl.exec_cmd("nwg-dock-hyprland")"#,
+        r#"hl.exec_cmd("nwg-dock-hyprland -i 37 -x -c "\rofi -show drun\"")"#,
         "--",
     )
 }
@@ -1835,55 +1846,94 @@ pub fn horror_survey_game() -> std::io::Result<()> {
     let bone = "\x1b[38;5;255m";
     let reset = "\x1b[0m";
 
-    println!("{}{}{}", blood, "\n  +-------------------------------+", reset);
+    println!(
+        "{}{}{}",
+        blood, "\n  +-------------------------------+", reset
+    );
     println!("{}{}{}", blood, "  |  W I N D O W   S U R V E Y  |", reset);
-    println!("{}{}{}", blood, "  +-------------------------------+", reset);
+    println!(
+        "{}{}{}",
+        blood, "  +-------------------------------+", reset
+    );
     println!();
-    println!("{}{}{}", bone, "   The knock is different tonight. It always is.", reset);
-    println!("{}{}{}", mist, "   The house asks questions it already knows the answer to,", reset);
-    println!("{}{}{}", mist, "   in an order you have never heard before. Answer 'y' or 'n'.", reset);
+    println!(
+        "{}{}{}",
+        bone, "   The knock is different tonight. It always is.", reset
+    );
+    println!(
+        "{}{}{}",
+        mist, "   The house asks questions it already knows the answer to,", reset
+    );
+    println!(
+        "{}{}{}",
+        mist, "   in an order you have never heard before. Answer 'y' or 'n'.", reset
+    );
     println!();
 
     let mut seed = survey_seed();
 
     // -- deep pool of mysteries -----------------------------------------
     let mut pool: Vec<(&str, &str, &str)> = Vec::new();
-    pool.push(("Was the window you locked already latched when you checked it back?",
+    pool.push((
+        "Was the window you locked already latched when you checked it back?",
         "It was. On the far side, something had been holding the latch shut for you.",
-        "It is ajar, and the space under the pane breathes a little thinner now."));
-    pool.push(("On the stairs you counted thirteen. The house says twelve. Which won?",
+        "It is ajar, and the space under the pane breathes a little thinner now.",
+    ));
+    pool.push((
+        "On the stairs you counted thirteen. The house says twelve. Which won?",
         "The house gives in, and the bottom step slips away from under your foot.",
-        "You lose count. The top of the stairs keeps a small patience it has saved for you."));
-    pool.push(("The mirror fogged from a breath you did not take. Did you breathe into it?",
+        "You lose count. The top of the stairs keeps a small patience it has saved for you.",
+    ));
+    pool.push((
+        "The mirror fogged from a breath you did not take. Did you breathe into it?",
         "You did not. The glass writes your initials in the fog anyway.",
-        "You admit it. The fog lets out its own relief, half a moment slower than yours."));
-    pool.push(("A floor under the house hums a tune nobody is singing. Could you place it?",
+        "You admit it. The fog lets out its own relief, half a moment slower than yours.",
+    ));
+    pool.push((
+        "A floor under the house hums a tune nobody is singing. Could you place it?",
         "You hum along, and the floor stops, and starts again, one note lower.",
-        "You do not know it, and it moves a room closer to the one you are in."));
-    pool.push(("The door you know you did not open stands open now. Do you close it?",
+        "You do not know it, and it moves a room closer to the one you are in.",
+    ));
+    pool.push((
+        "The door you know you did not open stands open now. Do you close it?",
         "It swings to, and the little bolt clicks on the far side of the night.",
-        "You leave it, and the thing it was holding steps quietly into the room."));
-    pool.push(("Somewhere in the dark a few seconds played backward. Did you hear it?",
+        "You leave it, and the thing it was holding steps quietly into the room.",
+    ));
+    pool.push((
+        "Somewhere in the dark a few seconds played backward. Did you hear it?",
         "You heard it, and it hears you, and it rewinds to the exact breath you drew.",
-        "You pretend you did not. The second pass sounds a little louder."));
-    pool.push(("The dust on the sill kept a single footprint of its own. Which way is it pointing?",
+        "You pretend you did not. The second pass sounds a little louder.",
+    ));
+    pool.push((
+        "The dust on the sill kept a single footprint of its own. Which way is it pointing?",
         "It points at you, then steps gently off the sill while you watch.",
-        "It points away, through the room, as if it had already gone past you."));
-    pool.push(("The phone is ringing somewhere that has no phone. Do you answer it?",
+        "It points away, through the room, as if it had already gone past you.",
+    ));
+    pool.push((
+        "The phone is ringing somewhere that has no phone. Do you answer it?",
         "You answer, and a small voice reads your name in a letter you were not taught yet.",
-        "You let it ring, and on the last ring it says your name anyway."));
-    pool.push(("There is something behind the shower curtain at the very end. Do you look?",
+        "You let it ring, and on the last ring it says your name anyway.",
+    ));
+    pool.push((
+        "There is something behind the shower curtain at the very end. Do you look?",
         "You look, and it looks back, which is not the same as it being on your side.",
-        "You do not. It has begun counting in the dark, and you are the last number."));
-    pool.push(("A lamp with no bulb burned all night. Did you turn the socket off?",
+        "You do not. It has begun counting in the dark, and you are the last number.",
+    ));
+    pool.push((
+        "A lamp with no bulb burned all night. Did you turn the socket off?",
         "You do, and the dark settles into the bulb-shaped emptiness.",
-        "You leave it, and the light keeps its warm shape with no bulb at all."));
-    pool.push(("The window is closed, yet the cold leaves a handprint on the latch. Do you name it?",
+        "You leave it, and the light keeps its warm shape with no bulb at all.",
+    ));
+    pool.push((
+        "The window is closed, yet the cold leaves a handprint on the latch. Do you name it?",
         "You do not. It leaves the way it came, through the glass, quietly.",
-        "You almost name it. The glass remembers it better than you do."));
-    pool.push(("The house listens in a way that holds its breath. Would it be listening to you?",
+        "You almost name it. The glass remembers it better than you do.",
+    ));
+    pool.push((
+        "The house listens in a way that holds its breath. Would it be listening to you?",
         "It keeps the first vowel of your name up in the ceiling, unused, waiting.",
-        "It is listening to the empty chair instead, and to you only when you sit in it."));
+        "It is listening to the empty chair instead, and to you only when you sit in it.",
+    ));
 
     survey_shuffle(&mut seed, &mut pool);
     let count: usize = pool.len();
@@ -1904,8 +1954,14 @@ pub fn horror_survey_game() -> std::io::Result<()> {
         idx = idx + 1;
     }
 
-    println!("{}{}{}", bone, "  The questions run out. The house clears its throat near your ear,", reset);
-    println!("{}{}{}", mist, "  and asks one final thing, in a voice like a closed drawer.", reset);
+    println!(
+        "{}{}{}",
+        bone, "  The questions run out. The house clears its throat near your ear,", reset
+    );
+    println!(
+        "{}{}{}",
+        mist, "  and asks one final thing, in a voice like a closed drawer.", reset
+    );
 
     let mut finals: Vec<&str> = Vec::new();
     finals.push("Would you draw the window shut against the outside?");
@@ -1941,7 +1997,10 @@ pub fn horror_survey_game() -> std::io::Result<()> {
     let verdict = verdicts[pick];
 
     println!("{}{}{}", blood, verdict, reset);
-    println!("{}{}", mist, "   — The window is closed now. It was always closed. —");
+    println!(
+        "{}{}",
+        mist, "   — The window is closed now. It was always closed. —"
+    );
     println!("{}{}{}", bone, " [ press anything to leave ]", reset);
 
     Ok(())
@@ -1954,7 +2013,9 @@ fn read_survey_answer(question: &str, tint: &str, reset: &str) -> bool {
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
             Ok(0) | Err(_) => {
-                println!("\x1b[38;5;245m  (The door lets you be.) You leave without an answer.\x1b[0m");
+                println!(
+                    "\x1b[38;5;245m  (The door lets you be.) You leave without an answer.\x1b[0m"
+                );
                 return false;
             }
             _ => (),
@@ -1966,7 +2027,9 @@ fn read_survey_answer(question: &str, tint: &str, reset: &str) -> bool {
         if answer.starts_with("n") {
             return false;
         }
-        println!("\x1b[38;5;124m  That is not an answer the house accepts. It waits. Try again.\x1b[0m");
+        println!(
+            "\x1b[38;5;124m  That is not an answer the house accepts. It waits. Try again.\x1b[0m"
+        );
     }
 }
 

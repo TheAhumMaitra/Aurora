@@ -763,6 +763,7 @@ install_packages() {
     [core]="
             $hyprland_pkg
             $xdp_hyprland_pkg
+            networkmanager
             pipewire
             pipewire-pulse
             wireplumber
@@ -934,6 +935,61 @@ install_packages() {
   fi
 
   print_success "Package installation completed ($installed_count/$total_packages packages installed/updated)"
+}
+
+# Configure NetworkManager as the system network manager
+setup_network_manager() {
+  next_step "Configuring NetworkManager"
+
+  if [ "$DRY_RUN" = true ]; then
+    print_warning "[DRY RUN] Would disable competing network managers and enable NetworkManager"
+    return 0
+  fi
+
+  if ! is_package_installed networkmanager; then
+    print_warning "NetworkManager is not installed; skipping network manager configuration"
+    log_warn "Skipped NetworkManager setup because the networkmanager package is unavailable"
+    return 0
+  fi
+
+  local services=(
+    iwd.service
+    systemd-networkd.service
+    systemd-networkd-wait-online.service
+    connman.service
+    dhcpcd.service
+    wicd.service
+  )
+  local service
+
+  print_warning "Disabling competing network managers..."
+  for service in "${services[@]}"; do
+    if systemctl list-unit-files "$service" &>/dev/null; then
+      echo "  -> Disabling $service"
+      sudo systemctl disable --now "$service" 2>/dev/null || true
+    fi
+  done
+
+  echo ""
+  print_warning "Enabling NetworkManager..."
+  sudo systemctl enable --now NetworkManager.service
+
+  echo ""
+  echo "Network management status:"
+  if systemctl is-active --quiet NetworkManager.service; then
+    print_success "NetworkManager.service is active"
+  else
+    print_error "NetworkManager.service is not active after being enabled"
+    return 1
+  fi
+
+  echo ""
+  echo "Active network-related services:"
+  systemctl --type=service --state=running |
+    grep -Ei 'NetworkManager|iwd|systemd-networkd|connman|dhcpcd|wicd' || true
+
+  print_success "NetworkManager is now the active network manager"
+  log_info "NetworkManager enabled and competing network managers disabled"
 }
 
 install_sddm_theme() {
@@ -1760,6 +1816,7 @@ main() {
   select_installation_mode # Issue #7 - Feature request
   validate_hyprland
   install_packages
+  setup_network_manager
 
   if [ "$DRY_RUN" = false ]; then
     install_sddm_theme

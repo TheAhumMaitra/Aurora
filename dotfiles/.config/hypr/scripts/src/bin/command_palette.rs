@@ -484,6 +484,7 @@ struct Palette {
     hints_row: GtkBox,
     confirm_box: GtkBox,
     output_box: GtkBox,
+    root: GtkBox,
     status_label: Label,
     detail_label: Label,
     footer_label: Label,
@@ -2773,6 +2774,10 @@ fn update_hints(p: &mut Palette) {
     p.scroll.set_visible(!compact_search);
     p.hints_row.set_visible(!compact_search);
     p.footer_label.set_visible(!compact_search);
+    p.root.set_size_request(
+        p.config.width as i32,
+        if compact_search { 72 } else { p.config.height as i32 },
+    );
     p.window.set_default_size(
         p.config.width as i32,
         if compact_search { 72 } else { p.config.height as i32 },
@@ -3297,6 +3302,7 @@ fn build_ui(app: &Application) {
         hints_row,
         confirm_box,
         output_box,
+        root,
         status_label,
         detail_label,
         footer_label,

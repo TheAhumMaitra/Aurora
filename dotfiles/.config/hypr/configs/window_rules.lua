@@ -120,8 +120,8 @@ hl.window_rule({
 	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
 hl.window_rule({
-	name = "Wifi manager used by Aurora",
-	match = { class = "wifitui" },
+	name = "Wifi manager TUI used by Aurora",
+	match = { class = "nmrs-tui" },
 	float = true,
 	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })

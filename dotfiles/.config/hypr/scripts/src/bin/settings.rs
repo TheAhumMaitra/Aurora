@@ -381,13 +381,6 @@ const SETTINGS_CATEGORIES: &[SettingsCategory] = &[
                 keywords: "record video capture wf-recorder stop",
                 action: SettingsAction::Run("screenrecorder", &["stop"]),
             },
-            SettingsItem {
-                title: "YouTube Downloader",
-                description: "Download a YouTube video into ~/Downloads/YT_vids",
-                button: "Open",
-                keywords: "youtube video download media",
-                action: SettingsAction::Launch("youtube-downloader"),
-            },
         ],
     },
     SettingsCategory {
@@ -695,10 +688,10 @@ const SETTINGS_CATEGORIES: &[SettingsCategory] = &[
             },
             SettingsItem {
                 title: "Wi-Fi TUI",
-                description: "Open the network manager interface used by Aurora's Waybar.",
+                description: "Open the network manager interface used by Aurora.",
                 button: "Open",
-                keywords: "wifi network internet nmcli wifitui",
-                action: SettingsAction::Run("kitty", &["--class", "wifitui", "wifitui"]),
+                keywords: "wifi network internet nmcli nmrs-tui",
+                action: SettingsAction::Run("kitty", &["--class", "nmrs-tui", "nmrs-tui"]),
             },
             SettingsItem {
                 title: "Bluetooth TUI",

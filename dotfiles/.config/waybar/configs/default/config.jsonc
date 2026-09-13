@@ -149,7 +149,7 @@
  "custom/wifi": {
         "format":" ",
         "tooltip": false,
-        "on-click": "exec kitty --class \"wifitui\" wifitui",
+        "on-click": "exec kitty --class \"nmrs-tui\" nmrs-tui",
   },
   "custom/bluetooth": {
         "format":"",

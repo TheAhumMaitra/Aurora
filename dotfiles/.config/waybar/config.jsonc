@@ -48,6 +48,7 @@
     "format": "{:%H:%M}  ",
     "format-alt": "{:%B %d, %Y - %R}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "on-double-click": "exec clock",
     "calendar": {
       "mode": "year",
       "mode-mon-col": 3,
@@ -148,7 +149,7 @@
  "custom/wifi": {
         "format":" ",
         "tooltip": false,
-        "on-click": "exec kitty --class \"wifitui\" wifitui",
+        "on-click": "exec kitty --class \"nmrs-tui\" nmrs-tui",
   },
   "custom/bluetooth": {
         "format":"",

@@ -824,7 +824,6 @@ install_packages() {
     [aur_extras]="
             nordzy-hyprcursors
             zen-browser-bin
-            wifitui-bin
             weathr-bin
             jolt
             leenfetch
@@ -1129,6 +1128,7 @@ install_rust_packages() {
   local -A rust_package_groups=(
     [cargo_tools]="
           termflix
+          nmrs-tui
         "
   )
 

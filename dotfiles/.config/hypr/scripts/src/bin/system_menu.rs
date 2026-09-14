@@ -30,6 +30,13 @@ struct Browser {
     manager: &'static str,
 }
 
+struct Editor {
+    name: &'static str,
+    executable: &'static str,
+    package: &'static str,
+    manager: &'static str,
+}
+
 const CATEGORIES: &[(&str, &str)] = &[
     ("Apps", ""),
     ("Power", ""),
@@ -260,6 +267,105 @@ const BROWSERS: &[Browser] = &[
     },
 ];
 
+const EDITORS: &[Editor] = &[
+    Editor {
+        name: "Neovim",
+        executable: "nvim",
+        package: "neovim",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Vim",
+        executable: "vim",
+        package: "vim",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Emacs",
+        executable: "emacs",
+        package: "emacs",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Helix",
+        executable: "hx",
+        package: "helix",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Nano",
+        executable: "nano",
+        package: "nano",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Micro",
+        executable: "micro",
+        package: "micro",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Kakoune",
+        executable: "kak",
+        package: "kakoune",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Kate",
+        executable: "kate",
+        package: "kate",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Geany",
+        executable: "geany",
+        package: "geany",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Gedit",
+        executable: "gedit",
+        package: "gedit",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Zed",
+        executable: "zed",
+        package: "zed",
+        manager: "pacman",
+    },
+    Editor {
+        name: "Visual Studio Code",
+        executable: "code",
+        package: "visual-studio-code-bin",
+        manager: "aur",
+    },
+    Editor {
+        name: "VSCodium",
+        executable: "codium",
+        package: "vscodium-bin",
+        manager: "aur",
+    },
+    Editor {
+        name: "Sublime Text",
+        executable: "subl",
+        package: "sublime-text-4",
+        manager: "aur",
+    },
+    Editor {
+        name: "Lite XL",
+        executable: "lite-xl",
+        package: "lite-xl",
+        manager: "aur",
+    },
+    Editor {
+        name: "Lapce",
+        executable: "lapce",
+        package: "lapce-bin",
+        manager: "aur",
+    },
+];
+
 fn run(command: &str) {
     let mut parts = command.split_whitespace();
     let Some(program) = parts.next() else { return };
@@ -305,6 +411,19 @@ fn remove_browser(browser: &'static Browser, window: &ApplicationWindow) {
         .spawn()
     {
         eprintln!("Could not launch {} remover: {error}", browser.name);
+    }
+    window.close();
+}
+
+fn manage_editor(editor: &'static Editor, remove: bool, window: &ApplicationWindow) {
+    let mut command = Command::new(if remove { "remover" } else { "installer" });
+    command
+        .arg(format!("--{}", editor.manager))
+        .arg(editor.package);
+
+    if let Err(error) = command.spawn() {
+        let action = if remove { "remover" } else { "installer" };
+        eprintln!("Could not launch {} {}: {error}", editor.name, action);
     }
     window.close();
 }
@@ -402,6 +521,47 @@ fn install_browser_panel(window: &ApplicationWindow) -> GtkBox {
     panel
 }
 
+fn editor_panel(window: &ApplicationWindow, remove: bool) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    let mut matching_editor = false;
+
+    for editor in EDITORS {
+        let installed = which::which(editor.executable).is_ok();
+        if installed == !remove {
+            continue;
+        }
+        matching_editor = true;
+
+        let content = GtkBox::new(Orientation::Horizontal, 14);
+        content.set_halign(Align::Start);
+        let icon = Label::with_mnemonic("");
+        icon.add_css_class("unified-menu-action-icon");
+        let label = Label::with_mnemonic(editor.name);
+        label.set_halign(Align::Start);
+        content.append(&icon);
+        content.append(&label);
+
+        let button = Button::new();
+        button.set_child(Some(&content));
+        button.add_css_class("unified-menu-action");
+        let window = window.clone();
+        button.connect_clicked(move |_| manage_editor(editor, remove, &window));
+        panel.append(&button);
+    }
+
+    if !matching_editor {
+        let message = if remove {
+            "No supported editors installed"
+        } else {
+            "All supported editors are installed"
+        };
+        let label = Label::new(Some(message));
+        label.set_halign(Align::Start);
+        panel.append(&label);
+    }
+    panel
+}
+
 fn install_panel(stack: &Stack) -> GtkBox {
     let panel = GtkBox::new(Orientation::Vertical, 6);
     let content = GtkBox::new(Orientation::Horizontal, 14);
@@ -437,6 +597,23 @@ fn install_panel(stack: &Stack) -> GtkBox {
     let browser_stack = stack.clone();
     button.connect_clicked(move |_| {
         browser_stack.set_visible_child_name("install-browsers");
+    });
+    panel.append(&button);
+    let content = GtkBox::new(Orientation::Horizontal, 14);
+    content.set_halign(Align::Start);
+    let icon = Label::with_mnemonic("");
+    icon.add_css_class("unified-menu-action-icon");
+    let label = Label::with_mnemonic("Editors");
+    label.set_halign(Align::Start);
+    content.append(&icon);
+    content.append(&label);
+
+    let button = Button::new();
+    button.set_child(Some(&content));
+    button.add_css_class("unified-menu-action");
+    let editor_stack = stack.clone();
+    button.connect_clicked(move |_| {
+        editor_stack.set_visible_child_name("install-editors");
     });
     panel.append(&button);
     panel
@@ -477,6 +654,23 @@ fn remove_panel(stack: &Stack) -> GtkBox {
     let browser_stack = stack.clone();
     button.connect_clicked(move |_| {
         browser_stack.set_visible_child_name("remove-browsers");
+    });
+    panel.append(&button);
+    let content = GtkBox::new(Orientation::Horizontal, 14);
+    content.set_halign(Align::Start);
+    let icon = Label::with_mnemonic("");
+    icon.add_css_class("unified-menu-action-icon");
+    let label = Label::with_mnemonic("Editors");
+    label.set_halign(Align::Start);
+    content.append(&icon);
+    content.append(&label);
+
+    let button = Button::new();
+    button.set_child(Some(&content));
+    button.add_css_class("unified-menu-action");
+    let editor_stack = stack.clone();
+    button.connect_clicked(move |_| {
+        editor_stack.set_visible_child_name("remove-editors");
     });
     panel.append(&button);
     panel
@@ -626,6 +820,8 @@ fn main() {
         stack.add_named(&ai_agent_panel(&window, true), Some("remove-ai"));
         stack.add_named(&install_browser_panel(&window), Some("install-browsers"));
         stack.add_named(&browser_panel(&window), Some("remove-browsers"));
+        stack.add_named(&editor_panel(&window, false), Some("install-editors"));
+        stack.add_named(&editor_panel(&window, true), Some("remove-editors"));
         stack.add_named(
             &action_panel("Aurora", AURORA, &stack, &window),
             Some("aurora"),

@@ -16,11 +16,27 @@ struct Action {
     command: &'static str,
 }
 
+struct AiAgent {
+    icon: &'static str,
+    name: &'static str,
+    executable: &'static str,
+    package: &'static str,
+}
+
+struct Browser {
+    name: &'static str,
+    executable: &'static str,
+    package: &'static str,
+    manager: &'static str,
+}
+
 const CATEGORIES: &[(&str, &str)] = &[
     ("Apps", ""),
     ("Power", ""),
     ("Capture", ""),
     ("Utilities", ""),
+    ("Install", ""),
+    ("Remove", ""),
     ("Aurora", ""),
     ("Help", ""),
 ];
@@ -160,6 +176,90 @@ const HELP: &[Action] = &[
     },
 ];
 
+const AI_AGENTS: &[AiAgent] = &[
+    AiAgent {
+        icon: "",
+        name: "GitHub Copilot CLI",
+        executable: "copilot",
+        package: "@github/copilot",
+    },
+    AiAgent {
+        icon: "",
+        name: "Claude Code",
+        executable: "claude",
+        package: "@anthropic-ai/claude-code",
+    },
+    AiAgent {
+        icon: "",
+        name: "Gemini CLI",
+        executable: "gemini",
+        package: "@google/gemini-cli",
+    },
+    AiAgent {
+        icon: "",
+        name: "OpenAI Codex CLI",
+        executable: "codex",
+        package: "@openai/codex",
+    },
+];
+
+const BROWSERS: &[Browser] = &[
+    Browser {
+        name: "Firefox",
+        executable: "firefox",
+        package: "firefox",
+        manager: "pacman",
+    },
+    Browser {
+        name: "Chromium",
+        executable: "chromium",
+        package: "chromium",
+        manager: "pacman",
+    },
+    Browser {
+        name: "Google Chrome",
+        executable: "google-chrome-stable",
+        package: "google-chrome",
+        manager: "aur",
+    },
+    Browser {
+        name: "Brave",
+        executable: "brave",
+        package: "brave-bin",
+        manager: "aur",
+    },
+    Browser {
+        name: "Vivaldi",
+        executable: "vivaldi",
+        package: "vivaldi",
+        manager: "aur",
+    },
+    Browser {
+        name: "Opera",
+        executable: "opera",
+        package: "opera",
+        manager: "aur",
+    },
+    Browser {
+        name: "Zen Browser",
+        executable: "zen-browser",
+        package: "zen-browser-bin",
+        manager: "aur",
+    },
+    Browser {
+        name: "LibreWolf",
+        executable: "librewolf",
+        package: "librewolf-bin",
+        manager: "aur",
+    },
+    Browser {
+        name: "Microsoft Edge",
+        executable: "microsoft-edge-stable",
+        package: "microsoft-edge-stable-bin",
+        manager: "aur",
+    },
+];
+
 fn run(command: &str) {
     let mut parts = command.split_whitespace();
     let Some(program) = parts.next() else { return };
@@ -168,16 +268,227 @@ fn run(command: &str) {
     }
 }
 
+fn manage_ai_agent(agent: &'static AiAgent, remove: bool) {
+    if !remove {
+        if let Err(error) = Command::new("installer")
+            .args(["--pnpm", agent.package])
+            .spawn()
+        {
+            eprintln!("Could not launch {} installer: {error}", agent.name);
+        }
+        return;
+    }
+
+    if let Err(error) = Command::new("remover")
+        .args(["--pnpm", agent.package])
+        .spawn()
+    {
+        eprintln!("Could not launch {} remover: {error}", agent.name);
+    }
+}
+
+fn install_browser(browser: &'static Browser, window: &ApplicationWindow) {
+    if let Err(error) = Command::new("installer")
+        .arg(format!("--{}", browser.manager))
+        .arg(browser.package)
+        .spawn()
+    {
+        eprintln!("Could not launch {} installer: {error}", browser.name);
+    }
+    window.close();
+}
+
+fn remove_browser(browser: &'static Browser, window: &ApplicationWindow) {
+    if let Err(error) = Command::new("remover")
+        .arg(format!("--{}", browser.manager))
+        .arg(browser.package)
+        .spawn()
+    {
+        eprintln!("Could not launch {} remover: {error}", browser.name);
+    }
+    window.close();
+}
+
+fn ai_agent_panel(window: &ApplicationWindow, remove: bool) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    for agent in AI_AGENTS {
+        let installed = which::which(agent.executable).is_ok();
+        if installed == !remove {
+            continue;
+        }
+
+        let content = GtkBox::new(Orientation::Horizontal, 14);
+        content.set_halign(Align::Start);
+
+        let icon = Label::with_mnemonic(agent.icon);
+        icon.add_css_class("unified-menu-action-icon");
+        let label = Label::with_mnemonic(agent.name);
+        label.set_halign(Align::Start);
+        content.append(&icon);
+        content.append(&label);
+
+        let button = Button::new();
+        button.set_child(Some(&content));
+        button.add_css_class("unified-menu-action");
+        let window = window.clone();
+        button.connect_clicked(move |_| {
+            manage_ai_agent(agent, remove);
+            window.close();
+        });
+        panel.append(&button);
+    }
+
+    panel
+}
+
+fn browser_panel(window: &ApplicationWindow) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    let mut installed_browser = false;
+    for browser in BROWSERS {
+        if which::which(browser.executable).is_err() {
+            continue;
+        }
+        installed_browser = true;
+
+        let content = GtkBox::new(Orientation::Horizontal, 14);
+        content.set_halign(Align::Start);
+        let icon = Label::with_mnemonic("");
+        icon.add_css_class("unified-menu-action-icon");
+        let label = Label::with_mnemonic(browser.name);
+        label.set_halign(Align::Start);
+        content.append(&icon);
+        content.append(&label);
+
+        let button = Button::new();
+        button.set_child(Some(&content));
+        button.add_css_class("unified-menu-action");
+        let window = window.clone();
+        button.connect_clicked(move |_| remove_browser(browser, &window));
+        panel.append(&button);
+    }
+
+    if !installed_browser {
+        let label = Label::new(Some("No supported browsers installed"));
+        label.set_halign(Align::Start);
+        panel.append(&label);
+    }
+    panel
+}
+
+fn install_browser_panel(window: &ApplicationWindow) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    for browser in BROWSERS {
+        if which::which(browser.executable).is_ok() {
+            continue;
+        }
+
+        let content = GtkBox::new(Orientation::Horizontal, 14);
+        content.set_halign(Align::Start);
+        let icon = Label::with_mnemonic("");
+        icon.add_css_class("unified-menu-action-icon");
+        let label = Label::with_mnemonic(browser.name);
+        label.set_halign(Align::Start);
+        content.append(&icon);
+        content.append(&label);
+
+        let button = Button::new();
+        button.set_child(Some(&content));
+        button.add_css_class("unified-menu-action");
+        let window = window.clone();
+        button.connect_clicked(move |_| install_browser(browser, &window));
+        panel.append(&button);
+    }
+
+    panel
+}
+
+fn install_panel(stack: &Stack) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    let content = GtkBox::new(Orientation::Horizontal, 14);
+    content.set_halign(Align::Start);
+
+    let icon = Label::with_mnemonic("");
+    icon.add_css_class("unified-menu-action-icon");
+    let label = Label::with_mnemonic("AI");
+    label.set_halign(Align::Start);
+    content.append(&icon);
+    content.append(&label);
+
+    let button = Button::new();
+    button.set_child(Some(&content));
+    button.add_css_class("unified-menu-action");
+    let ai_stack = stack.clone();
+    button.connect_clicked(move |_| {
+        ai_stack.set_visible_child_name("install-ai");
+    });
+    panel.append(&button);
+    let content = GtkBox::new(Orientation::Horizontal, 14);
+    content.set_halign(Align::Start);
+    let icon = Label::with_mnemonic("");
+    icon.add_css_class("unified-menu-action-icon");
+    let label = Label::with_mnemonic("Browsers");
+    label.set_halign(Align::Start);
+    content.append(&icon);
+    content.append(&label);
+
+    let button = Button::new();
+    button.set_child(Some(&content));
+    button.add_css_class("unified-menu-action");
+    let browser_stack = stack.clone();
+    button.connect_clicked(move |_| {
+        browser_stack.set_visible_child_name("install-browsers");
+    });
+    panel.append(&button);
+    panel
+}
+
+fn remove_panel(stack: &Stack) -> GtkBox {
+    let panel = GtkBox::new(Orientation::Vertical, 6);
+    let content = GtkBox::new(Orientation::Horizontal, 14);
+    content.set_halign(Align::Start);
+
+    let icon = Label::with_mnemonic("");
+    icon.add_css_class("unified-menu-action-icon");
+    let label = Label::with_mnemonic("AI");
+    label.set_halign(Align::Start);
+    content.append(&icon);
+    content.append(&label);
+
+    let button = Button::new();
+    button.set_child(Some(&content));
+    button.add_css_class("unified-menu-action");
+    let ai_stack = stack.clone();
+    button.connect_clicked(move |_| {
+        ai_stack.set_visible_child_name("remove-ai");
+    });
+    panel.append(&button);
+    let content = GtkBox::new(Orientation::Horizontal, 14);
+    content.set_halign(Align::Start);
+    let icon = Label::with_mnemonic("");
+    icon.add_css_class("unified-menu-action-icon");
+    let label = Label::with_mnemonic("Browsers");
+    label.set_halign(Align::Start);
+    content.append(&icon);
+    content.append(&label);
+
+    let button = Button::new();
+    button.set_child(Some(&content));
+    button.add_css_class("unified-menu-action");
+    let browser_stack = stack.clone();
+    button.connect_clicked(move |_| {
+        browser_stack.set_visible_child_name("remove-browsers");
+    });
+    panel.append(&button);
+    panel
+}
+
 fn action_panel(
-    title: &'static str,
+    _title: &'static str,
     actions: &'static [Action],
     _stack: &Stack,
     window: &ApplicationWindow,
 ) -> GtkBox {
     let panel = GtkBox::new(Orientation::Vertical, 6);
-    let heading = Label::builder().label(title).halign(Align::Start).build();
-    heading.add_css_class("unified-menu-panel-title");
-    panel.append(&heading);
     for action in actions {
         let content = GtkBox::new(Orientation::Horizontal, 8);
         content.set_halign(Align::Start);
@@ -309,6 +620,12 @@ fn main() {
             &action_panel("Capture", CAPTURE, &stack, &window),
             Some("capture"),
         );
+        stack.add_named(&install_panel(&stack), Some("install"));
+        stack.add_named(&remove_panel(&stack), Some("remove"));
+        stack.add_named(&ai_agent_panel(&window, false), Some("install-ai"));
+        stack.add_named(&ai_agent_panel(&window, true), Some("remove-ai"));
+        stack.add_named(&install_browser_panel(&window), Some("install-browsers"));
+        stack.add_named(&browser_panel(&window), Some("remove-browsers"));
         stack.add_named(
             &action_panel("Aurora", AURORA, &stack, &window),
             Some("aurora"),

@@ -731,6 +731,16 @@ fn focus_category(index: usize, list: &ListBox, scroll: &ScrolledWindow) {
     adjustment.set_value(target.clamp(adjustment.lower(), max_value.max(adjustment.lower())));
 }
 
+fn first_visible_category(list: &ListBox) -> Option<ListBoxRow> {
+    for index in 0..list.observe_children().n_items() {
+        let row = list.row_at_index(index as i32)?;
+        if row.is_visible() {
+            return Some(row);
+        }
+    }
+    None
+}
+
 fn main() {
     let app = Application::builder()
         .application_id("com.aurora.system_menu")
@@ -792,9 +802,34 @@ fn main() {
             row.set_child(Some(&button));
             list.append(&row);
         }
+        let list_for_filter = list.clone();
+        search.connect_changed(move |_| {
+            list_for_filter.invalidate_filter();
+        });
+        let search_for_filter = search.clone();
+        list.set_filter_func(move |row| {
+            let query = search_for_filter.text().trim().to_lowercase();
+            if query.is_empty() {
+                return true;
+            }
+            row.child()
+                .and_downcast::<Button>()
+                .and_then(|button| button.label())
+                .map(|label| label.to_lowercase().contains(&query))
+                .unwrap_or(false)
+        });
         list.connect_row_activated(|_, row| {
             if let Some(button) = row.child().and_downcast::<Button>() {
                 button.activate();
+            }
+        });
+        let list_for_activate = list.clone();
+        search.connect_activate(move |_| {
+            if let Some(row) = first_visible_category(&list_for_activate) {
+                list_for_activate.select_row(Some(&row));
+                row.child()
+                    .and_downcast::<Button>()
+                    .map(|button| button.activate());
             }
         });
         list.set_focusable(true);
@@ -856,7 +891,9 @@ fn main() {
                     && search.has_focus()
                     && (key == Key::Down || key == Key::KP_Down)
                 {
-                    focus_category(0, &list, &list_scroll);
+                    if let Some(row) = first_visible_category(&list) {
+                        focus_category(row.index() as usize, &list, &list_scroll);
+                    }
                     return true.into();
                 }
                 false.into()

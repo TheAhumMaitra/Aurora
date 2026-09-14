@@ -138,6 +138,18 @@ hl.window_rule({
 	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
 })
 hl.window_rule({
+	name = "Package installer used by Aurora",
+	match = { class = "com.aurora.installer" },
+	float = true,
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
+})
+hl.window_rule({
+	name = "Package remover used by Aurora",
+	match = { class = "com.aurora.remover" },
+	float = true,
+	size = { "monitor_w * 0.7", "monitor_h * 0.7" },
+})
+hl.window_rule({
 	name = "",
 	match = { class = "xdg-desktop-portal-gtk" },
 	float = true,

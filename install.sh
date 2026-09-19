@@ -25,6 +25,20 @@
 
 set -Eeuo pipefail
 
+# Never ask for usernames, passwords, or passphrases interactively.
+# Without this, a typo'd, private, or unreachable HTTPS URL makes git print
+# "Username for 'https://github.com':", and an SSH remote on a fresh machine
+# (no keys / no known_hosts entries) prompts for passphrases or host
+# verification, which looks like Aurora needs git setup or a GitHub account.
+# Fail fast with a readable error instead. These exports also propagate to the
+# edition installer executed later, so its "pull latest changes" self-update
+# cannot prompt either.
+# Escape hatches for private edition repositories that truly need auth:
+#   GIT_TERMINAL_PROMPT=1 ./install.sh ...   (re-enable HTTPS prompts)
+#   GIT_SSH_COMMAND="ssh" ./install.sh ...    (re-enable SSH prompts)
+export GIT_TERMINAL_PROMPT="${GIT_TERMINAL_PROMPT:-0}"
+export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new}"
+
 # Colors for output
 RESET='\033[0m'
 RED='\033[1;38;5;203m'
@@ -47,7 +61,7 @@ LOG_LEVEL="${LOG_LEVEL:-INFO}"
 
 # Edition repositories
 ARCH_REPO="${AURORA_ARCH_REPO:-https://github.com/TheAhumMaitra/Aurora-Arch.git}"
-FEDORA_REPO="${AURORA_FEDORA_REPO:-https://github.com/TheAhumMaitra/Arch-Fedora.git}"
+FEDORA_REPO="${AURORA_FEDORA_REPO:-https://github.com/TheAhumMaitra/Aurora-Fedora.git}"
 REPO_URL=""
 REPO_BRANCH="${AURORA_BRANCH:-}"
 EXPECTED_SCRIPT=""
@@ -182,10 +196,14 @@ Options:
 
 Editions:
   Arch Linux    https://github.com/TheAhumMaitra/Aurora-Arch.git    -> install-arch.sh
-  Fedora Linux  https://github.com/TheAhumMaitra/Arch-Fedora.git    -> install-fedora.sh
+  Fedora Linux  https://github.com/TheAhumMaitra/Aurora-Fedora.git  -> install-fedora.sh
 
 Environment overrides:
   AURORA_ARCH_REPO, AURORA_FEDORA_REPO, AURORA_BRANCH, AURORA_DIR, AURORA_BOOTSTRAP_LOG
+
+Git never prompts for credentials; unreachable repositories fail fast instead.
+For private edition repositories, allow prompts with GIT_TERMINAL_PROMPT=1
+(HTTPS) or GIT_SSH_COMMAND="ssh" (SSH).
 
 Examples:
   ./install.sh                    # Detect the distribution, fetch the edition and install it
@@ -442,6 +460,152 @@ ensure_git() {
   print_success "git installed successfully"
 }
 
+# Compare two git remote URLs for the same repository.
+# Handles equivalent spellings of the same remote: scp-like SSH syntax
+# (git@host:user/repo.git) vs ssh:// vs HTTPS, userinfo, letter case,
+# trailing slashes, and a trailing ".git", so an existing checkout cloned
+# over SSH still matches an HTTPS edition URL.
+normalize_git_url() {
+  local url="$1"
+  local host=""
+  local path=""
+
+  # Trim surrounding whitespace.
+  url="${url#"${url%%[![:space:]]*}"}"
+  url="${url%"${url##*[![:space:]]}"}"
+
+  if [[ "$url" == ssh://* ]]; then
+    # ssh://[user@]host[:port]/path -> host/path (drop user, port).
+    url="${url#ssh://}"
+    url="${url#*@}"
+    if [[ "$url" == *"/"* ]]; then
+      host="${url%%/*}"
+      path="${url#*/}"
+      host="${host%%:*}"
+    else
+      host="${url%%:*}"
+      path=""
+    fi
+    url="$host/$path"
+  elif [[ "$url" == *"://"* ]]; then
+    # scheme://[user@]host[:port]/path -> scheme://host/path
+    local scheme rest
+    scheme="${url%%://*}"
+    rest="${url#*://}"
+    if [[ "$rest" == *"@"* ]]; then
+      rest="${rest#*@}"
+    fi
+    if [[ "$rest" == *"/"* ]]; then
+      host="${rest%%/*}"
+      path="${rest#*/}"
+      host="${host%%:*}"
+    else
+      host="${rest%%:*}"
+      path=""
+    fi
+    url="$scheme://$host/$path"
+  elif [[ "$url" == *":"* ]]; then
+    # scp-like [user@]host:path -> ssh-equivalent host/path.
+    local remainder
+    remainder="$url"
+    if [[ "$remainder" == *"@"* ]]; then
+      remainder="${remainder#*@}"
+    fi
+    host="${remainder%%:*}"
+    path="${remainder#*:}"
+    url="ssh://$host/$path"
+  fi
+
+  # Lowercase for comparison (host and GitHub owner/repo are case-insensitive).
+  url="$(printf '%s' "$url" | tr '[:upper:]' '[:lower:]')"
+
+  # Drop trailing slashes, one trailing ".git", and any slashes it reveals.
+  while [[ "$url" == */ ]]; do
+    url="${url%/}"
+  done
+  if [[ "$url" == *.git ]]; then
+    url="${url%.git}"
+  fi
+  while [[ "$url" == */ ]]; do
+    url="${url%/}"
+  done
+
+  # Treat scp-like/ssh:// SSH and HTTPS spellings of the same host/path
+  # as equal (ssh://github.com/x vs https://github.com/x).
+  url="${url#ssh://}"
+  url="${url#https://}"
+  url="${url#http://}"
+
+  printf '%s' "$url"
+}
+
+git_urls_match() {
+  [ "$(normalize_git_url "$1")" = "$(normalize_git_url "$2")" ]
+}
+
+# Explain why a repository could not be reached without ever prompting.
+# Takes the captured git output as $1.
+report_repo_unreachable() {
+  local detail="${1:-}"
+
+  print_error "Could not reach the Aurora $DISTRO_FAMILY edition at $REPO_URL"
+  if [ -n "$detail" ]; then
+    echo -e "  ${DARK}$(printf '%s' "$detail" | head -n 1)${NC}"
+  fi
+  case "$detail" in
+  *"could not read Username"* | *"Authentication failed"* | *"Permission denied"* | *"publickey"* | *"repository not found"* | *"not found"*)
+    echo -e "  ${DARK}The repository may be private, renamed, or the URL mistyped.${NC}"
+    echo -e "  ${DARK}Git runs non-interactively, so it cannot ask for a username.${NC}"
+    echo -e "  ${DARK}If this repository truly needs credentials, allow prompts with:${NC}"
+    echo -e "  ${DARK}  GIT_TERMINAL_PROMPT=1 ./install.sh ...   (HTTPS)${NC}"
+    echo -e "  ${DARK}  GIT_SSH_COMMAND=\"ssh\" ./install.sh ...    (SSH remotes)${NC}"
+    ;;
+  *"Could not resolve host"* | *"unable to connect"* | *"Connection refused"* | *"Network is unreachable"* | *"Temporary failure in name resolution"* | *"Could not resolve hostname"*)
+    echo -e "  ${DARK}This looks like a network problem; check your connection and try again.${NC}"
+    ;;
+  *)
+    echo -e "  ${DARK}Check that the URL is correct and reachable, then try again.${NC}"
+    ;;
+  esac
+  exit 1
+}
+
+# Pre-flight check so a bad URL fails here with a clear message instead of
+# stalling at a credential prompt (or a cryptic error) halfway through cloning.
+verify_repo_reachable() {
+  local output=""
+  local output_tmp=""
+
+  log_info "Checking that $REPO_URL is reachable"
+  if [ -n "$REPO_BRANCH" ]; then
+    output_tmp="$(mktemp)"
+    if ! git ls-remote --heads "$REPO_URL" "$REPO_BRANCH" >"$output_tmp" 2>&1; then
+      cat "$output_tmp" 2>/dev/null || true
+      output="$(cat "$output_tmp" 2>/dev/null || true)"
+      rm -f "$output_tmp"
+      report_repo_unreachable "$output"
+    fi
+    output="$(cat "$output_tmp" 2>/dev/null || true)"
+    rm -f "$output_tmp"
+    if [ -z "$output" ]; then
+      print_error "Branch '$REPO_BRANCH' was not found in $REPO_URL"
+      echo -e "  ${DARK}Check --branch and that the repository URL is correct.${NC}"
+      exit 1
+    fi
+  else
+    output_tmp="$(mktemp)"
+    if ! git ls-remote "$REPO_URL" HEAD >"$output_tmp" 2>&1; then
+      cat "$output_tmp" 2>/dev/null || true
+      output="$(cat "$output_tmp" 2>/dev/null || true)"
+      rm -f "$output_tmp"
+      report_repo_unreachable "$output"
+    fi
+    rm -f "$output_tmp"
+  fi
+
+  log_debug "Repository is reachable: $REPO_URL"
+}
+
 clone_or_update_repository() {
   next_step "Fetching the Aurora $DISTRO_FAMILY edition"
 
@@ -452,10 +616,29 @@ clone_or_update_repository() {
       log_warn "--force given; removing the existing checkout at $CLONE_DIR"
       rm -rf "$CLONE_DIR"
     else
+      local existing_origin
+      existing_origin="$(git -C "$CLONE_DIR" remote get-url origin 2>/dev/null || true)"
+      if [ -n "$existing_origin" ] && ! git_urls_match "$existing_origin" "$REPO_URL"; then
+        print_error "The checkout at $CLONE_DIR belongs to a different repository:"
+        echo -e "  ${DARK}existing origin: $existing_origin${NC}"
+        echo -e "  ${DARK}expected ($DISTRO_FAMILY edition): $REPO_URL${NC}"
+        echo -e "  ${DARK}Pulling it would fetch the wrong project and may ask for credentials.${NC}"
+        echo -e "  ${DARK}Rerun with --force to re-clone, --dir <path> for another location,${NC}"
+        echo -e "  ${DARK}or --repo <url> matching the existing checkout.${NC}"
+        exit 1
+      fi
+      if [ -n "$existing_origin" ]; then
+        log_debug "Existing origin matches the $DISTRO_FAMILY edition"
+      else
+        log_warn "Existing checkout has no 'origin' remote; pulling its current upstream"
+      fi
       log_info "Existing Aurora checkout found at $CLONE_DIR; updating it"
       if ! git -C "$CLONE_DIR" pull --ff-only; then
         print_error "Failed to update the Aurora checkout at $CLONE_DIR"
-        echo -e "  ${DARK}Resolve the git error above or rerun with --force to re-clone.${NC}"
+        echo -e "  ${DARK}Git runs non-interactively, so no username was requested.${NC}"
+        echo -e "  ${DARK}This usually means the repository is unreachable, private, or SSH has no access.${NC}"
+        echo -e "  ${DARK}Resolve the git error above, allow prompts with GIT_TERMINAL_PROMPT=1${NC}"
+        echo -e "  ${DARK}(and GIT_SSH_COMMAND=\"ssh\" for SSH remotes), or rerun with --force to re-clone.${NC}"
         exit 1
       fi
       print_success "Aurora checkout updated"
@@ -471,6 +654,8 @@ clone_or_update_repository() {
       exit 1
     fi
   fi
+
+  verify_repo_reachable
 
   local -a clone_cmd=(git clone --depth 1)
   if [ -n "$REPO_BRANCH" ]; then
@@ -491,11 +676,19 @@ clone_or_update_repository() {
     fi
     full_clone_cmd+=("$REPO_URL" "$CLONE_DIR")
 
-    if ! "${full_clone_cmd[@]}"; then
-      print_error "Could not fetch the Aurora $DISTRO_FAMILY edition"
-      echo -e "  ${DARK}Check your network connection and that $REPO_URL is reachable.${NC}"
-      exit 1
+    log_debug "Running: ${full_clone_cmd[*]}"
+    local full_clone_output=""
+    local full_clone_tmp=""
+    full_clone_tmp="$(mktemp)"
+    if ! "${full_clone_cmd[@]}" >"$full_clone_tmp" 2>&1; then
+      # Show the real git output, then explain it: with prompts disabled the
+      # first failure mode is a terse auth error instead of a username prompt.
+      cat "$full_clone_tmp" 2>/dev/null || true
+      full_clone_output="$(cat "$full_clone_tmp" 2>/dev/null || true)"
+      rm -f "$full_clone_tmp"
+      report_repo_unreachable "$full_clone_output"
     fi
+    rm -f "$full_clone_tmp"
   fi
 
   print_success "Aurora $DISTRO_FAMILY edition fetched into $CLONE_DIR"

@@ -17,12 +17,29 @@
 
 use std::{process::Command, thread, time::Duration};
 
+fn set_cursor_invisible(invisible: bool) {
+    let value = if invisible { "true" } else { "false" };
+    // Runs: hyprctl eval 'hl.config({ cursor = { invisible = true/false } })'
+    let expression = format!("hl.config({{ cursor = {{ invisible = {value} }} }})");
+    if let Err(err) = Command::new("hyprctl").args(["eval", &expression]).status() {
+        eprintln!("Failed to restore cursor visibility: {err}");
+    }
+}
+
 fn main() {
     let _ = Command::new("pkill")
         .args(["-f", "org.aurora.screensaver"])
         .status();
+    let _ = Command::new("pkill")
+        .args(["-f", "aurora-screensaver"])
+        .status();
 
     thread::sleep(Duration::from_millis(300));
+
+    // aurora-launch-screensaver restores this on exit via its guard, but a
+    // SIGKILL/SIGTERM kill bypasses Drop — always restore here so the cursor
+    // can't stay stuck invisible after locking.
+    set_cursor_invisible(false);
 
     if let Err(err) = Command::new("hyprlock").spawn() {
         eprintln!("Failed to launch hyprlock: {err}");

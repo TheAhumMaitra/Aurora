@@ -24,6 +24,31 @@ use std::{
 
 const LOCK_FILE: &str = "/tmp/aurora-screensaver.lock";
 
+fn set_cursor_invisible(invisible: bool) -> Result<(), String> {
+    let value = if invisible { "true" } else { "false" };
+    let expression = format!("hl.config({{ cursor = {{ invisible = {value} }} }})");
+    let status = Command::new("hyprctl")
+        .args(["eval", &expression])
+        .status()
+        .map_err(|err| format!("failed to run hyprctl: {err}"))?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("hyprctl exited with status {status}"))
+    }
+}
+
+struct CursorVisibilityGuard;
+
+impl Drop for CursorVisibilityGuard {
+    fn drop(&mut self) {
+        if let Err(err) = set_cursor_invisible(false) {
+            eprintln!("Failed to restore cursor visibility: {err}");
+        }
+    }
+}
+
 fn aurora_running() -> bool {
     Command::new("pgrep")
         .args(["-f", "org.aurora.screensaver"])
@@ -58,6 +83,13 @@ fn main() {
         return;
     }
 
+    if let Err(err) = set_cursor_invisible(true) {
+        let _ = fs::remove_file(LOCK_FILE);
+        eprintln!("Failed to hide cursor: {err}");
+        return;
+    }
+    let _cursor_visibility_guard = CursorVisibilityGuard;
+
     let result = Command::new("kitty")
         .args([
             "--config",
@@ -81,4 +113,8 @@ fn main() {
     if let Err(err) = result {
         eprintln!("Failed to launch Aurora screensaver: {err}");
     }
+
+    // Explicitly restore `hyprctl eval 'hl.config({ cursor = { invisible = false } })'`
+    // before process exit (also runs via `Drop` on early returns / panics).
+    drop(_cursor_visibility_guard);
 }

@@ -73,6 +73,7 @@ DISTRO_ID="unknown"
 DISTRO_LIKE=""
 DISTRO_NAME="unknown"
 CLONE_DIR="${AURORA_DIR:-}"
+RUN_DIR=""
 INSTALLER_PATH=""
 RUN_INSTALLER=true
 FORCE_CLONE=false
@@ -187,10 +188,10 @@ Usage: ./install.sh [OPTIONS] [EDITION INSTALLER OPTIONS]
 Options:
   --help                    Show this help message
   --distro <arch|fedora>    Force an edition instead of auto-detecting your distribution
-  --dir <path>              Fetch the edition into <path> instead of ./Aurora
+  --dir <path>              Fetch the edition repository into <path> instead of $HOME/Aurora-Arch|Aurora-Fedora
   --repo <url>              Fetch a custom edition repository
   --branch <name>           Fetch a specific branch of the edition repository
-  --force                   Remove and re-clone an existing Aurora checkout
+  --force                   Remove and re-clone an existing edition checkout
   --no-run                  Only fetch/prepare the edition, do not run its installer
   -y, --yes                 Assume "yes" for prompts (for example installing git)
 
@@ -209,7 +210,7 @@ Examples:
   ./install.sh                    # Detect the distribution, fetch the edition and install it
   ./install.sh --dry-run          # Same, but the edition installer only previews the changes
   ./install.sh --distro arch      # Force the Arch Linux edition
-  ./install.sh --no-run           # Only fetch/prepare ./Aurora
+  ./install.sh --no-run           # Only fetch the edition; place its installer in the Aurora folder without running it
   ./install.sh --uninstall        # Forwarded to the edition installer to remove Aurora
 
 EOF
@@ -314,23 +315,29 @@ parse_args() {
     esac
   done
 
-  if [ -z "$CLONE_DIR" ]; then
-    # Default to the folder that already carries the dotfiles layout
-    # (Aurora/dotfiles/.config), i.e. this checkout itself when its name is
-    # "Aurora", or ./Aurora one level below otherwise. Never nest an extra
-    # Aurora/Aurora level, which made the edition installer look for dotfiles
-    # in the wrong place.
+  # The Aurora folder is the directory that carries the dotfiles layout
+  # (Aurora/dotfiles/.config). The edition installers read their config source
+  # from "$SCRIPT_DIR/dotfiles/.config", so they must be placed and run from
+  # here, never from inside the edition repository clone. Cloning the edition
+  # into an extra Aurora/Aurora level made the installer look for dotfiles in
+  # the wrong place.
+  if [ -z "$RUN_DIR" ]; then
     if [ "$(basename "$SCRIPT_DIR")" = "Aurora" ]; then
-      CLONE_DIR="$SCRIPT_DIR"
+      RUN_DIR="$SCRIPT_DIR"
     else
-      CLONE_DIR="$SCRIPT_DIR/Aurora"
+      RUN_DIR="$HOME/Aurora"
     fi
   fi
 
-  case "$CLONE_DIR" in
-  /*) ;;
-  *) CLONE_DIR="$PWD/$CLONE_DIR" ;;
-  esac
+  # A user-provided edition clone location (--dir / AURORA_DIR) is kept as-is;
+  # the default ($HOME/Aurora-Arch or $HOME/Aurora-Fedora) is derived from the
+  # distribution family in detect_distro.
+  if [ -n "$CLONE_DIR" ]; then
+    case "$CLONE_DIR" in
+    /*) ;;
+    *) CLONE_DIR="$PWD/$CLONE_DIR" ;;
+    esac
+  fi
 }
 
 in_word_list() {
@@ -424,10 +431,20 @@ detect_distro() {
     fi
   fi
 
+  if [ -z "$CLONE_DIR" ]; then
+    if [ "$DISTRO_FAMILY" = "arch" ]; then
+      CLONE_DIR="$HOME/Aurora-Arch"
+    else
+      CLONE_DIR="$HOME/Aurora-Fedora"
+    fi
+    log_debug "No edition clone directory given; defaulting to $CLONE_DIR"
+  fi
+
   print_success "Detected $DISTRO_NAME (family: $DISTRO_FAMILY)"
   log_info "Edition repository: $REPO_URL"
   log_info "Edition installer: $EXPECTED_SCRIPT"
-  log_info "Aurora directory: $CLONE_DIR"
+  log_info "Edition clone directory: $CLONE_DIR"
+  log_info "Aurora folder (installer runs here): $RUN_DIR"
 }
 
 ensure_git() {
@@ -641,16 +658,16 @@ clone_or_update_repository() {
       else
         log_warn "Existing checkout has no 'origin' remote; pulling its current upstream"
       fi
-      log_info "Existing Aurora checkout found at $CLONE_DIR; updating it"
+      log_info "Existing edition checkout found at $CLONE_DIR; updating it"
       if ! git -C "$CLONE_DIR" pull --ff-only; then
-        print_error "Failed to update the Aurora checkout at $CLONE_DIR"
+        print_error "Failed to update the edition checkout at $CLONE_DIR"
         echo -e "  ${DARK}Git runs non-interactively, so no username was requested.${NC}"
         echo -e "  ${DARK}This usually means the repository is unreachable, private, or SSH has no access.${NC}"
         echo -e "  ${DARK}Resolve the git error above, allow prompts with GIT_TERMINAL_PROMPT=1${NC}"
         echo -e "  ${DARK}(and GIT_SSH_COMMAND=\"ssh\" for SSH remotes), or rerun with --force to re-clone.${NC}"
         exit 1
       fi
-      print_success "Aurora checkout updated"
+      print_success "Edition checkout updated"
       return 0
     fi
   elif [ -d "$CLONE_DIR" ] && [ -n "$(ls -A "$CLONE_DIR" 2>/dev/null || true)" ]; then
@@ -759,7 +776,7 @@ patch_self_update_reference() {
 }
 
 move_installer_into_aurora_dir() {
-  next_step "Preparing the installer inside $CLONE_DIR"
+  next_step "Moving the installer into $RUN_DIR"
 
   local source_path=""
   if ! source_path="$(locate_installer "$CLONE_DIR")"; then
@@ -768,7 +785,24 @@ move_installer_into_aurora_dir() {
     exit 1
   fi
 
-  local target_path="$CLONE_DIR/$EXPECTED_SCRIPT"
+  if [ ! -d "$RUN_DIR" ]; then
+    print_error "The Aurora folder $RUN_DIR does not exist"
+    echo -e "  ${DARK}The edition installer reads \$RUN_DIR/dotfiles/.config, so it must run from an Aurora checkout.${NC}"
+    echo -e "  ${DARK}Fetch it with:${NC}"
+    echo -e "  ${CYAN}  git clone https://github.com/TheAhumMaitra/Aurora.git \"$RUN_DIR\"${NC}"
+    echo -e "  ${DARK}or run this script from inside $RUN_DIR.${NC}"
+    exit 1
+  fi
+
+  if [ ! -d "$RUN_DIR/dotfiles/.config" ]; then
+    print_error "$RUN_DIR does not look like the Aurora dotfiles folder"
+    echo -e "  ${DARK}Expected $RUN_DIR/dotfiles/.config, but it is missing.${NC}"
+    echo -e "  ${DARK}The edition installer reads its dotfiles from there; clone the Aurora repository into $RUN_DIR${NC}"
+    echo -e "  ${DARK}(git clone https://github.com/TheAhumMaitra/Aurora.git \"$RUN_DIR\") and rerun.${NC}"
+    exit 1
+  fi
+
+  local target_path="$RUN_DIR/$EXPECTED_SCRIPT"
 
   if [ "$source_path" != "$target_path" ]; then
     log_info "Moving $(basename "$source_path") to $target_path"
@@ -787,20 +821,21 @@ move_installer_into_aurora_dir() {
 run_installer() {
   if [ "$RUN_INSTALLER" = false ]; then
     print_header "Aurora is ready"
-    echo -e "  ${WHITE}Edition folder:${NC} ${CYAN}$CLONE_DIR${NC}"
+    echo -e "  ${WHITE}Edition clone folder:${NC} ${CYAN}$CLONE_DIR${NC}"
+    echo -e "  ${WHITE}Aurora folder:${NC} ${CYAN}$RUN_DIR${NC}"
     echo -e "  ${WHITE}Installer:${NC} ${CYAN}$INSTALLER_PATH${NC}"
     echo -e "  ${DARK}--no-run was given, so the installer was not executed.${NC}"
     echo ""
-    echo -e "  ${DARK}Run it later with: $INSTALLER_PATH${NC}"
+    echo -e "  ${DARK}Run it later with:${NC} ${CYAN}cd \"$RUN_DIR\" && ./$EXPECTED_SCRIPT${NC}"
     echo ""
     return 0
   fi
 
   print_header "Launching the Aurora $DISTRO_FAMILY installer"
 
-  cd "$CLONE_DIR" || exit 1
+  cd "$RUN_DIR" || exit 1
 
-  log_info "Running: $INSTALLER_PATH"
+  log_info "Running: $INSTALLER_PATH (from $RUN_DIR)"
 
   if [ "${#PASSTHROUGH_ARGS[@]}" -gt 0 ]; then
     log_info "Forwarding options: ${PASSTHROUGH_ARGS[*]}"

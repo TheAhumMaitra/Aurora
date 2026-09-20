@@ -315,7 +315,16 @@ parse_args() {
   done
 
   if [ -z "$CLONE_DIR" ]; then
-    CLONE_DIR="$PWD/Aurora"
+    # Default to the folder that already carries the dotfiles layout
+    # (Aurora/dotfiles/.config), i.e. this checkout itself when its name is
+    # "Aurora", or ./Aurora one level below otherwise. Never nest an extra
+    # Aurora/Aurora level, which made the edition installer look for dotfiles
+    # in the wrong place.
+    if [ "$(basename "$SCRIPT_DIR")" = "Aurora" ]; then
+      CLONE_DIR="$SCRIPT_DIR"
+    else
+      CLONE_DIR="$SCRIPT_DIR/Aurora"
+    fi
   fi
 
   case "$CLONE_DIR" in

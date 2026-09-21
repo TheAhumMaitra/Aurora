@@ -86,7 +86,7 @@ chmod +x install.sh && ./install.sh
 ```
 
 #### Universal installer options
-```
+
 ```
 Options:
   --help                    Show this help message
@@ -97,7 +97,6 @@ Options:
   --force                   Remove and re-clone an existing edition checkout
   --no-run                  Only fetch/prepare the edition, do not run its installer
   -y, --yes                 Assume "yes" for prompts (for example installing git)
-```
 ```
 
 # Support

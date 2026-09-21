@@ -53,13 +53,31 @@ https://github.com/user-attachments/assets/e83a9d95-ab42-4abc-a9d7-747c86e72a9c
 ## Using script
 You can use our installation script but it is in beta, might not work properly.
 
+Aurora ships one edition per distribution and each edition has its own installer
+
+| Distribution | Edition repository | Installer |
+| --- | --- | --- |
+| Arch Linux (CachyOS, EndeavourOS, Manjaro, Garuda, ...) | [`Aurora-Arch`](https://github.com/TheAhumMaitra/Aurora-Arch) | `install-arch.sh` |
+| Fedora Linux (Nobara, Bazzite, ...) | [`Aurora-Fedora`](https://github.com/TheAhumMaitra/Aurora-Fedora) | `install-fedora.sh` |
+
 __**To install Aurora using installation script follow these steps**__
 
-### Step 1
-Clone this repo into your home directory
+### Step 1 - Get the universal installer
+
+The universal `install.sh` detects your distribution, clones the matching edition into
+`~/Aurora-Arch` or `~/Aurora-Fedora`, moves that edition's installer
+(`install-arch.sh` / `install-fedora.sh`) into your `Aurora` folder (the one holding the
+`dotfiles/` layout) and runs it from there.
 
 ```
-cd ~ && git clone https://github.com/TheAhumMaitra/Aurora.git
+cd ~
+curl -fsSLO https://raw.githubusercontent.com/TheAhumMaitra/Aurora/master/install.sh
+```
+
+Or clone this repo and use the same script from the checkout
+
+```
+cd ~ && git clone https://github.com/TheAhumMaitra/Aurora.git && cd Aurora
 ```
 
 ### Step 2 - Make the installation script executable and run it
@@ -67,123 +85,16 @@ cd ~ && git clone https://github.com/TheAhumMaitra/Aurora.git
 chmod +x install.sh && ./install.sh
 ```
 
-## Manually
-
-#### Step 1. Install all required + recommended packages :- 
-
-**For arch**
-```
-hyprland (You can use Hyprland git version also)
-xdg-desktop-portal-hyprland (you can use git version also)
-pipewire
-pipewire-pulse
-wireplumber
-swaync
-hypridle
-hyprlock
-polkit-gnome
-waybar
-rofi
-wlogout
-gtk3
-gtk4
-yaru-gtk-theme (AUR)
-yaru-icon-theme (AUR)
-kitty
-neovim
-cliphist
-nemo
-wl-clipboard
-hyprshot
-network-manager-applet
-brightnessctl
-libnotify
-ttf-dejavu
-noto-fonts
-noto-fonts-emoji
-awww
-git
-papirus-icon-theme
-uv
-sudo-rs
-nordzy-hyprcursors (AUR)
-rofi-emoji
-ttf-jetbrains-mono-nerd
-mise
-starship
-wiremix
-wifitui-bin (AUR)
-weathr-bin (AUR)
-bluetui
-btop
-jolt (AUR)
-leenfetch (AUR)
-zen-browser-bin (AUR)
-hyprshutdown
-termflix (Cargo)
-```
-
-### Step 2. Clone this repository
-
-#### Clone this repo using `git`
-```
-git clone https://github.com/TheAhumMaitra/Aurora.git
-```
-
-#### Copy all contents of `Aurora/dotfiles/.config`
-```
-cp -r ./Aurora/dotfiles/.config/* ~/.config/ 
-```
-
-### Step 3. Compile and install scripts of Aurora
-
-#### Go to `.config/hypr/scripts`
-```
-cd ~/.config/hypr/scripts
-```
-
-#### Install them 
-
-**Please run** :- 
-
-```
-cargo install --path .
-```
-
-**Note : You need to install compiler of Rust to do that**
-
-
-### Install Step 4. Install Wallpaper Switcher
-
-#### Clone the custom Waytrogen repo
-```bash
-git clone https://github.com/TheAhumMaitra/waytrogen-aurora.git
-```
-#### Go to the repo folder
-```bash
-cd waytrogen-aurora
-```
-
-#### Install it
-```bash
-cargo install --path .
-```
-### Copy and compile gsettings schema
-```bash
-sudo cp ./org.Waytrogen.Waytrogen.gschema.xml \
-/usr/share/glib-2.0/schemas/
-sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
-```
-
-### Step 5. Install LazyVim starter for Neovim
-```bash
-mv ~/.config/nvim{,.bak}
-mv ~/.local/share/nvim{,.bak}
-mv ~/.local/state/nvim{,.bak}
-mv ~/.cache/nvim{,.bak}
-git clone https://github.com/LazyVim/starter ~/.config/nvim
-rm -rf ~/.config/nvim/.git
-```
+#### Universal installer options
+Options:
+  --help                    Show this help message
+  --distro <arch|fedora>    Force an edition instead of auto-detecting your distribution
+  --dir <path>              Fetch the edition repository into <path> instead of $HOME/Aurora-Arch|Aurora-Fedora
+  --repo <url>              Fetch a custom edition repository
+  --branch <name>           Fetch a specific branch of the edition repository
+  --force                   Remove and re-clone an existing edition checkout
+  --no-run                  Only fetch/prepare the edition, do not run its installer
+  -y, --yes                 Assume "yes" for prompts (for example installing git)
 # Support
 
 ## Discord Server

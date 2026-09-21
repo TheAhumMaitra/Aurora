@@ -219,7 +219,7 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:mag
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 
 -- toggle pseudo mode
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
+hl.bind(mainMod .. " + CTRL + P", hl.dsp.window.pseudo())
 
 -- resize the window
 hl.bind(mainMod .. " + SHIFT + RIGHT", hl.dsp.window.resize({ x = 20, y = 0, relative = true }))

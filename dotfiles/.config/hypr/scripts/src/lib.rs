@@ -20,6 +20,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::fs;
 use std::io::{Error, ErrorKind, Read};
 
@@ -596,6 +597,16 @@ pub fn apply_theme(theme_name: &str) {
         theme_debug("No custom.css found for this theme; skipping");
     }
 
+    // write QuickShell colors from the freshly applied custom.css
+    let custom_css = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/custom.css");
+    match write_quickshell_colors(&custom_css) {
+        Ok(target) => theme_debug(format!(
+            "Wrote QuickShell colors to {}",
+            target.display()
+        )),
+        Err(e) => eprintln!("[theme-switcher] Failed to write QuickShell colors: {e}"),
+    }
+
     // Run refresh script for refreshing the system
     theme_debug("Running refresh_system");
     Command::new("refresh_system")
@@ -636,6 +647,67 @@ pub fn apply_theme(theme_name: &str) {
     }
 
     theme_debug(format!("Finished theme switch for `{display_name}`"));
+}
+
+/// Parse `@define-color name value;` declarations from a CSS file.
+fn parse_css_colors(css_path: &Path) -> std::io::Result<HashMap<String, String>> {
+    let contents = fs::read_to_string(css_path)?;
+    let mut colors = HashMap::new();
+
+    for line in contents.lines() {
+        let line = line.trim();
+        if !line.starts_with("@define-color") {
+            continue;
+        }
+
+        let rest = line.trim_start_matches("@define-color").trim();
+        let mut parts = rest.split_whitespace();
+        if let (Some(name), Some(value)) = (parts.next(), parts.next()) {
+            colors.insert(name.to_string(), value.trim_end_matches(';').to_string());
+        }
+    }
+
+    Ok(colors)
+}
+
+/// Generate `colors.qml` for QuickShell from the theme's `custom.css` values
+/// and write it to `.config/quickshell/colors.qml`.
+pub fn write_quickshell_colors(css_path: &Path) -> std::io::Result<PathBuf> {
+    const ORDERED: &[(&str, &str)] = &[
+        ("accent", "accent"),
+        ("activeBackground", "active-background"),
+        ("activeAccent", "active-accent"),
+        ("urgentBackground", "urgent-background"),
+        ("border", "border"),
+        ("surface", "surface"),
+        ("surfaceAlt", "surface-alt"),
+        ("muted", "muted"),
+        ("background", "theme_bg_color"),
+        ("foreground", "theme_fg_color"),
+        ("success", "success_color"),
+        ("warning", "warning_color"),
+    ];
+
+    let colors = parse_css_colors(css_path)?;
+
+    let mut out = String::from(
+        "// colors.qml\n\npragma Singleton\nimport QtQuick\n\nQtObject {\n",
+    );
+    for (qml_name, css_name) in ORDERED {
+        if let Some(value) = colors.get(*css_name) {
+            out.push_str(&format!(
+                "    readonly property color {qml_name}: \"{value}\"\n"
+            ));
+        }
+    }
+    out.push_str("}\n");
+
+    let paths = aurora_paths();
+    let target_dir = paths.config.join("quickshell");
+    fs::create_dir_all(&target_dir)?;
+    let target = target_dir.join("colors.qml");
+    fs::write(&target, out)?;
+    Ok(target)
 }
 
 fn apply_gtk_options(paths: &AuroraPaths, config: &Config) {

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+[2fbe938](2fbe938c571b6408d18b3af8659521b3106fd20a)...[1c6dc54](1c6dc54640ad3acc935ae771263a30c293da280b)
+
+### 🐛 Bug Fixes
+
+- Fix README ([4a7f66f](4a7f66fd414ab290ab8a8fc33c9b46732a040637))
+- Fix README's duplicate chars ([3c14e4e](3c14e4e08f989aeed65e354f6c279fc717b1d3dc))
+- Daemon was not running ([1c6dc54](1c6dc54640ad3acc935ae771263a30c293da280b))
+
+## Aurora_I - 2026-09-21
+
 ### ⚡ Performance & Improvements
 
 - Improved margin and padding on notification ([dbcc15a](dbcc15af591fc4b767cf6642ce7b0689f84ed16e))
@@ -160,6 +170,7 @@ All notable changes to this project will be documented in this file.
 - Adding small game ([6a12d6f](6a12d6fa4e75c8c4d6d6d0815d70eae439bd20a0))
 - Update required pacakges list ([4e8142b](4e8142b5c3c4ecc5a5b96575467876b5b3b9e560))
 - Add new sub command in settings (dock) ([7c105df](7c105df50a55cd9561d12a0a0e5d7b46ba93cf42))
+- Update Changelog ([2fbe938](2fbe938c571b6408d18b3af8659521b3106fd20a))
 
 ### 📚 Documentation
 

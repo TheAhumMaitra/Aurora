@@ -1,0 +1,11 @@
+{
+  // Copy + merge this into your waybar config (typically ~/.config/waybar/config.jsonc).
+  // Wire the toggle onto your existing network module or a custom module:
+  "network": {
+    "format-wifi": " {essid}  {signalStrength}%",
+    "format-ethernet": " {ifname}",
+    "format-disconnected": "",
+    "tooltip-format": "{ifname}: {ipaddr}",
+    "on-click": "quickshell -c networks_manager ipc call wifi toggle"
+  }
+}

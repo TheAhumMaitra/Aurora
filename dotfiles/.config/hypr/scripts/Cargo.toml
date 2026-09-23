@@ -1,7 +1,7 @@
 [package]
 name = "aurora"
 description = "All the scripts required to run Aurora. Aurora is a Rust based, fast, beautiful Hyprland rice"
-version = "0.1.0"
+version = "1.0.0"
 license = "GPL-3.0-or-later"
 authors = ["Ahum Maitra", "Ahum Maitra <theahummaitra@gmail.com>"]
 edition = "2024"

@@ -94,7 +94,8 @@
   },
 
   "scroll-step": 1,
-  "on-click": "quickshell -c volume_adjuster ipc call volume toggle",
+  "on-click": "qs_popup ~/.config/quickshell/volume_adjuster/ volume open toggle",
+  "on-click-middle": "qs_popup ~/.config/quickshell/volume_adjuster/ volume open toggleSinkMute",
 
   "ignored-sinks": [
     "Easy Effects Sink"
@@ -149,12 +150,12 @@
  "custom/wifi": {
         "format":" ",
         "tooltip": false,
-        "on-click": "~/.config/hypr/scripts/qs-popup.sh ~/.config/quickshell/networks_manager/ wifi open toggle",
+        "on-click": "qs_popup ~/.config/quickshell/networks_manager/ wifi open toggle",
   },
   "custom/bluetooth": {
         "format":"",
         "tooltip": false,
-        "on-click": "~/.config/hypr/scripts/qs-popup.sh ~/.config/quickshell/bluetooth_manager/ bluetooth open togglePopup",
+        "on-click": "qs_popup ~/.config/quickshell/bluetooth_manager/ bluetooth open togglePopup",
   },
    "custom/system-resources-info": {
         "format":" ",

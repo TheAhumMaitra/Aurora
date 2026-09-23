@@ -142,31 +142,66 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
             }
 
-            Rectangle {
+            RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                width: 26
-                height: 22
-                radius: 6
-                color: muteHover.hovered ? Config.bgHover
-                      : root.muted ? Qt.alpha(Config.danger, 0.22)
-                                   : Config.bgElevated
-                border.color: root.muted ? Config.danger : Config.border
-                border.width: 1
+                spacing: 6
 
-                Text {
-                    anchors.centerIn: parent
-                    text: root.isSource ? Config.gMicMute : Config.gVolumeOff
-                    font.family: Config.glyphFont
-                    font.pixelSize: 11
-                    color: root.muted ? Config.danger : Config.fgDim
+                Rectangle {
+                    width: 26
+                    height: 22
+                    radius: 6
+                    color: defHover.hovered ? Config.bgHover
+                          : root.isDefault ? Qt.alpha(Config.accentActive, 0.18)
+                                           : Config.bgElevated
+                    border.color: root.isDefault ? Config.accentActive : Config.border
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.isDefault ? Config.gDotCircle : Config.gCircle
+                        font.family: Config.glyphFont
+                        font.pixelSize: 10
+                        color: root.isDefault ? Config.accentActive
+                              : defHover.hovered ? Config.fg
+                                                 : Config.fgDim
+                    }
+
+                    MouseArea {
+                        id: defHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (root.present && !root.isDefault) root.requestDefault()
+                        }
+                    }
                 }
 
-                MouseArea {
-                    id: muteHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggleMute()
+                Rectangle {
+                    width: 26
+                    height: 22
+                    radius: 6
+                    color: muteHover.hovered ? Config.bgHover
+                          : root.muted ? Qt.alpha(Config.danger, 0.22)
+                                       : Config.bgElevated
+                    border.color: root.muted ? Config.danger : Config.border
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.isSource ? Config.gMicMute : Config.gVolumeOff
+                        font.family: Config.glyphFont
+                        font.pixelSize: 11
+                        color: root.muted ? Config.danger : Config.fgDim
+                    }
+
+                    MouseArea {
+                        id: muteHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleMute()
+                    }
                 }
             }
         }

@@ -18,7 +18,7 @@ QtObject {
     readonly property int popupWidth: 380
     readonly property int rowHeight: 52
     readonly property int maxListHeight: 364
-    readonly property int emptyListHeight: 96
+    readonly property int emptyListHeight: 56
 
     // Palette (colors.qml) ---------------------------------------------------
     readonly property color bg: Colors.background

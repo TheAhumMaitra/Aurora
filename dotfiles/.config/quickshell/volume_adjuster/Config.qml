@@ -62,4 +62,6 @@ QtObject {
     readonly property string gCheck: "\uf00c"
     readonly property string gTimes: "\uf00d"
     readonly property string gInfo: "\uf05a"
+    readonly property string gCircle: "\uf111"
+    readonly property string gDotCircle: "\uf192"
 }

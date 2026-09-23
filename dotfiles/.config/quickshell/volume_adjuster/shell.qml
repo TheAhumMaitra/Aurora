@@ -10,6 +10,10 @@ import "."
 ShellRoot {
     id: root
 
+    // Popup state. The window is only mapped while the popup is open: a mapped
+    // full screen layer surface keeps capturing pointer input.
+    property bool popupOpen: false
+
     // ------------------------------------------------------- live color reload
     // Watch colors.qml and push changes into the Colors singleton so every
     // Config binding re-evaluates without reloading the whole shell.
@@ -41,7 +45,7 @@ ShellRoot {
     // -------------------------------------------------------------- popup window
     PanelWindow {
         id: menuWindow
-        visible: true
+        visible: root.popupOpen
         screen: Quickshell.screens[Config.screenIndex] || Quickshell.screens[0]
 
         anchors {
@@ -93,8 +97,8 @@ ShellRoot {
                 shadowVerticalOffset: 2
                 shadowColor: "#cc000000"
 
-                opacity: menuWindow.visible ? 1 : 0
-                scale: menuWindow.visible ? 1 : 0.97
+                opacity: root.popupOpen ? 1 : 0
+                scale: root.popupOpen ? 1 : 0.97
 
                 Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
@@ -104,7 +108,7 @@ ShellRoot {
                     width: parent.width
                     height: card.implicitHeight
 
-                    active: menuWindow.visible
+                    active: root.popupOpen
 
                     onRequestClose: root.closePopup()
                 }
@@ -114,21 +118,21 @@ ShellRoot {
 
     // ------------------------------------------------------------------------- ipc
     function openPopup() {
-        menuWindow.visible = true
+        root.popupOpen = true
     }
 
     function closePopup() {
-        menuWindow.visible = false
+        root.popupOpen = false
     }
 
     function togglePopup() {
-        menuWindow.visible = !menuWindow.visible
+        root.popupOpen = !root.popupOpen
     }
 
     IpcHandler {
         target: "volume"
 
-        property bool popupOpen: menuWindow.visible
+        property bool popupOpen: root.popupOpen
         property int sinksCount: card.sinkCount
         property int micsCount: card.micCount
         property real sinkVolume: card.mainSink && card.mainSink.audio ? card.mainSink.audio.volume * 100 : 0

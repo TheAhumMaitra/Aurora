@@ -10,13 +10,17 @@ import "."
 ShellRoot {
     id: root
 
+    // Popup state. The window is only mapped while the popup is open: a mapped
+    // full screen layer surface keeps capturing pointer input.
+    property bool popupOpen: false
+
     // ----------------------------------------------------------------- device discovery
     property var adapter: Bluetooth.defaultAdapter
 
     // -------------------------------------------------------------- popup window
     PanelWindow {
         id: menuWindow
-        visible: true
+        visible: root.popupOpen
         screen: Quickshell.screens[Config.screenIndex] || Quickshell.screens[0]
 
         anchors {
@@ -68,8 +72,8 @@ ShellRoot {
                 shadowVerticalOffset: 2
                 shadowColor: "#cc000000"
 
-                opacity: menuWindow.visible ? 1 : 0
-                scale: menuWindow.visible ? 1 : 0.97
+                opacity: root.popupOpen ? 1 : 0
+                scale: root.popupOpen ? 1 : 0.97
 
                 Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
@@ -80,7 +84,7 @@ ShellRoot {
                     height: card.implicitHeight
 
                     adapter: root.adapter
-                    active: menuWindow.visible
+                    active: root.popupOpen
 
                     onRequestClose: root.closePopup()
                 }
@@ -90,21 +94,21 @@ ShellRoot {
 
     // ------------------------------------------------------------------------- ipc
     function openPopup() {
-        menuWindow.visible = true
+        root.popupOpen = true
     }
 
     function closePopup() {
-        menuWindow.visible = false
+        root.popupOpen = false
     }
 
     function togglePopup() {
-        menuWindow.visible = !menuWindow.visible
+        root.popupOpen = !root.popupOpen
     }
 
     IpcHandler {
         target: "bluetooth"
 
-        property bool popupOpen: menuWindow.visible
+        property bool popupOpen: root.popupOpen
         property bool bluetoothOn: root.adapter && root.adapter.enabled
         property bool discovering: root.adapter && root.adapter.discovering
         property int devicesVisible: root.adapter && root.adapter.enabled ? card.rowCount : 0

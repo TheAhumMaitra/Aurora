@@ -268,9 +268,9 @@ Rectangle {
         // device list -------------------------------------------------------
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: root.rowCount === 0
-                ? Config.emptyListHeight
-                : Math.min(Config.maxListHeight, root.rowCount * Config.rowHeight)
+            Layout.preferredHeight: root.rowCount > 0
+                ? Math.min(Config.maxListHeight, root.rowCount * Config.rowHeight)
+                : Config.emptyListHeight
             radius: Config.radiusSm
             color: Config.bgElevated
             border.color: Config.border

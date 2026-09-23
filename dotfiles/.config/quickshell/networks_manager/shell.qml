@@ -10,6 +10,10 @@ import "."
 ShellRoot {
     id: root
 
+    // Popup state. The window is only mapped while the popup is open: a mapped
+    // full screen layer surface keeps capturing pointer input.
+    property bool popupOpen: false
+
     // ----------------------------------------------------------------- device discovery
     property var wifiDevice: null
 
@@ -25,6 +29,34 @@ ShellRoot {
 
     Component.onCompleted: {
         root.refreshDevices()
+    }
+
+    // ------------------------------------------------------- live color reload
+    // Watch colors.qml and push changes into the Colors singleton so every
+    // Config binding re-evaluates without reloading the whole shell.
+    FileView {
+        id: colorFile
+        path: Quickshell.configPath("colors.qml")
+        preload: true
+        watchChanges: true
+
+        onFileChanged: reload()
+        onLoaded: root.applyColors()
+    }
+
+    function applyColors() {
+        var text = colorFile.text()
+        if (!text) return
+        var known = ["accent", "activeBackground", "activeAccent",
+                     "urgentBackground", "border", "surface", "surfaceAlt",
+                     "muted", "background", "foreground", "success", "warning"]
+        var re = /(?:readonly\s+)?property\s+color\s+(\w+)\s*:\s*(['"])([\s\S]*?)\2/g
+        var m
+        while ((m = re.exec(text)) !== null) {
+            if (known.indexOf(m[1]) !== -1) {
+                Colors[m[1]] = m[3]
+            }
+        }
     }
 
     Connections {
@@ -45,7 +77,7 @@ ShellRoot {
     // -------------------------------------------------------------- popup window
     PanelWindow {
         id: menuWindow
-        visible: true
+        visible: root.popupOpen
         screen: Quickshell.screens[Config.screenIndex] || Quickshell.screens[0]
 
         anchors {
@@ -97,8 +129,8 @@ ShellRoot {
                 shadowVerticalOffset: 2
                 shadowColor: "#cc000000"
 
-                opacity: menuWindow.visible ? 1 : 0
-                scale: menuWindow.visible ? 1 : 0.97
+                opacity: root.popupOpen ? 1 : 0
+                scale: root.popupOpen ? 1 : 0.97
 
                 Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
@@ -118,21 +150,21 @@ ShellRoot {
 
     // ------------------------------------------------------------------------- ipc
     function openPopup() {
-        menuWindow.visible = true
+        root.popupOpen = true
     }
 
     function closePopup() {
-        menuWindow.visible = false
+        root.popupOpen = false
     }
 
     function togglePopup() {
-        menuWindow.visible = !menuWindow.visible
+        root.popupOpen = !root.popupOpen
     }
 
     IpcHandler {
         target: "wifi"
 
-        property bool popupOpen: menuWindow.visible
+        property bool popupOpen: root.popupOpen
         property bool wifiOn: Networking.wifiEnabled
         property bool airplaneMode: card.airplaneMode
         property int networksVisible: root.wifiDevice ? root.wifiDevice.networks.values.length : 0

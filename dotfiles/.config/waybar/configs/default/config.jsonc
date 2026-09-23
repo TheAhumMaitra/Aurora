@@ -94,7 +94,7 @@
   },
 
   "scroll-step": 1,
-  "on-click": "exec kitty --class \"wiremix\" wiremix",
+  "on-click": "quickshell -c volume_adjuster ipc call volume toggle",
 
   "ignored-sinks": [
     "Easy Effects Sink"
@@ -149,12 +149,12 @@
  "custom/wifi": {
         "format":" ",
         "tooltip": false,
-        "on-click": "quickshell -c networks_manager ipc call wifi toggle",
+        "on-click": "~/.config/hypr/scripts/qs-popup.sh ~/.config/quickshell/networks_manager/ wifi open toggle",
   },
   "custom/bluetooth": {
         "format":"",
         "tooltip": false,
-        "on-click": "qs -c ~/.config/quickshell/bluetooth_manager/",
+        "on-click": "~/.config/hypr/scripts/qs-popup.sh ~/.config/quickshell/bluetooth_manager/ bluetooth open togglePopup",
   },
    "custom/system-resources-info": {
         "format":" ",

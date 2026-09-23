@@ -17,6 +17,34 @@ ShellRoot {
     // ----------------------------------------------------------------- device discovery
     property var adapter: Bluetooth.defaultAdapter
 
+    // ------------------------------------------------------- live color reload
+    // Watch colors.qml and push changes into the Colors singleton so every
+    // Config binding re-evaluates without reloading the whole shell.
+    FileView {
+        id: colorFile
+        path: Quickshell.configPath("colors.qml")
+        preload: true
+        watchChanges: true
+
+        onFileChanged: reload()
+        onLoaded: root.applyColors()
+    }
+
+    function applyColors() {
+        var text = colorFile.text()
+        if (!text) return
+        var known = ["accent", "activeBackground", "activeAccent",
+                     "urgentBackground", "border", "surface", "surfaceAlt",
+                     "muted", "background", "foreground", "success", "warning"]
+        var re = /(?:readonly\s+)?property\s+color\s+(\w+)\s*:\s*(['"])([\s\S]*?)\2/g
+        var m
+        while ((m = re.exec(text)) !== null) {
+            if (known.indexOf(m[1]) !== -1) {
+                Colors[m[1]] = m[3]
+            }
+        }
+    }
+
     // -------------------------------------------------------------- popup window
     PanelWindow {
         id: menuWindow

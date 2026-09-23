@@ -48,6 +48,7 @@ QtObject {
 
     // Glyphs (Nerd Font Font-Awesome 5 range) --------------------------------
     readonly property string gWifi: "\uf1eb"
+    readonly property string gPlane: "\uf072"
     readonly property string gLock: "\uf023"
     readonly property string gCheck: "\uf00c"
     readonly property string gRefresh: "\uf021"

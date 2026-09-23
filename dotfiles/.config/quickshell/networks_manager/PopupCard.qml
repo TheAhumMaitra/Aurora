@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Networking
 import "helpers.js" as H
 
@@ -19,6 +20,68 @@ Rectangle {
     color: Config.bg
     border.color: Config.border
     border.width: 1
+
+    // Styled toggle switch with a leading icon.
+    component IconSwitch: Item {
+        id: isw
+        property bool checked: false
+        property string icon: ""
+        signal clicked()
+
+        width: 62
+        height: 22
+        implicitWidth: 62
+        implicitHeight: 22
+
+        Text {
+            id: isIcon
+            width: 18
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            text: isw.icon
+            font.family: Config.glyphFont
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignHCenter
+            color: isw.checked ? Config.accent : Config.fgDim
+
+            Behavior on color { ColorAnimation { duration: 150 } }
+        }
+
+        Rectangle {
+            id: track
+            width: 38
+            height: 22
+            radius: 11
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            color: isw.checked ? Config.accent : Qt.alpha(Config.fg, 0.12)
+            border.width: 1
+            border.color: isw.checked ? Config.accent : Qt.alpha(Config.fg, 0.25)
+
+            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+            Rectangle {
+                id: knob
+                width: 18
+                height: 18
+                radius: 9
+                color: "#ffffff"
+                border.color: Qt.alpha("#000000", 0.15)
+                border.width: 1
+                y: (track.height - knob.height) / 2
+                x: isw.checked ? track.width - knob.width - 2 : 2
+
+                Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: isw.clicked()
+        }
+    }
 
     // Networks, connected first, then by signal strength.
     property var sorted: []
@@ -51,7 +114,97 @@ Rectangle {
     }
 
     onWifiDeviceChanged: root.rehook()
-    Component.onCompleted: root.rehook()
+    Component.onCompleted: { root.rehook(); root.pollRadio() }
+
+    // ------------------------------------------------------------- radio state
+    // Airplane mode is derived from NetworkManager's wifi + wwan radios.
+    property bool airplaneMode: false
+    property bool wwanEnabled: false
+
+    function parseRadio(data) {
+        if (typeof data !== "string") return
+        var line = data.trim()
+        if (line === "") return
+        var parts = line.split(":")
+        if (parts.length < 2) return
+        var w = parts[0]
+        var ww = parts[1]
+        if (w !== "enabled" && w !== "disabled") return
+        if (ww !== "enabled" && ww !== "disabled") return
+        root.wwanEnabled = ww === "enabled"
+        root.airplaneMode = w === "disabled" && ww === "disabled"
+    }
+
+    Process {
+        id: radioStatus
+        command: ["nmcli", "-t", "-f", "WIFI,WWAN", "radio"]
+        stdout: SplitParser {
+            onRead: function(data) { root.parseRadio(data) }
+        }
+    }
+
+    Process {
+        id: radioCmd
+    }
+
+    Timer {
+        id: radioPoll
+        interval: 2000
+        running: true
+        repeat: true
+        onTriggered: root.pollRadio()
+    }
+
+    Timer {
+        id: pollSoonTimer
+        interval: 600
+        onTriggered: root.pollRadio()
+    }
+
+    function pollRadio() {
+        radioStatus.running = false
+        radioStatus.running = true
+    }
+
+    function pollSoon() {
+        pollSoonTimer.restart()
+    }
+
+    function setRadioAll(enabled) {
+        radioCmd.exec(["nmcli", "radio", "all", enabled ? "on" : "off"])
+        root.pollSoon()
+    }
+
+    function toggleAirplane() {
+        var target = !root.airplaneMode
+        root.airplaneMode = target
+        if (target) {
+            root.wwanEnabled = false
+            setRadioAll(false)
+        } else {
+            root.wwanEnabled = true
+            setRadioAll(true)
+            rescanSoon.restart()
+        }
+    }
+
+    function setWifi(enabled) {
+        Networking.wifiEnabled = enabled
+        if (enabled && root.airplaneMode) {
+            root.airplaneMode = false
+            root.wwanEnabled = true
+            setRadioAll(true)
+            rescanSoon.restart()
+        } else {
+            root.pollSoon()
+        }
+    }
+
+    Timer {
+        id: rescanSoon
+        interval: 1200
+        onTriggered: root.rescan()
+    }
 
     readonly property int rowCount: Networking.wifiEnabled ? root.sorted.length : 0
 
@@ -126,8 +279,20 @@ Rectangle {
                 color: Config.fg
             }
 
-            Item {
-                Layout.fillWidth: true
+            Item { Layout.fillWidth: true }
+
+            IconSwitch {
+                Layout.alignment: Qt.AlignVCenter
+                icon: Config.gPlane
+                checked: root.airplaneMode
+                onClicked: root.toggleAirplane()
+            }
+
+            IconSwitch {
+                Layout.alignment: Qt.AlignVCenter
+                icon: Config.gWifi
+                checked: Networking.wifiEnabled
+                onClicked: root.setWifi(!Networking.wifiEnabled)
             }
 
             Rectangle {

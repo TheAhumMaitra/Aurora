@@ -45,7 +45,7 @@ ShellRoot {
     // -------------------------------------------------------------- popup window
     PanelWindow {
         id: menuWindow
-        visible: false
+        visible: true
         screen: Quickshell.screens[Config.screenIndex] || Quickshell.screens[0]
 
         anchors {
@@ -134,6 +134,7 @@ ShellRoot {
 
         property bool popupOpen: menuWindow.visible
         property bool wifiOn: Networking.wifiEnabled
+        property bool airplaneMode: card.airplaneMode
         property int networksVisible: root.wifiDevice ? root.wifiDevice.networks.values.length : 0
         property string currentNetwork: root.connectedNetwork
         property int cardWidth: card.implicitWidth
@@ -157,6 +158,14 @@ ShellRoot {
                 root.wifiDevice.scannerEnabled = false
                 root.wifiDevice.scannerEnabled = true
             }
+        }
+
+        function toggleAirplane(): void {
+            card.toggleAirplane()
+        }
+
+        function setWifi(enabled: bool): void {
+            card.setWifi(enabled)
         }
     }
 }

@@ -21,8 +21,8 @@
 use aurora::apply_theme;
 use aurora::aurora_parse;
 use aurora::aurora_paths;
-use aurora::download_theme;
 use aurora::dock_change;
+use aurora::download_theme;
 use aurora::ghostty_theme_blur_change;
 use aurora::ghostty_theme_change;
 use aurora::horror_survey_game;
@@ -187,8 +187,8 @@ fn main() {
     match &cli.command {
         Commands::Version => {
             println!("{LOGO}");
-            println!("Using Aurora's 0.1.0");
-            println!("Using Aurora's CLI - 0.1.0");
+            println!("Using Aurora's 1.0.0 | Iesus");
+            println!("Using Aurora's CLI - 1.0.0");
         }
 
         Commands::ApplyTheme { name } => {

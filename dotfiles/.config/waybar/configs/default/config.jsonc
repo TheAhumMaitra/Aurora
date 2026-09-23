@@ -154,7 +154,7 @@
   "custom/bluetooth": {
         "format":"",
         "tooltip": false,
-        "on-click": "exec kitty --class \"bluetui\" bluetui",
+        "on-click": "qs -c ~/.config/quickshell/bluetooth_manager/",
   },
    "custom/system-resources-info": {
         "format":" ",

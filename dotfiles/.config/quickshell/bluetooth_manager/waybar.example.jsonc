@@ -1,0 +1,14 @@
+{
+  // Copy + merge this into your waybar config (typically ~/.config/waybar/config.jsonc).
+  // Wire the toggle onto your existing bluetooth module or a custom module:
+  "bluetooth": {
+    "format": " {status}",
+    "format-on": "\uf293 {num_connections}",
+    "format-off": "",
+    "format-disabled": "",
+    "tooltip-format": "{device_alias}",
+    // toggle = bluetooth power (header switch), toggle-popup = open/close the manager
+    "on-click": "quickshell -c bluetooth_manager ipc call bluetooth toggle",
+    "on-click-middle": "quickshell -c bluetooth_manager ipc call bluetooth togglePopup"
+  }
+}

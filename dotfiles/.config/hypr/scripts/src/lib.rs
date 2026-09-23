@@ -661,46 +661,133 @@ fn parse_css_colors(css_path: &Path) -> std::io::Result<HashMap<String, String>>
         }
 
         let rest = line.trim_start_matches("@define-color").trim();
-        let mut parts = rest.split_whitespace();
-        if let (Some(name), Some(value)) = (parts.next(), parts.next()) {
-            colors.insert(name.to_string(), value.trim_end_matches(';').to_string());
+        // Values can contain spaces (`rgba(100, 114, 125, 0.5)`), so only the
+        // name is split off and the whole remainder is kept as the value.
+        let Some((name, value)) = rest.split_once(char::is_whitespace) else {
+            continue;
+        };
+        let value = value.trim().trim_end_matches(';').trim();
+        if name.is_empty() || value.is_empty() {
+            continue;
         }
+
+        colors.insert(name.to_string(), value.to_string());
     }
 
     Ok(colors)
 }
 
-/// Generate `colors.qml` for QuickShell from the theme's `custom.css` values
-/// and write it to `.config/quickshell/colors.qml`.
-pub fn write_quickshell_colors(css_path: &Path) -> std::io::Result<PathBuf> {
-    const ORDERED: &[(&str, &str)] = &[
-        ("accent", "accent"),
-        ("activeBackground", "active-background"),
-        ("activeAccent", "active-accent"),
-        ("urgentBackground", "urgent-background"),
-        ("border", "border"),
-        ("surface", "surface"),
-        ("surfaceAlt", "surface-alt"),
-        ("muted", "muted"),
-        ("background", "theme_bg_color"),
-        ("foreground", "theme_fg_color"),
-        ("success", "success_color"),
-        ("warning", "warning_color"),
-    ];
+/// Convert a CSS color into a literal QML's `color` type accepts (`#rrggbb` or
+/// `#aarrggbb`, Qt reads 8 digit hex as `#aarrggbb`). Returns `None` for values
+/// QML cannot parse, such as GTK specific functions or references to another
+/// color.
+fn normalize_qml_color(value: &str) -> Option<String> {
+    let value = value.trim();
 
-    let colors = parse_css_colors(css_path)?;
+    if let Some(hex) = value.strip_prefix('#') {
+        let valid =
+            matches!(hex.len(), 3 | 4 | 6 | 8) && hex.chars().all(|c| c.is_ascii_hexdigit());
+        return valid.then(|| value.to_string());
+    }
 
+    let function = strip_color_function(value, "rgba(").or_else(|| strip_color_function(value, "rgb("));
+    if let Some(args) = function {
+        let parts: Vec<&str> = args.split(',').map(str::trim).collect();
+        if !(3..=4).contains(&parts.len()) {
+            return None;
+        }
+
+        let mut channels = [0u8; 3];
+        for (channel, part) in channels.iter_mut().zip(parts.iter()) {
+            *channel = part.parse().ok()?;
+        }
+
+        let alpha = match parts.get(3) {
+            None => 255,
+            // `rgba()` alpha is either a 0-255 integer or a 0.0-1.0 float.
+            Some(part) => part
+                .parse::<u8>()
+                .or_else(|_| part.parse::<f32>().map(|a| (a.clamp(0.0, 1.0) * 255.0).round() as u8))
+                .ok()?,
+        };
+
+        return Some(if alpha == 255 {
+            format!("#{:02x}{:02x}{:02x}", channels[0], channels[1], channels[2])
+        } else {
+            format!(
+                "#{alpha:02x}{:02x}{:02x}{:02x}",
+                channels[0], channels[1], channels[2]
+            )
+        });
+    }
+
+    // SVG color names such as `white` are valid in QML as well.
+    (!value.is_empty() && value.chars().all(|c| c.is_ascii_alphabetic())).then(|| value.to_string())
+}
+
+/// Strip the `rgb(...)`/`rgba(...)` wrapper and return the comma separated
+/// arguments. The function name is matched case insensitively.
+fn strip_color_function<'a>(value: &'a str, function: &str) -> Option<&'a str> {
+    let body = value.strip_suffix(')')?;
+    if body.len() <= function.len() || !body[..function.len()].eq_ignore_ascii_case(function) {
+        return None;
+    }
+
+    Some(&body[function.len()..])
+}
+
+/// QML property name, CSS color name, and the fallback used when the theme does
+/// not define the color or defines one that QML cannot parse.
+const QUICKSHELL_COLORS: &[(&str, &str, &str)] = &[
+    ("accent", "accent", "#a5a5a5"),
+    ("activeBackground", "active-background", "#484a4b"),
+    ("activeAccent", "active-accent", "#a5a5a5"),
+    ("urgentBackground", "urgent-background", "#df0000"),
+    ("border", "border", "#4e4e4e"),
+    ("surface", "surface", "#121212"),
+    ("surfaceAlt", "surface-alt", "#1c1c1c"),
+    ("muted", "muted", "#a1a1a1"),
+    ("background", "theme_bg_color", "#060606"),
+    ("foreground", "theme_fg_color", "#ffffff"),
+    ("success", "success_color", "#a5a5a5"),
+    ("warning", "warning_color", "#df0000"),
+];
+
+/// Render the QuickShell `colors.qml` singleton from CSS colors. Every property
+/// is always written with a color QML can parse: QuickShell imports this file as
+/// the `Colors` singleton, so a single invalid color makes the whole popup
+/// configuration fail to load. The properties are writable because the popups
+/// update them at runtime to reload colors without restarting the shell.
+fn render_quickshell_colors(colors: &HashMap<String, String>) -> String {
     let mut out = String::from(
         "// colors.qml\n\npragma Singleton\nimport QtQuick\n\nQtObject {\n",
     );
-    for (qml_name, css_name) in ORDERED {
-        if let Some(value) = colors.get(*css_name) {
-            out.push_str(&format!(
-                "    readonly property color {qml_name}: \"{value}\"\n"
-            ));
-        }
+
+    for (qml_name, css_name, fallback) in QUICKSHELL_COLORS {
+        let value = match colors.get(*css_name).and_then(|value| normalize_qml_color(value)) {
+            Some(value) => value,
+            None => {
+                if colors.contains_key(*css_name) {
+                    theme_debug(format!(
+                        "QuickShell color `{qml_name}` is not a plain color; using {fallback}"
+                    ));
+                }
+                (*fallback).to_string()
+            }
+        };
+
+        out.push_str(&format!("    property color {qml_name}: \"{value}\"\n"));
     }
     out.push_str("}\n");
+
+    out
+}
+
+/// Generate `colors.qml` for QuickShell from the theme's `custom.css` values
+/// and write it to `.config/quickshell/colors.qml`.
+pub fn write_quickshell_colors(css_path: &Path) -> std::io::Result<PathBuf> {
+    let colors = parse_css_colors(css_path)?;
+    let out = render_quickshell_colors(&colors);
 
     let paths = aurora_paths();
     let target_dir = paths.config.join("quickshell");
@@ -2394,10 +2481,13 @@ fn survey_shuffle<T>(state: &mut u64, items: &mut Vec<T>) {
 #[cfg(test)]
 mod tests {
     use super::{
-        copy_theme_path, should_copy, vscode_extension_is_installed, write_vscode_settings,
-        write_zed_settings, Config, Reminder,
+        copy_theme_path, normalize_qml_color, parse_css_colors, render_quickshell_colors,
+        should_copy, vscode_extension_is_installed, write_vscode_settings, write_zed_settings,
+        Config, Reminder, QUICKSHELL_COLORS,
     };
+    use std::collections::HashMap;
     use std::fs;
+    use std::path::Path;
     use std::path::PathBuf;
     use std::thread;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -2580,5 +2670,117 @@ mod tests {
             assert!(!vscode.extension_name.trim().is_empty());
             assert!(!vscode.theme_name.trim().is_empty());
         }
+    }
+
+    /// Guards against the regression that broke every QuickShell popup: one
+    /// color QML cannot parse makes the whole `Colors` singleton unavailable.
+    fn assert_valid_qml_color(value: &str, source: &Path) {
+        let is_hex = value.strip_prefix('#').is_some_and(|hex| {
+            matches!(hex.len(), 3 | 4 | 6 | 8) && hex.chars().all(|c| c.is_ascii_hexdigit())
+        });
+        let is_name = !value.is_empty() && value.chars().all(|c| c.is_ascii_alphabetic());
+
+        assert!(
+            is_hex || is_name,
+            "{} produced the invalid QML color `{value}`",
+            source.display()
+        );
+    }
+
+    #[test]
+    fn parse_css_colors_keeps_values_with_spaces() {
+        let root = test_dir("parse-css-colors");
+        fs::create_dir_all(&root).unwrap();
+        let css = root.join("custom.css");
+
+        fs::write(
+            &css,
+            "@define-color accent rgba(100, 114, 125, 0.5);\n@define-color border #4e4e4e;\n",
+        )
+        .unwrap();
+
+        let colors = parse_css_colors(&css).unwrap();
+
+        // Splitting the value on whitespace truncated this to `rgba(100,`.
+        assert_eq!(colors.get("accent").unwrap(), "rgba(100, 114, 125, 0.5)");
+        assert_eq!(colors.get("border").unwrap(), "#4e4e4e");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn normalize_qml_color_rewrites_css_color_functions() {
+        assert_eq!(
+            normalize_qml_color("rgba(100, 114, 125, 0.5)").unwrap(),
+            "#8064727d"
+        );
+        assert_eq!(normalize_qml_color("rgb(6, 6, 6)").unwrap(), "#060606");
+        assert_eq!(normalize_qml_color("rgba(6, 6, 6, 255)").unwrap(), "#060606");
+        assert_eq!(normalize_qml_color("  #4e4e4e  ").unwrap(), "#4e4e4e");
+        assert_eq!(normalize_qml_color("white").unwrap(), "white");
+
+        // Values QML cannot parse must be rejected instead of being written out.
+        assert!(normalize_qml_color("rgba(100,").is_none());
+        assert!(normalize_qml_color("alpha(#ffffff, 0.5)").is_none());
+        assert!(normalize_qml_color("@accent_bg_color").is_none());
+        assert!(normalize_qml_color("rgba(300, 0, 0, 1)").is_none());
+    }
+
+    #[test]
+    fn render_quickshell_colors_falls_back_for_unparseable_values() {
+        let mut colors = HashMap::new();
+        // The exact value that stopped every popup from loading.
+        colors.insert("accent".to_string(), "rgba(100,".to_string());
+        colors.insert("border".to_string(), "#4e4e4e".to_string());
+
+        let rendered = render_quickshell_colors(&colors);
+        let properties: Vec<&str> = rendered
+            .lines()
+            .filter(|line| line.contains("property color"))
+            .collect();
+
+        assert_eq!(properties.len(), QUICKSHELL_COLORS.len());
+        assert!(rendered.contains("property color accent: \"#a5a5a5\""));
+        assert!(rendered.contains("property color border: \"#4e4e4e\""));
+
+        for property in properties {
+            let value = property.split('"').nth(1).unwrap();
+            assert_valid_qml_color(value, Path::new("custom.css"));
+        }
+    }
+
+    #[test]
+    fn bundled_themes_render_loadable_quickshell_colors() {
+        let themes_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../themes");
+
+        let mut checked = 0;
+        for entry in fs::read_dir(themes_dir).unwrap() {
+            let css = entry.unwrap().path().join("custom.css");
+            if !css.exists() {
+                continue;
+            }
+
+            let rendered = render_quickshell_colors(&parse_css_colors(&css).unwrap());
+            let properties: Vec<&str> = rendered
+                .lines()
+                .filter(|line| line.contains("property color"))
+                .collect();
+
+            assert_eq!(
+                properties.len(),
+                QUICKSHELL_COLORS.len(),
+                "{} is missing colors",
+                css.display()
+            );
+
+            for property in properties {
+                let value = property.split('"').nth(1).unwrap();
+                assert_valid_qml_color(value, &css);
+            }
+
+            checked += 1;
+        }
+
+        assert!(checked > 0, "no theme custom.css files were found");
     }
 }

@@ -53,9 +53,6 @@ hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("theme_switcher"))
 -- launch command palette
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("command_palette"))
 
--- launch Aurora unified command center
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("system_menu"))
-
 -- launch workspace overview
 hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("workspace_overview"))
 

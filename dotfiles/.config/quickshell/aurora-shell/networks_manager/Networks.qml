@@ -151,6 +151,7 @@ Scope {
     // ------------------------------------------------------------------------- ipc
     function openPopup() {
         root.popupOpen = true
+        card.rescan()
     }
 
     function closePopup() {

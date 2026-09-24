@@ -29,21 +29,34 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-/// Configs as (display name, source directory relative to HOME).
-const CONFIGS: &[(&str, &str)] = &[
-    ("default", ".config/waybar/configs/default"),
-    ("floating", ".config/waybar/configs/floating"),
-];
-
-fn resolved_config_paths() -> Vec<(&'static str, PathBuf)> {
-    let home = home_dir().expect("Could not get HOME directory");
-    CONFIGS
-        .iter()
-        .map(|(name, path)| (*name, home.join(path)))
-        .collect()
+fn configs_root() -> PathBuf {
+    home_dir()
+        .expect("Could not get HOME directory")
+        .join(".config/waybar/configs")
 }
 
-fn index_by_name() -> HashMap<&'static str, PathBuf> {
+fn resolved_config_paths() -> Vec<(String, PathBuf)> {
+    let root = configs_root();
+    let mut paths = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(root) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+
+            if let Some(name) = path.file_name().map(|s| s.to_string_lossy().to_string()) {
+                paths.push((name, path));
+            }
+        }
+    }
+
+    paths.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    paths
+}
+
+fn index_by_name() -> HashMap<String, PathBuf> {
     resolved_config_paths().into_iter().collect()
 }
 
@@ -155,7 +168,7 @@ fn build_ui(app: &Application) {
 
         let row = ListBoxRow::new();
         row.add_css_class("section-row-theme");
-        row.set_widget_name(name);
+        row.set_widget_name(&name);
 
         let label = Label::new(Some(&display));
         label.set_xalign(0.0);

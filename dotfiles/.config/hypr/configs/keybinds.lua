@@ -262,6 +262,8 @@ hl.bind(
 -- lock the screen using hyprlock
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 
+-- launch control panel
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("aurora-shell toggle cc"))
 -- rofi menus
 
 -- launch rofi based  emoji menu

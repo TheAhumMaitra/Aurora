@@ -157,6 +157,10 @@ fn component(name: &str) -> Option<Component> {
             name: "volume",
             target: "volume",
         }),
+        "control" | "control_center" | "cc" | "dashboard" | "quick" => Some(Component {
+            name: "control_center",
+            target: "cc",
+        }),
         _ => None,
     }
 }
@@ -164,7 +168,7 @@ fn component(name: &str) -> Option<Component> {
 fn require_component(name: &str) -> Result<Component, String> {
     component(name).ok_or_else(|| {
         format!(
-            "unknown component '{name}'\n  try: bluetooth_manager, networks_manager or volume_adjuster"
+            "unknown component '{name}'\n  try: bluetooth_manager, networks_manager, volume_adjuster or control_center"
         )
     })
 }
@@ -219,13 +223,13 @@ fn cmd_start(config_dir: &str, args: &[String]) -> Result<(), String> {
 fn cmd_stop(config_dir: &str, args: &[String]) -> Result<(), String> {
     let Some(name) = args.first() else {
         return Err(
-            "unknown component ''\n  try: bluetooth_manager, networks_manager or volume_adjuster"
+            "unknown component ''\n  try: bluetooth_manager, networks_manager, volume_adjuster or control_center"
                 .to_string(),
         );
     };
 
     if name == "all" {
-        for canonical in ["bluetooth", "network", "volume"] {
+        for canonical in ["bluetooth", "network", "volume", "control_center"] {
             close(config_dir, &require_component(canonical)?)?;
         }
         return Ok(());
@@ -237,7 +241,7 @@ fn cmd_stop(config_dir: &str, args: &[String]) -> Result<(), String> {
 fn cmd_toggle(config_dir: &str, args: &[String]) -> Result<(), String> {
     let Some(name) = args.first() else {
         return Err(
-            "unknown component ''\n  try: bluetooth_manager, networks_manager or volume_adjuster"
+            "unknown component ''\n  try: bluetooth_manager, networks_manager, volume_adjuster or control_center"
                 .to_string(),
         );
     };
@@ -248,7 +252,7 @@ fn cmd_toggle(config_dir: &str, args: &[String]) -> Result<(), String> {
 fn cmd_call(config_dir: &str, args: &[String]) -> Result<(), String> {
     let Some(name) = args.first() else {
         return Err(
-            "unknown component ''\n  try: bluetooth_manager, networks_manager or volume_adjuster"
+            "unknown component ''\n  try: bluetooth_manager, networks_manager, volume_adjuster or control_center"
                 .to_string(),
         );
     };
@@ -283,8 +287,8 @@ fn usage() {
   aurora-shell start                just start the Aurora instance
   aurora-shell status               list the available IPC targets
 
-Components: bluetooth_manager | networks_manager | volume_adjuster
-(shorthands: bluetooth/bt, network/net/wifi, volume/vol)
+Components: bluetooth_manager | networks_manager | volume_adjuster | control_center
+(shorthands: bluetooth/bt, network/net/wifi, volume/vol, control/cc/dashboard/quick)
 
 Starting Aurora alone shows nothing; popups are only mapped when opened."
     );

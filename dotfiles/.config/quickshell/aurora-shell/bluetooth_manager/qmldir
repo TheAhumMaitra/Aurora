@@ -1,4 +1,5 @@
 singleton Colors 1.0 colors.qml
 singleton Config 1.0 Config.qml
+Bluetooth 1.0 Bluetooth.qml
 PopupCard 1.0 PopupCard.qml
 DeviceRow 1.0 DeviceRow.qml

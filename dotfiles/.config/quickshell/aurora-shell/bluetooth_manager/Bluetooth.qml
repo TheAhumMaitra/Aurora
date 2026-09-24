@@ -7,7 +7,7 @@ import Quickshell.Bluetooth
 import Quickshell.Io
 import "."
 
-ShellRoot {
+Scope {
     id: root
 
     // Popup state. The window is only mapped while the popup is open: a mapped

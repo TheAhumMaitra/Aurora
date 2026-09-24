@@ -70,6 +70,9 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("app_entries_home"))
 
 -- launch waybar position switcher
 hl.bind(mainMod .. " + ALT + W", hl.dsp.exec_cmd("waybar_position_switcher"))
+
+--launch waybar flavour changer
+hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("waybar_flavour_switcher"))
 -- launch custom settings
 hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd("settings"))
 

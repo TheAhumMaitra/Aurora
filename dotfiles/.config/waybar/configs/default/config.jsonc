@@ -37,6 +37,7 @@
         "format":"    ",
         "tooltip": false,
         "on-click": "exec settings",
+        "on-double-click": "exec  aurora-shell toggle cc"
   },
   "hyprland/workspaces": {
     "persistent-workspaces": {

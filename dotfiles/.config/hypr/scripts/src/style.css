@@ -590,6 +590,11 @@ button.unified-menu-action:focus {
   border-color: @active-accent;
 }
 
+button.unified-menu-action:hover .unified-menu-action-icon,
+button.unified-menu-action:focus .unified-menu-action-icon {
+  color: @theme_fg_color;
+}
+
 .system-menu-content {
   background: @theme_bg_color;
 }

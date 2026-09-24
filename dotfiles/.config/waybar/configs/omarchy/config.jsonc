@@ -58,7 +58,7 @@
   "custom/wifi": {
     "format": " ",
     "tooltip-format": "Wi-Fi",
-    "on-click": "qs_popup ~/.config/quickshell/networks_manager/ wifi open toggle"
+    "on-click": "aurora-shell network"
   },
   "battery": {
     "format": "{capacity}% {icon}",
@@ -73,7 +73,7 @@
     "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
     "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
     "interval": 5,
-    "on-click": "omarchy-menu power",
+    "on-click": "jplt",
     "states": {
       "warning": 20,
       "critical": 10
@@ -82,7 +82,7 @@
   "custom/bluetooth": {
     "format": "",
     "tooltip-format": "Bluetooth",
-    "on-click": "qs_popup ~/.config/quickshell/bluetooth_manager/ bluetooth open togglePopup"
+    "on-click": "aurora-shell bluetooth"
   },
   "pulseaudio": {
     "format": "{icon}",
@@ -100,8 +100,8 @@
       "default": ["", "", "", "", ""]
     },
     "scroll-step": 1,
-    "on-click": "qs_popup ~/.config/quickshell/volume_adjuster/ volume open toggle",
-    "on-click-middle": "qs_popup ~/.config/quickshell/volume_adjuster/ volume open toggleSinkMute",
+    "on-click": "aurora-shell volume",
+    "on-click-middle": "aurora-shell call volume toggleSinkMute",
     "ignored-sinks": ["Easy Effects Sink"]
   },
   "custom/screenrecording-indicator": {

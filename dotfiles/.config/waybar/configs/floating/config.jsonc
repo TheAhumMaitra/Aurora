@@ -91,8 +91,8 @@
   },
 
   "scroll-step": 1,
-  "on-click": "qs_popup ~/.config/quickshell/volume_adjuster/ volume open toggle",
-  "on-click-middle": "qs_popup ~/.config/quickshell/volume_adjuster/ volume open toggleSinkMute",
+  "on-click": "aurora-shell volume",
+  "on-click-middle": "aurora-shell call volume toggleSinkMute",
 
   "ignored-sinks": [
     "Easy Effects Sink"
@@ -147,12 +147,12 @@
  "custom/wifi": {
         "format":" ",
         "tooltip": false,
-        "on-click": "qs_popup ~/.config/quickshell/networks_manager/ wifi open toggle",
+        "on-click": "aurora-shell network",
   },
   "custom/bluetooth": {
         "format":"",
         "tooltip": false,
-        "on-click": "qs_popup ~/.config/quickshell/bluetooth_manager/ bluetooth open togglePopup",
+        "on-click": "aurora-shell bluetooth",
   },
    "custom/system-resources-info": {
         "format":" ",

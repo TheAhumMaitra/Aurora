@@ -37,6 +37,7 @@
         "format":"    ",
         "tooltip": false,
         "on-click": "exec settings",
+        "on-double-click": "exec  aurora-shell toggle cc"
   },
   "hyprland/workspaces": {
     "persistent-workspaces": {
@@ -94,7 +95,8 @@
   },
 
   "scroll-step": 1,
-  "on-click": "exec kitty --class \"wiremix\" wiremix",
+  "on-click": "aurora-shell volume",
+  "on-click-middle": "aurora-shell call volume toggleSinkMute",
 
   "ignored-sinks": [
     "Easy Effects Sink"
@@ -149,12 +151,12 @@
  "custom/wifi": {
         "format":" ",
         "tooltip": false,
-        "on-click": "quickshell -c networks_manager ipc call wifi toggle",
+        "on-click": "aurora-shell network",
   },
   "custom/bluetooth": {
         "format":"",
         "tooltip": false,
-        "on-click": "exec kitty --class \"bluetui\" bluetui",
+        "on-click": "aurora-shell bluetooth",
   },
    "custom/system-resources-info": {
         "format":" ",

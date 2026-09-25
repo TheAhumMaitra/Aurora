@@ -19,10 +19,10 @@
 // Aurora's robust theme switcher :)
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
-use std::io::{Error, ErrorKind, Read};
+use std::io::{Error, ErrorKind, Read, Write};
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -30,8 +30,8 @@ use std::thread;
 
 use getrandom;
 use gtk4 as gtk;
-use gtk4::gdk::Display;
 use gtk4::CssProvider;
+use gtk4::gdk::Display;
 
 pub struct AuroraPaths {
     pub home: PathBuf,
@@ -600,10 +600,7 @@ pub fn apply_theme(theme_name: &str) {
     // write QuickShell colors from the freshly applied custom.css
     let custom_css = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/custom.css");
     match write_quickshell_colors(&custom_css) {
-        Ok(target) => theme_debug(format!(
-            "Wrote QuickShell colors to {}",
-            target.display()
-        )),
+        Ok(target) => theme_debug(format!("Wrote QuickShell colors to {}", target.display())),
         Err(e) => eprintln!("[theme-switcher] Failed to write QuickShell colors: {e}"),
     }
 
@@ -690,7 +687,8 @@ fn normalize_qml_color(value: &str) -> Option<String> {
         return valid.then(|| value.to_string());
     }
 
-    let function = strip_color_function(value, "rgba(").or_else(|| strip_color_function(value, "rgb("));
+    let function =
+        strip_color_function(value, "rgba(").or_else(|| strip_color_function(value, "rgb("));
     if let Some(args) = function {
         let parts: Vec<&str> = args.split(',').map(str::trim).collect();
         if !(3..=4).contains(&parts.len()) {
@@ -707,7 +705,10 @@ fn normalize_qml_color(value: &str) -> Option<String> {
             // `rgba()` alpha is either a 0-255 integer or a 0.0-1.0 float.
             Some(part) => part
                 .parse::<u8>()
-                .or_else(|_| part.parse::<f32>().map(|a| (a.clamp(0.0, 1.0) * 255.0).round() as u8))
+                .or_else(|_| {
+                    part.parse::<f32>()
+                        .map(|a| (a.clamp(0.0, 1.0) * 255.0).round() as u8)
+                })
                 .ok()?,
         };
 
@@ -759,12 +760,13 @@ const QUICKSHELL_COLORS: &[(&str, &str, &str)] = &[
 /// configuration fail to load. The properties are writable because the popups
 /// update them at runtime to reload colors without restarting the shell.
 fn render_quickshell_colors(colors: &HashMap<String, String>) -> String {
-    let mut out = String::from(
-        "// colors.qml\n\npragma Singleton\nimport QtQuick\n\nQtObject {\n",
-    );
+    let mut out = String::from("// colors.qml\n\npragma Singleton\nimport QtQuick\n\nQtObject {\n");
 
     for (qml_name, css_name, fallback) in QUICKSHELL_COLORS {
-        let value = match colors.get(*css_name).and_then(|value| normalize_qml_color(value)) {
+        let value = match colors
+            .get(*css_name)
+            .and_then(|value| normalize_qml_color(value))
+        {
             Some(value) => value,
             None => {
                 if colors.contains_key(*css_name) {
@@ -2229,6 +2231,237 @@ pub fn ghostty_theme_blur_is_enabled() -> Result<bool, String> {
         "#",
     )
 }
+// line changer ------------------------------------------------------------
+
+/// How `line_changer` has been told to find the line(s) it should change.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LineSelection {
+    /// The exact line, or block of lines, to look for.
+    Contents(String),
+    /// A single line, counted from 1.
+    Number(usize),
+    /// An inclusive range of lines, counted from 1.
+    Range(usize, usize),
+}
+
+/// Reads a `number` or `first-last` selector, such as `23` or `137-183`.
+pub fn parse_line_selection(spec: &str) -> Result<LineSelection, String> {
+    let spec = spec.trim();
+
+    if spec.is_empty() {
+        return Err("Line selector is empty".to_string());
+    }
+
+    let (start, end) = match spec.split_once('-') {
+        Some((start, end)) => (start.trim(), Some(end.trim())),
+        None => (spec, None),
+    };
+
+    let start = parse_line_number(start)?;
+
+    let Some(end) = end else {
+        return Ok(LineSelection::Number(start));
+    };
+
+    let end = parse_line_number(end)?;
+
+    if end < start {
+        return Err(format!("Line range {start}-{end} ends before it starts"));
+    }
+
+    Ok(LineSelection::Range(start, end))
+}
+
+fn parse_line_number(value: &str) -> Result<usize, String> {
+    let number = value
+        .parse::<usize>()
+        .map_err(|_| format!("Invalid line number: {value}"))?;
+
+    if number == 0 {
+        return Err("Line numbers start at 1".to_string());
+    }
+
+    Ok(number)
+}
+
+/// True when the selector is a line number, or a range of them, rather than
+/// the text of a line.
+fn looks_like_line_numbers(spec: &str) -> bool {
+    let (start, end) = match spec.split_once('-') {
+        Some((start, end)) => (start, Some(end)),
+        None => (spec, None),
+    };
+
+    let is_number =
+        |value: &str| !value.trim().is_empty() && value.trim().chars().all(|c| c.is_ascii_digit());
+
+    is_number(start) && end.is_none_or(is_number)
+}
+
+/// Turns a selection into the 0-based indexes of the lines it covers.
+fn resolve_selection(
+    path: &Path,
+    lines: &[String],
+    selection: &LineSelection,
+) -> Result<Vec<usize>, String> {
+    let out_of_range = |wanted: usize| {
+        format!(
+            "Line {wanted} is out of range, {} only has {} line(s)",
+            path.display(),
+            lines.len()
+        )
+    };
+
+    match selection {
+        LineSelection::Number(number) => {
+            if *number > lines.len() {
+                return Err(out_of_range(*number));
+            }
+
+            Ok(vec![number - 1])
+        }
+
+        LineSelection::Range(start, end) => {
+            if *end > lines.len() {
+                return Err(out_of_range(*end));
+            }
+
+            Ok((*start..=*end).map(|number| number - 1).collect())
+        }
+
+        LineSelection::Contents(target) => {
+            let wanted: Vec<String> = target.lines().map(|line| line.trim().to_string()).collect();
+
+            if wanted.is_empty() {
+                return Err("Nothing to look for, the line to change is empty".to_string());
+            }
+
+            let found = lines.windows(wanted.len()).position(|window| {
+                window
+                    .iter()
+                    .zip(wanted.iter())
+                    .all(|(line, wanted)| matches_line(line, wanted, ""))
+            });
+
+            let Some(first) = found else {
+                return Err(format!("Line not found: {}", wanted.join("\n")));
+            };
+
+            Ok((first..first + wanted.len()).collect())
+        }
+    }
+}
+
+/// Changes the selected line(s) of `path` into `replacement` and hands back how
+/// many lines were changed. The indentation of the first selected line is kept
+/// on every replacement line that does not bring its own, and an empty
+/// replacement deletes the selection.
+pub fn replace_lines(
+    path: &Path,
+    selection: &LineSelection,
+    replacement: &str,
+) -> Result<usize, String> {
+    if path.is_dir() {
+        return Err(format!(
+            "Failed to read {}: it is a directory, not a file",
+            path.display()
+        ));
+    }
+
+    let mut changed = 0;
+
+    edit_file(path, |lines| {
+        let indexes = resolve_selection(path, lines, selection)?;
+
+        let indent = leading_indent(&lines[indexes[0]]).to_string();
+
+        let body: Vec<String> = replacement
+            .lines()
+            .map(|line| {
+                if leading_indent(line).is_empty() {
+                    format!("{indent}{line}")
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect();
+
+        lines.splice(indexes[0]..=indexes[indexes.len() - 1], body);
+
+        changed = indexes.len();
+
+        Ok(())
+    })?;
+
+    Ok(changed)
+}
+
+/// Asks the user for a value, for the flags that were left out.
+pub fn read_prompt(prompt: &str) -> Result<String, String> {
+    print!("{prompt}");
+
+    std::io::stdout()
+        .flush()
+        .map_err(|e| format!("Failed to ask: {e}"))?;
+
+    let mut input = String::new();
+
+    match std::io::stdin().read_line(&mut input) {
+        Ok(0) | Err(_) => Err("Nothing was given on stdin".to_string()),
+        Ok(_) => Ok(input),
+    }
+}
+
+fn prompted_selection() -> Result<LineSelection, String> {
+    let spec = read_prompt("Which line should change? (text, a number, or first-last): ")?;
+
+    let trimmed = spec.trim();
+
+    if trimmed.is_empty() {
+        return Err("Nothing was given on stdin".to_string());
+    }
+
+    if looks_like_line_numbers(trimmed) {
+        return parse_line_selection(trimmed);
+    }
+
+    Ok(LineSelection::Contents(spec.trim_end().to_string()))
+}
+
+/// Changes the selected line(s) of `path` into `replacement`, asking for
+/// whatever was left out. `target` looks a line up by its text, while
+/// `numbers` takes a `number` or `first-last` selector.
+pub fn line_changer(
+    path: &Path,
+    target: Option<&str>,
+    numbers: Option<&str>,
+    replacement: Option<&str>,
+) -> Result<usize, String> {
+    let selection = match (target, numbers) {
+        (Some(target), _) => LineSelection::Contents(target.trim_end().to_string()),
+        (_, Some(numbers)) => parse_line_selection(numbers)?,
+        (None, None) => prompted_selection()?,
+    };
+
+    let replacement = match replacement {
+        Some(replacement) => replacement.to_string(),
+        None => {
+            let prompt = match &selection {
+                LineSelection::Contents(target) => {
+                    format!("Change this line:\n{target}\ninto what?\n")
+                }
+                LineSelection::Number(number) => format!("Change line {number} into what?\n"),
+                LineSelection::Range(start, end) => {
+                    format!("Change lines {start}-{end} into what?\n")
+                }
+            };
+
+            read_prompt(&prompt)?
+        }
+    };
+
+    replace_lines(path, &selection, &replacement)
+}
 // horror survey game -----------------------------------------------------
 
 /// A small "window survey" that returns a different set of questions every
@@ -2481,9 +2714,9 @@ fn survey_shuffle<T>(state: &mut u64, items: &mut Vec<T>) {
 #[cfg(test)]
 mod tests {
     use super::{
-        copy_theme_path, normalize_qml_color, parse_css_colors, render_quickshell_colors,
+        Config, LineSelection, QUICKSHELL_COLORS, Reminder, copy_theme_path, normalize_qml_color,
+        parse_css_colors, parse_line_selection, render_quickshell_colors, replace_lines,
         should_copy, vscode_extension_is_installed, write_vscode_settings, write_zed_settings,
-        Config, Reminder, QUICKSHELL_COLORS,
     };
     use std::collections::HashMap;
     use std::fs;
@@ -2715,7 +2948,10 @@ mod tests {
             "#8064727d"
         );
         assert_eq!(normalize_qml_color("rgb(6, 6, 6)").unwrap(), "#060606");
-        assert_eq!(normalize_qml_color("rgba(6, 6, 6, 255)").unwrap(), "#060606");
+        assert_eq!(
+            normalize_qml_color("rgba(6, 6, 6, 255)").unwrap(),
+            "#060606"
+        );
         assert_eq!(normalize_qml_color("  #4e4e4e  ").unwrap(), "#4e4e4e");
         assert_eq!(normalize_qml_color("white").unwrap(), "white");
 
@@ -2782,5 +3018,162 @@ mod tests {
         }
 
         assert!(checked > 0, "no theme custom.css files were found");
+    }
+
+    #[test]
+    fn parse_line_selection_reads_numbers_and_ranges() {
+        assert_eq!(
+            parse_line_selection("23").unwrap(),
+            LineSelection::Number(23)
+        );
+        assert_eq!(
+            parse_line_selection(" 137-183 ").unwrap(),
+            LineSelection::Range(137, 183)
+        );
+        assert_eq!(
+            parse_line_selection("7-7").unwrap(),
+            LineSelection::Range(7, 7)
+        );
+
+        // Line numbers are counted from 1, and a range cannot run backwards.
+        assert!(parse_line_selection("0").is_err());
+        assert!(parse_line_selection("183-137").is_err());
+        assert!(parse_line_selection("").is_err());
+        assert!(parse_line_selection("first-last").is_err());
+    }
+
+    #[test]
+    fn replace_lines_changes_a_line_found_by_its_text() {
+        let root = test_dir("replace-by-text");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("config.lua");
+
+        fs::write(&path, "local a = 1\n  local b = 2\nlocal c = 3\n").unwrap();
+
+        let changed = replace_lines(
+            &path,
+            &LineSelection::Contents("local b = 2".to_string()),
+            "local b = 22",
+        )
+        .unwrap();
+
+        assert_eq!(changed, 1);
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "local a = 1\n  local b = 22\nlocal c = 3\n"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn replace_lines_changes_a_line_by_its_number_and_keeps_indentation() {
+        let root = test_dir("replace-by-number");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("config.lua");
+
+        fs::write(&path, "first\n    second\nthird\n").unwrap();
+
+        let changed =
+            replace_lines(&path, &LineSelection::Number(2), "second\nand a half").unwrap();
+
+        assert_eq!(changed, 1);
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "first\n    second\n    and a half\nthird\n"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn replace_lines_changes_a_range_of_lines() {
+        let root = test_dir("replace-by-range");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("notes.txt");
+
+        fs::write(&path, "one\ntwo\nthree\nfour\nfive\n").unwrap();
+
+        let changed = replace_lines(&path, &LineSelection::Range(2, 4), "kept").unwrap();
+
+        assert_eq!(changed, 3);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "one\nkept\nfive\n");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn replace_lines_looks_a_block_of_lines_up_by_its_text() {
+        let root = test_dir("replace-block");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("block.txt");
+
+        fs::write(&path, "keep\nfirst of two\nsecond of two\nkeep\n").unwrap();
+
+        let changed = replace_lines(
+            &path,
+            &LineSelection::Contents("first of two\nsecond of two".to_string()),
+            "one line now",
+        )
+        .unwrap();
+
+        assert_eq!(changed, 2);
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "keep\none line now\nkeep\n"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn replace_lines_deletes_the_line_when_the_replacement_is_empty() {
+        let root = test_dir("replace-empty");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("notes.txt");
+
+        fs::write(&path, "one\ntwo\nthree\n").unwrap();
+
+        let changed = replace_lines(&path, &LineSelection::Number(2), "").unwrap();
+
+        assert_eq!(changed, 1);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "one\nthree\n");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn replace_lines_leaves_the_file_alone_when_the_line_is_not_there() {
+        let root = test_dir("replace-missing");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("notes.txt");
+
+        let before = "one\ntwo\nthree\n";
+        fs::write(&path, before).unwrap();
+
+        assert!(
+            replace_lines(
+                &path,
+                &LineSelection::Contents("nothing here".to_string()),
+                "replacement"
+            )
+            .is_err()
+        );
+        assert!(replace_lines(&path, &LineSelection::Number(9), "replacement").is_err());
+        assert!(replace_lines(&path, &LineSelection::Range(1, 9), "replacement").is_err());
+
+        assert_eq!(fs::read_to_string(&path).unwrap(), before);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn replace_lines_refuses_a_directory() {
+        let root = test_dir("replace-directory");
+        fs::create_dir_all(&root).unwrap();
+
+        assert!(replace_lines(&root, &LineSelection::Number(1), "replacement").is_err());
+
+        fs::remove_dir_all(root).unwrap();
     }
 }

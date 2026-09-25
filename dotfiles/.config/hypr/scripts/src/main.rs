@@ -28,6 +28,7 @@ use aurora::ghostty_theme_change;
 use aurora::horror_survey_game;
 use aurora::kitty_blur_change;
 use aurora::kitty_theme_change;
+use aurora::line_changer;
 use aurora::list_themes;
 use aurora::screensaver_change;
 use aurora::welcome_app_change;
@@ -35,6 +36,7 @@ use aurora::welcome_app_change;
 use clap::{Parser, Subcommand, ValueEnum};
 
 use std::fs;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use which::which;
 
@@ -84,6 +86,15 @@ enum Commands {
     /// Run specified script
     Runscript { binary_name: String },
 
+    /// Open the Aurora reminder app
+    Reminder,
+
+    /// Open the Aurora unified command center
+    Menu {
+        #[command(subcommand)]
+        command: Option<MenuCommands>,
+    },
+
     /// Reload Aurora with updated configuration
     Reload,
 
@@ -109,6 +120,30 @@ enum Commands {
     Game {
         #[command(subcommand)]
         command: GamesCommands,
+    },
+
+    /// Change a line of a file into another line
+    #[command(name = "line_changer")]
+    LineChanger {
+        /// File to change
+        #[arg(long, value_name = "PATH")]
+        file: PathBuf,
+
+        /// Line to look for, spaces and indentation are ignored
+        #[arg(long, value_name = "TEXT", conflicts_with_all = ["line_no", "line_numbers"])]
+        line: Option<String>,
+
+        /// Line number to change, counted from 1
+        #[arg(long, value_name = "NUMBER", conflicts_with_all = ["line", "line_numbers"])]
+        line_no: Option<String>,
+
+        /// Lines to change, counted from 1, such as 137-183
+        #[arg(long, value_name = "FIRST-LAST", conflicts_with_all = ["line", "line_no"])]
+        line_numbers: Option<String>,
+
+        /// Text the line becomes, an empty text deletes the line
+        #[arg(long, value_name = "TEXT")]
+        line_to: Option<String>,
     },
 }
 
@@ -152,6 +187,14 @@ enum GamesCommands {
 }
 
 #[derive(Subcommand)]
+enum MenuCommands {
+    /// Open the command center
+    Open,
+    /// Toggle the command center
+    Toggle,
+}
+
+#[derive(Subcommand)]
 enum HorrorCommands {
     /// The "Are your windows closed?" horror survey
     Survey,
@@ -187,8 +230,8 @@ fn main() {
     match &cli.command {
         Commands::Version => {
             println!("{LOGO}");
-            println!("Using Aurora's 1.0.0 | Iesus");
-            println!("Using Aurora's CLI - 1.0.0");
+            println!("Using Aurora's 0.1.0");
+            println!("Using Aurora's CLI - 0.1.0");
         }
 
         Commands::ApplyTheme { name } => {
@@ -261,6 +304,18 @@ fn main() {
                     "Requested executable binary not found in PATH. Try to install the scripts again in PATH!"
                 );
             }
+        }
+
+        Commands::Reminder => {
+            Command::new("reminder")
+                .spawn()
+                .expect("Failed to run the reminder app");
+        }
+
+        Commands::Menu { .. } => {
+            Command::new("system_menu")
+                .spawn()
+                .expect("Failed to run the Aurora command center");
         }
 
         Commands::Reload => match aurora_parse() {
@@ -360,5 +415,27 @@ fn main() {
                 },
             },
         },
+
+        Commands::LineChanger {
+            file,
+            line,
+            line_no,
+            line_numbers,
+            line_to,
+        } => {
+            let numbers = line_no.as_deref().or(line_numbers.as_deref());
+
+            match line_changer(file, line.as_deref(), numbers, line_to.as_deref()) {
+                Ok(changed) => {
+                    let line = if changed == 1 { "line" } else { "lines" };
+
+                    println!("Changed {changed} {line} of {}.", file.display());
+                }
+                Err(err) => {
+                    eprintln!("Failed to change the line: {err}");
+                    std::process::exit(1);
+                }
+            }
+        }
     }
 }

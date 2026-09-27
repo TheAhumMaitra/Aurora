@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Aurora Universal Installation Bootstrap (Arch Linux / Fedora Linux)
+# Aurora Universal Installation Bootstrap (Arch Linux / Fedora Linux / NixOS)
 #
 # The marker below is used by this script to recognise itself, so that it never
 # picks itself up as a distribution installer when an Aurora checkout is reused.
@@ -62,12 +62,24 @@ LOG_LEVEL="${LOG_LEVEL:-INFO}"
 # Edition repositories
 ARCH_REPO="${AURORA_ARCH_REPO:-https://github.com/TheAhumMaitra/Aurora-Arch.git}"
 FEDORA_REPO="${AURORA_FEDORA_REPO:-https://github.com/TheAhumMaitra/Aurora-Fedora.git}"
+NIXOS_REPO="${AURORA_NIXOS_REPO:-https://github.com/TheAhumMaitra/Aurora-NixOS.git}"
 REPO_URL=""
 REPO_BRANCH="${AURORA_BRANCH:-}"
 EXPECTED_SCRIPT=""
 
+# NixOS files the edition installer copies to /etc/nixos. It reads them from its
+# own directory, so the bootstrap copies them next to the installer, inside the
+# Aurora folder, before handing over.
+NIXOS_CONFIG_FILES=(
+  configuration.nix
+  home.nix
+  hardware-configuration.nix
+  flake.nix
+  flake.lock
+)
+
 # Runtime state
-DISTRO_REQUEST="" # empty = auto-detect, otherwise arch | fedora
+DISTRO_REQUEST="" # empty = auto-detect, otherwise arch | fedora | nixos
 DISTRO_FAMILY=""
 DISTRO_ID="unknown"
 DISTRO_LIKE=""
@@ -174,21 +186,22 @@ render_banner() {
   echo -e "${BLUE}${BOLD}        ▒██  ▀█▄  ▓██  ▒██ ░▓██ ░▄█ ▒▒██░  ██▒▓██ ░▄█  ▒██  ▀█▄   ${NC}"
   echo -e "${CYAN}${BOLD}        ░██▄▄▄▄██ ▓▓█  ░██ ░▒██▀▀█▄  ▒██   ██░▒██▀▀█▄  ░██▄▄▄▄██  ${NC}"
   echo -e "${GREEN}${BOLD}        ▓█   ▓██ ▒▒█████▓ ░██▓ ▒██▒░ ████▓▒░░██▓ ▒██▒ ▓█   ▓██▒ ${NC}"
-  echo -e "${WHITE}${BOLD}  One installer for the Arch Linux and Fedora Linux editions${NC}"
+  echo -e "${WHITE}${BOLD}  One installer for the Arch Linux, Fedora Linux and NixOS editions${NC}"
   echo -e "${DARK}  Detects your distribution, fetches the right edition, then installs it.${NC}"
   print_rule
 }
 
 print_usage() {
   cat <<"EOF"
-Aurora Universal Installation Bootstrap (Arch Linux / Fedora Linux)
+Aurora Universal Installation Bootstrap (Arch Linux / Fedora Linux / NixOS)
 
 Usage: ./install.sh [OPTIONS] [EDITION INSTALLER OPTIONS]
 
 Options:
   --help                    Show this help message
-  --distro <arch|fedora>    Force an edition instead of auto-detecting your distribution
-  --dir <path>              Fetch the edition repository into <path> instead of $HOME/Aurora-Arch|Aurora-Fedora
+  --distro <arch|fedora|nixos>
+                            Force an edition instead of auto-detecting your distribution
+  --dir <path>              Fetch the edition repository into <path> instead of $HOME/Aurora-Arch|Aurora-Fedora|Aurora-NixOS
   --repo <url>              Fetch a custom edition repository
   --branch <name>           Fetch a specific branch of the edition repository
   --force                   Remove and re-clone an existing edition checkout
@@ -198,9 +211,13 @@ Options:
 Editions:
   Arch Linux    https://github.com/TheAhumMaitra/Aurora-Arch.git    -> install-arch.sh
   Fedora Linux  https://github.com/TheAhumMaitra/Aurora-Fedora.git  -> install-fedora.sh
+  NixOS         https://github.com/TheAhumMaitra/Aurora-NixOS.git   -> install-nixos.sh
+                                             (also copies configuration.nix, home.nix,
+                                              hardware-configuration.nix, flake.nix and
+                                              flake.lock into the Aurora folder)
 
 Environment overrides:
-  AURORA_ARCH_REPO, AURORA_FEDORA_REPO, AURORA_BRANCH, AURORA_DIR, AURORA_BOOTSTRAP_LOG
+  AURORA_ARCH_REPO, AURORA_FEDORA_REPO, AURORA_NIXOS_REPO, AURORA_BRANCH, AURORA_DIR, AURORA_BOOTSTRAP_LOG
 
 Git never prompts for credentials; unreachable repositories fail fast instead.
 For private edition repositories, allow prompts with GIT_TERMINAL_PROMPT=1
@@ -210,6 +227,7 @@ Examples:
   ./install.sh                    # Detect the distribution, fetch the edition and install it
   ./install.sh --dry-run          # Same, but the edition installer only previews the changes
   ./install.sh --distro arch      # Force the Arch Linux edition
+  ./install.sh --distro nixos     # Force the NixOS edition
   ./install.sh --no-run           # Only fetch the edition; place its installer in the Aurora folder without running it
   ./install.sh --uninstall        # Forwarded to the edition installer to remove Aurora
 
@@ -246,19 +264,21 @@ parse_args() {
       ;;
     --distro)
       if [ $# -lt 2 ]; then
-        print_error "--distro requires a value (arch or fedora)"
+        print_error "--distro requires a value (arch, fedora or nixos)"
         exit 1
       fi
       case "$2" in
-      arch | archlinux | fedora)
-        if [ "$2" = "fedora" ]; then
-          DISTRO_REQUEST="fedora"
-        else
-          DISTRO_REQUEST="arch"
-        fi
+      arch | archlinux)
+        DISTRO_REQUEST="arch"
+        ;;
+      fedora)
+        DISTRO_REQUEST="fedora"
+        ;;
+      nixos | nix)
+        DISTRO_REQUEST="nixos"
         ;;
       *)
-        print_error "Unknown distribution for --distro: $2 (expected arch or fedora)"
+        print_error "Unknown distribution for --distro: $2 (expected arch, fedora or nixos)"
         exit 1
         ;;
       esac
@@ -376,7 +396,11 @@ detect_distro() {
     family="$DISTRO_REQUEST"
     log_info "Distribution family forced to $family with --distro"
   else
-    if in_word_list "$DISTRO_ID" arch archarm archlinux cachyos endeavouros manjaro garuda artix arcolinux archcraft; then
+    # /etc/NIXOS only exists on NixOS, so it is the most reliable signal and is
+    # checked first: a NixOS system can still carry foreign package managers.
+    if [ -e /etc/NIXOS ] || [ "$DISTRO_ID" = "nixos" ] || command -v nixos-rebuild &>/dev/null; then
+      family="nixos"
+    elif in_word_list "$DISTRO_ID" arch archarm archlinux cachyos endeavouros manjaro garuda artix arcolinux archcraft; then
       family="arch"
     elif in_word_list "$DISTRO_ID" fedora nobara bazzite ultramarine; then
       family="fedora"
@@ -393,6 +417,10 @@ detect_distro() {
           family="fedora"
           break
           ;;
+        nixos)
+          family="nixos"
+          break
+          ;;
         esac
       done
     fi
@@ -404,39 +432,42 @@ detect_distro() {
       elif command -v dnf &>/dev/null; then
         family="fedora"
         log_debug "dnf is available; assuming the Fedora family"
+      elif command -v nix &>/dev/null; then
+        family="nixos"
+        log_debug "nix is available; assuming NixOS"
       fi
     fi
   fi
 
   if [ -z "$family" ]; then
     print_error "Unsupported distribution: $DISTRO_NAME"
-    echo -e "  ${DARK}Aurora currently ships editions for Arch Linux and Fedora Linux only.${NC}"
-    echo -e "  ${DARK}Rerun with --distro arch or --distro fedora to force an edition.${NC}"
+    echo -e "  ${DARK}Aurora currently ships editions for Arch Linux, Fedora Linux and NixOS only.${NC}"
+    echo -e "  ${DARK}Rerun with --distro arch, --distro fedora or --distro nixos to force an edition.${NC}"
     exit 1
   fi
 
   DISTRO_FAMILY="$family"
 
-  if [ "$DISTRO_FAMILY" = "arch" ]; then
-    EXPECTED_SCRIPT="install-arch.sh"
-  else
-    EXPECTED_SCRIPT="install-fedora.sh"
-  fi
+  case "$DISTRO_FAMILY" in
+  arch) EXPECTED_SCRIPT="install-arch.sh" ;;
+  fedora) EXPECTED_SCRIPT="install-fedora.sh" ;;
+  nixos) EXPECTED_SCRIPT="install-nixos.sh" ;;
+  esac
 
   if [ -z "$REPO_URL" ]; then
-    if [ "$DISTRO_FAMILY" = "arch" ]; then
-      REPO_URL="$ARCH_REPO"
-    else
-      REPO_URL="$FEDORA_REPO"
-    fi
+    case "$DISTRO_FAMILY" in
+    arch) REPO_URL="$ARCH_REPO" ;;
+    fedora) REPO_URL="$FEDORA_REPO" ;;
+    nixos) REPO_URL="$NIXOS_REPO" ;;
+    esac
   fi
 
   if [ -z "$CLONE_DIR" ]; then
-    if [ "$DISTRO_FAMILY" = "arch" ]; then
-      CLONE_DIR="$HOME/Aurora-Arch"
-    else
-      CLONE_DIR="$HOME/Aurora-Fedora"
-    fi
+    case "$DISTRO_FAMILY" in
+    arch) CLONE_DIR="$HOME/Aurora-Arch" ;;
+    fedora) CLONE_DIR="$HOME/Aurora-Fedora" ;;
+    nixos) CLONE_DIR="$HOME/Aurora-NixOS" ;;
+    esac
     log_debug "No edition clone directory given; defaulting to $CLONE_DIR"
   fi
 
@@ -458,13 +489,20 @@ ensure_git() {
   print_warning "git is not installed and Aurora needs it to fetch its files"
 
   local -a install_cmd
-  if [ "$DISTRO_FAMILY" = "arch" ]; then
-    install_cmd=(sudo pacman -S --needed --noconfirm git)
-  else
-    install_cmd=(sudo dnf install -y git)
-  fi
+  case "$DISTRO_FAMILY" in
+  arch) install_cmd=(sudo pacman -S --needed --noconfirm git) ;;
+  fedora) install_cmd=(sudo dnf install -y git) ;;
+  nixos)
+    if ! command -v nix &>/dev/null; then
+      print_error "nix is not available in PATH; install git with Nix and rerun this script"
+      echo -e "  ${DARK}Add git to environment.systemPackages in your configuration, rebuild, then rerun.${NC}"
+      exit 1
+    fi
+    install_cmd=(nix profile install nixpkgs#git)
+    ;;
+  esac
 
-  if ! command -v sudo &>/dev/null; then
+  if [ "$DISTRO_FAMILY" != "nixos" ] && ! command -v sudo &>/dev/null; then
     print_error "sudo is not available; install git manually and rerun this script"
     exit 1
   fi
@@ -476,7 +514,16 @@ ensure_git() {
   fi
 
   log_info "Running: ${install_cmd[*]}"
-  "${install_cmd[@]}"
+
+  if ! "${install_cmd[@]}"; then
+    print_error "git installation failed"
+    if [ "$DISTRO_FAMILY" = "nixos" ]; then
+      echo -e "  ${DARK}Flakes are needed for nixpkgs#git; enable them with:${NC}"
+      echo -e "  ${DARK}  sudo nix config set experimental-features \"nix-command flakes\"${NC}"
+      echo -e "  ${DARK}or add git to environment.systemPackages and rerun this script.${NC}"
+    fi
+    exit 1
+  fi
 
   if ! command -v git &>/dev/null; then
     print_error "git installation failed"
@@ -632,6 +679,29 @@ verify_repo_reachable() {
   log_debug "Repository is reachable: $REPO_URL"
 }
 
+# The edition installer is moved out of the edition checkout and into the Aurora
+# folder, which leaves it deleted in the working tree of a checkout that is
+# otherwise left alone. A pull cannot repair that on its own, so the deleted
+# tracked files are restored from the fetched commit before the installer is
+# looked up again, otherwise a rerun of this script cannot find it.
+restore_files_moved_out_of_checkout() {
+  local deleted_file
+  local -a deleted_files=()
+
+  while IFS= read -r deleted_file; do
+    [ -n "$deleted_file" ] && deleted_files+=("$deleted_file")
+  done < <(git -C "$CLONE_DIR" ls-files --deleted 2>/dev/null)
+
+  if [ ${#deleted_files[@]} -eq 0 ]; then
+    return 0
+  fi
+
+  log_info "Restoring files moved out of the edition checkout: ${deleted_files[*]}"
+  if ! git -C "$CLONE_DIR" checkout -- "${deleted_files[@]}"; then
+    log_warn "Could not restore every moved file in $CLONE_DIR; rerun with --force if the installer is missing"
+  fi
+}
+
 clone_or_update_repository() {
   next_step "Fetching the Aurora $DISTRO_FAMILY edition"
 
@@ -667,6 +737,7 @@ clone_or_update_repository() {
         echo -e "  ${DARK}(and GIT_SSH_COMMAND=\"ssh\" for SSH remotes), or rerun with --force to re-clone.${NC}"
         exit 1
       fi
+      restore_files_moved_out_of_checkout
       print_success "Edition checkout updated"
       return 0
     fi
@@ -725,11 +796,12 @@ locate_installer() {
   local candidate
   local -a candidates
 
-  if [ "$DISTRO_FAMILY" = "arch" ]; then
-    candidates=("$EXPECTED_SCRIPT" "install.sh" "arch-install.sh")
-  else
-    candidates=("$EXPECTED_SCRIPT" "install.sh" "fedora-install.sh")
-  fi
+  case "$DISTRO_FAMILY" in
+  arch) candidates=("$EXPECTED_SCRIPT" "install.sh" "arch-install.sh") ;;
+  fedora) candidates=("$EXPECTED_SCRIPT" "install.sh" "fedora-install.sh") ;;
+  # The NixOS edition may ship its installer as Install-nix.sh or install-nix.sh
+  nixos) candidates=("$EXPECTED_SCRIPT" "Install-nix.sh" "install-nix.sh" "install.sh" "nixos-install.sh") ;;
+  esac
 
   for candidate in "${candidates[@]}"; do
     if [ ! -f "$dir/$candidate" ]; then
@@ -756,7 +828,7 @@ locate_installer() {
     fi
     echo "$candidate"
     return 0
-  done < <(find "$dir" -maxdepth 2 -type f -name 'install*.sh' 2>/dev/null | LC_ALL=C sort)
+  done < <(find "$dir" -maxdepth 2 -type f -iname 'install*.sh' 2>/dev/null | LC_ALL=C sort)
 
   return 1
 }
@@ -769,9 +841,21 @@ patch_self_update_reference() {
     return 0
   fi
 
+  # Escape regex metacharacters so a name such as Install-nix.sh is matched
+  # literally in the sed patterns below.
+  local escaped_name
+  escaped_name="$(printf '%s' "$original_name" | sed 's/[][\.*^$()+?{}|]/\\&/g')"
+
   if grep -q -F "exec \"\$SCRIPT_DIR/$original_name\"" "$script_path" 2>/dev/null; then
-    sed -i "s|exec \"\$SCRIPT_DIR/$original_name\"|exec \"\$SCRIPT_DIR/$EXPECTED_SCRIPT\"|g" "$script_path"
+    sed -i "s|exec \"\$SCRIPT_DIR/$escaped_name\"|exec \"\$SCRIPT_DIR/$EXPECTED_SCRIPT\"|g" "$script_path"
     log_info "Pointed the self-update of $EXPECTED_SCRIPT to the renamed script"
+  fi
+
+  # Keep the printed hints (for example "./Install-nix.sh --uninstall") usable
+  # after the rename.
+  if grep -q -F "./$original_name" "$script_path" 2>/dev/null; then
+    sed -i "s|\./$escaped_name|\./$EXPECTED_SCRIPT|g" "$script_path"
+    log_info "Updated the $original_name hints in $EXPECTED_SCRIPT"
   fi
 }
 
@@ -818,6 +902,59 @@ move_installer_into_aurora_dir() {
   print_success "Installer ready: $INSTALLER_PATH"
 }
 
+# The NixOS edition installer copies configuration.nix, home.nix,
+# hardware-configuration.nix, flake.nix and flake.lock to /etc/nixos, reading them
+# from its own directory. Those files live in the edition checkout, so they are
+# copied next to the installer inside the Aurora folder; the installer is then
+# run from there, exactly like the Arch and Fedora editions.
+copy_nixos_files_into_aurora_dir() {
+  next_step "Copying the NixOS configuration into $RUN_DIR"
+
+  local -a missing_files=()
+  local config_file
+  local source_file
+  local target_file
+  local backup_dir=""
+
+  for config_file in "${NIXOS_CONFIG_FILES[@]}"; do
+    if [ ! -f "$CLONE_DIR/$config_file" ]; then
+      missing_files+=("$config_file")
+    fi
+  done
+
+  if [ ${#missing_files[@]} -gt 0 ]; then
+    print_error "The NixOS edition at $REPO_URL is missing files that $EXPECTED_SCRIPT needs:"
+    printf '%s\n' "${missing_files[@]}" | sed 's/^/  - /'
+    echo -e "  ${DARK}$EXPECTED_SCRIPT copies them to /etc/nixos, so it cannot run without them.${NC}"
+    echo -e "  ${DARK}Check the edition checkout at $CLONE_DIR, or fetch another branch with --branch.${NC}"
+    exit 1
+  fi
+
+  for config_file in "${NIXOS_CONFIG_FILES[@]}"; do
+    source_file="$CLONE_DIR/$config_file"
+    target_file="$RUN_DIR/$config_file"
+
+    # Never discard a file the user may have edited in the Aurora folder: keep
+    # one timestamped copy outside the checkout, like the edition installer does
+    # for /etc/nixos.
+    if [ -e "$target_file" ] && ! cmp -s "$source_file" "$target_file"; then
+      if [ -z "$backup_dir" ]; then
+        backup_dir="$HOME/.local/share/Aurora/nixos_source_backup_$(date +%s)"
+        mkdir -p "$backup_dir"
+        log_info "Backing up existing NixOS files in $RUN_DIR to $backup_dir"
+      fi
+      cp -f "$target_file" "$backup_dir/$config_file"
+    fi
+
+    cp -f "$source_file" "$target_file"
+    log_debug "Copied $source_file -> $target_file"
+  done
+
+  print_success "NixOS files copied to $RUN_DIR: ${NIXOS_CONFIG_FILES[*]}"
+  print_warning "hardware-configuration.nix comes from the edition; review it if your hardware differs"
+  log_info "Deployed ${#NIXOS_CONFIG_FILES[@]} NixOS files to $RUN_DIR${backup_dir:+ (previous versions: $backup_dir)}"
+}
+
 run_installer() {
   if [ "$RUN_INSTALLER" = false ]; then
     print_header "Aurora is ready"
@@ -860,6 +997,11 @@ main() {
   ensure_git
   clone_or_update_repository
   move_installer_into_aurora_dir
+
+  if [ "$DISTRO_FAMILY" = "nixos" ]; then
+    copy_nixos_files_into_aurora_dir
+  fi
+
   run_installer
 }
 

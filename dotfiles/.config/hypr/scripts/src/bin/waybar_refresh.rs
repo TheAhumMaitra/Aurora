@@ -17,24 +17,67 @@
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::{process::Command, thread, time::Duration};
-use sysinfo::{Signal, System};
+use sysinfo::{Pid, ProcessesToUpdate, Signal, System};
 
 fn main() {
     let mut sys = System::new_all();
+
+    // Collect PIDs before refreshing so we have a clean snapshot
     sys.refresh_all();
 
-    // 1. Kill all waybar processes
-    for process in sys.processes().values() {
-        if process.name() == "waybar" {
-            println!("Stopping Waybar (PID: {})", process.pid());
-            process.kill_with(Signal::Term); // graceful stop
+    let waybar_pids: Vec<Pid> = sys
+        .processes()
+        .values()
+        .filter(|p| p.name() == "waybar")
+        .map(|p| p.pid())
+        .collect();
+
+    if waybar_pids.is_empty() {
+        println!("No running waybar processes found.");
+    } else {
+        // 1. Send SIGTERM to all waybar processes
+        for &pid in &waybar_pids {
+            if let Some(process) = sys.process(pid) {
+                println!("Stopping Waybar (PID: {pid})");
+                process.kill_with(Signal::Term);
+            }
+        }
+
+        // 2. Wait for all waybar processes to actually exit (with timeout)
+        let max_retries = 15; // ~1.5 seconds total timeout
+        for i in 0..max_retries {
+            // Refresh process list to check if waybar is gone
+            sys.refresh_processes(ProcessesToUpdate::All, true);
+
+            let still_alive: Vec<Pid> = sys
+                .processes()
+                .values()
+                .filter(|p| p.name() == "waybar")
+                .map(|p| p.pid())
+                .filter(|pid| waybar_pids.contains(pid))
+                .collect();
+
+            if still_alive.is_empty() {
+                println!("All waybar processes stopped.");
+                break;
+            }
+
+            if i == max_retries - 1 {
+                // Last resort: SIGKILL
+                for &pid in &still_alive {
+                    if let Some(process) = sys.process(pid) {
+                        println!("Waybar (PID: {pid}) not responding, sending SIGKILL");
+                        process.kill_with(Signal::Kill);
+                    }
+                }
+                thread::sleep(Duration::from_millis(100));
+            } else {
+                thread::sleep(Duration::from_millis(100));
+            }
         }
     }
 
-    // 2. Small delay (important!)
-    thread::sleep(Duration::from_millis(200));
-
-    // 3. Start Waybar again
+    // 3. Start Waybar fresh
     println!("Starting Waybar...");
     Command::new("waybar")
         .spawn()

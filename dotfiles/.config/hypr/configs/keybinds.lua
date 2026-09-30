@@ -186,11 +186,29 @@ hl.bind(mainMod .. " + P + RIGHT", hl.dsp.exec_cmd("hyprwave-toggle next"))
 -- on/off (toggle) waybar
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("waybar_toggle"))
 
--- open wallpaper switcher for theme's wallaper
-hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("waytrogen_line_change_for_theme && waytrogen"))
+-- Open wallpaper switcher for current theme
+
+local home = os.getenv("HOME") or os.getenv("USERPROFILE")
+
+local theme_name_log_path = home .. "/.local/share/Aurora/theme_name.log"
+
+local file = io.open(theme_name_log_path, "r")
+
+if file then
+	local current_theme_name = file:read("*l")
+	file:close()
+
+	if current_theme_name and current_theme_name ~= "" then
+		local theme_path = home .. "/.config/themes/" .. current_theme_name
+
+		hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("waytrogen open " .. string.format("%q", theme_path)))
+	end
+end
+--open matugen based wallaper switcher (lists all theme's wallpapers + global ones)
+hl.bind(mainMod .. " + CTRL + I", hl.dsp.exec_cmd("waytrogen mixture --matugen"))
 
 -- open wallpaper switcher for showing global wallpapers
-hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd(" waytrogen_line_change_for_global_wallpapers  && waytrogen"))
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd("waytrogen open ~/Pictures/Wallpapers/"))
 
 -- refresh waybar
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("waybar_refresh"))

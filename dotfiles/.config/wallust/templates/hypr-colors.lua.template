@@ -24,13 +24,13 @@
 -- ~/.config/wallust/templates/hypr-colors.lua.template instead.
 
 return {
-	main = {
+	main = "rgba({{ color6 | strip }}ff)",
+	accent = {
 		colors = {
-			"rgba({{ color6 | strip }})",
-			"rgba({{ background | lighten(0.05) | strip }})",
+			"rgba({{ background | strip }}ff)",
+			"rgba({{ background | lighten(0.05) | strip }}ff)",
 		},
 		angle = 45,
 	},
-	accent = "rgba({{ foreground | blend('#5A5A5A') | blend('#5A5A5A') | strip }})",
-	shadow = "rgba({{ (background | lighten(0.06) | strip) ~ 'ED' }})",
+	shadow = "rgba({{ background | strip }}ee)",
 }

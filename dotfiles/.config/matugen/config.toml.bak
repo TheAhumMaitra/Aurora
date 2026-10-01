@@ -35,16 +35,6 @@
 [config]
 show_preview = false
 
-# Templates below read `{{ base16.baseXX.dark.hex }}`, so the scheme is pinned to
-# dark instead of "smart". Every base16 slot is then chosen from the dark ramp
-# and the neutral/accent ordering (base00 darkest .. base07 lightest) holds.
-mode = "dark"
-
-# Aurora drives matugen from a script (waytrogen), so there is no terminal to
-# prompt on. Without this matugen aborts with "Multiple source colors found" on
-# any wallpaper that has more than one plausible accent. 0 = most dominant.
-source_color_index = 0
-
 # Aurora draws its wallpaper with awww. `set = false` keeps matugen from
 # touching the wallpaper, because here the wallpaper is the *input*. Flip it to
 # true if you drive matugen from a single colour instead of an image and want
@@ -57,28 +47,6 @@ set = false
 # ##########################
 # ### MATUGEN: TEMPLATES ###
 # ##########################
-#
-# Every template is driven by matugen's own `base16` palette rather than the
-# Material 3 roles, so one scheme drives the whole rice and the slots keep a
-# stable meaning as the wallpaper changes:
-#
-#   base00  window / base background        base08  red, error, urgent
-#   base01  lowest raised surface           base09  warning
-#   base02  raised surface, selection       base0a  secondary accent
-#   base03  comments, disabled text         base0b  success
-#   base04  dim text, borders               base0c  supporting accent
-#   base05  default text                    base0d  primary accent
-#   base06  bright text                     base0e  tertiary accent
-#   base07  brightest surface               base0f  deprecated
-#
-# base00..base07 are a monotonic grey ramp and base08/base0f keep a fixed hue,
-# but base09..base0e rotate with the source hue. The role above is what each slot
-# is *for*; the exact hue it lands on follows the wallpaper.
-#
-# Templates that need a true ANSI hue (kitty/ghostty color1..6, btop's red/green/
-# blue meter gradients) keep a `set_hue` filter to pin the hue, seeded from the
-# base16 accent base0d, because base16 does not carry a fixed red/green/yellow/
-# blue/cyan/ magenta ramp.
 
 [templates.hypr]
 input_path = "~/.config/matugen/templates/hypr-colors.lua.template"
@@ -95,7 +63,7 @@ output_path = "~/.config/quickshell/colors.qml"
 [templates.waybar]
 input_path = "~/.config/matugen/templates/waybar-colors.css.template"
 output_path = "~/.config/waybar/colors.css"
-post_hook = "waybar_refresh || true"
+post_hook = "waybar_refresh"
 
 [templates.wlogout]
 input_path = "~/.config/matugen/templates/wlogout-colors.css.template"
@@ -104,9 +72,7 @@ output_path = "~/.config/wlogout/colors.css"
 [templates.swaync]
 input_path = "~/.config/matugen/templates/swaync-colors.css.template"
 output_path = "~/.config/swaync/colors.css"
-# `|| true`: swaync is not always running, and a failing reload made matugen
-# report an error for a theme it had generated just fine.
-post_hook = "pkill -SIGUSR1 swaync || true"
+post_hook = "pkill -SIGUSR1 swaync"
 
 [templates.rofi]
 input_path = "~/.config/matugen/templates/rofi-colors.rasi.template"

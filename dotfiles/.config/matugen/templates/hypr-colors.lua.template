@@ -26,11 +26,11 @@
 return {
 	main = {
 		colors = {
-			"rgba({{ colors.primary.default.hex_alpha | to_color | set_alpha: 1.0 | format: "hex_alpha_stripped" }})",
-			"rgba({{ colors.surface_container.default.hex_alpha | to_color | set_alpha: 1.0 | format: "hex_alpha_stripped" }})",
+			"rgba({{ base16.base0d.dark.hex_alpha | to_color | set_alpha: 1.0 | format: "hex_alpha_stripped" }})",
+			"rgba({{ base16.base01.dark.hex_alpha | to_color | set_lightness: 12 | set_alpha: 1.0 | format: "hex_alpha_stripped" }})",
 		},
 		angle = 45,
 	},
-	accent = "rgba({{ colors.outline_variant.default.hex_alpha | to_color | set_alpha: 1.0 | format: "hex_alpha_stripped" }})",
-	shadow = "rgba({{ colors.shadow.default.hex_alpha | to_color | set_alpha: 0.93 | format: "hex_alpha_stripped" }})",
+	accent = "rgba({{ base16.base03.dark.hex_alpha | to_color | set_lightness: 48 | set_alpha: 1.0 | format: "hex_alpha_stripped" }})",
+	shadow = "rgba({{ base16.base00.dark.hex_alpha | to_color | set_lightness: 8 | set_alpha: 0.93 | format: "hex_alpha_stripped" }})",
 }

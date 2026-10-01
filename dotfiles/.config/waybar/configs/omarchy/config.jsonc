@@ -101,7 +101,7 @@
     },
     "scroll-step": 1,
     "on-click": "aurora-shell volume",
-    "on-click-middle": "aurora-shell call volume toggleSinkMute",
+    "on-double-click": "aurora-shell call volume toggleSinkMute",
     "ignored-sinks": ["Easy Effects Sink"]
   },
   "custom/screenrecording-indicator": {

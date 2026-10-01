@@ -201,14 +201,14 @@ if file then
 	if current_theme_name and current_theme_name ~= "" then
 		local theme_path = home .. "/.config/themes/" .. current_theme_name
 
-		hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("waytrogen open " .. string.format("%q", theme_path)))
+		hl.dsp.exec_cmd("waytrogen open " .. string.format("%q", theme_path) .. " --wallust")
 	end
 end
 --open matugen based wallaper switcher (lists all theme's wallpapers + global ones)
-hl.bind(mainMod .. " + CTRL + I", hl.dsp.exec_cmd("waytrogen mixture --matugen"))
+hl.bind(mainMod .. " + CTRL + I", hl.dsp.exec_cmd("waytrogen mixture --wallust"))
 
 -- open wallpaper switcher for showing global wallpapers
-hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd("waytrogen open ~/Pictures/Wallpapers/"))
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd("waytrogen open ~/Pictures/Wallpapers/ --wallust"))
 
 -- refresh waybar
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("waybar_refresh"))

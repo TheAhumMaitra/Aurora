@@ -48,7 +48,7 @@ https://github.com/user-attachments/assets/e83a9d95-ab42-4abc-a9d7-747c86e72a9c
 
 - Rust (install via https://rustup.rs)
 - Git
-- Arch Linux (recommended)
+- Arch Linux (recommended), Fedora Linux or NixOS
 
 ## Using script
 You can use our installation script but it is in beta, might not work properly.
@@ -59,15 +59,19 @@ Aurora ships one edition per distribution and each edition has its own installer
 | --- | --- | --- |
 | Arch Linux (CachyOS, EndeavourOS, Manjaro, Garuda, ...) | [`Aurora-Arch`](https://github.com/TheAhumMaitra/Aurora-Arch) | `install-arch.sh` |
 | Fedora Linux (Nobara, Bazzite, ...) | [`Aurora-Fedora`](https://github.com/TheAhumMaitra/Aurora-Fedora) | `install-fedora.sh` |
+| NixOS | [`Aurora-NixOS`](https://github.com/TheAhumMaitra/Aurora-NixOS) | `install-nixos.sh` |
 
 __**To install Aurora using installation script follow these steps**__
 
 ### Step 1 - Get the universal installer
 
 The universal `install.sh` detects your distribution, clones the matching edition into
-`~/Aurora-Arch` or `~/Aurora-Fedora`, moves that edition's installer
-(`install-arch.sh` / `install-fedora.sh`) into your `Aurora` folder (the one holding the
-`dotfiles/` layout) and runs it from there.
+`~/Aurora-Arch`, `~/Aurora-Fedora` or `~/Aurora-NixOS`, moves that edition's installer
+(`install-arch.sh` / `install-fedora.sh` / `install-nixos.sh`) into your `Aurora` folder
+(the one holding the `dotfiles/` layout) and runs it from there. On NixOS it also copies
+`configuration.nix`, `home.nix`, `hardware-configuration.nix`, `flake.nix` and `flake.lock`
+into your `Aurora` folder, because the NixOS installer deploys them to `/etc/nixos` and
+reads them from its own directory.
 
 ```
 cd ~
@@ -90,8 +94,9 @@ chmod +x install.sh && ./install.sh
 ```
 Options:
   --help                    Show this help message
-  --distro <arch|fedora>    Force an edition instead of auto-detecting your distribution
-  --dir <path>              Fetch the edition repository into <path> instead of $HOME/Aurora-Arch|Aurora-Fedora
+  --distro <arch|fedora|nixos>
+                            Force an edition instead of auto-detecting your distribution
+  --dir <path>              Fetch the edition repository into <path> instead of $HOME/Aurora-Arch|Aurora-Fedora|Aurora-NixOS
   --repo <url>              Fetch a custom edition repository
   --branch <name>           Fetch a specific branch of the edition repository
   --force                   Remove and re-clone an existing edition checkout

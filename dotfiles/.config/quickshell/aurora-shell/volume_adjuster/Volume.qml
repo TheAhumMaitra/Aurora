@@ -19,7 +19,7 @@ Scope {
     // Config binding re-evaluates without reloading the whole shell.
     FileView {
         id: colorFile
-        path: Quickshell.configPath("colors.qml")
+        path: Quickshell.shellPath("colors.qml")
         preload: true
         watchChanges: true
 

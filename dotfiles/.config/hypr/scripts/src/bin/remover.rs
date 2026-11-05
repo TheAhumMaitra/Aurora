@@ -99,7 +99,11 @@ fn main() {
     failed |= remove("pnpm", &packages.pnpm, |package| {
         (
             "pnpm",
-            vec!["remove".to_owned(), "--global".to_owned(), package.to_owned()],
+            vec![
+                "remove".to_owned(),
+                "--global".to_owned(),
+                package.to_owned(),
+            ],
         )
     });
     failed |= remove_with_output(

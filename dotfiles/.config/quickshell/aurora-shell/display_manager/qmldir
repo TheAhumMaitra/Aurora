@@ -1,0 +1,7 @@
+singleton Colors 1.0 colors.qml
+singleton Config 1.0 Config.qml
+Display 1.0 Display.qml
+PopupCard 1.0 PopupCard.qml
+MonitorCard 1.0 MonitorCard.qml
+DisplaySlider 1.0 DisplaySlider.qml
+PresetButton 1.0 PresetButton.qml

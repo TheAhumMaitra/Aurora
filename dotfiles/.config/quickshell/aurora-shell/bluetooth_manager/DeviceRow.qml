@@ -9,6 +9,7 @@ Item {
     required property var device
 
     signal clicked(var device)
+    signal detailClicked(var device)
 
     implicitHeight: Config.rowHeight
     width: parent ? parent.width : Config.popupWidth
@@ -94,13 +95,29 @@ Item {
             }
         }
 
-        Text {
+        Rectangle {
             Layout.alignment: Qt.AlignVCenter
             visible: !root.busy && root.isPaired
-            text: Config.gBookmark
-            font.family: Config.glyphFont
-            font.pixelSize: 11
-            color: Config.fgDim
+            width: 24
+            height: 24
+            radius: 6
+            color: gearHover.hovered ? Config.bgHover : "transparent"
+
+            Text {
+                anchors.centerIn: parent
+                text: Config.gSettings
+                font.family: Config.glyphFont
+                font.pixelSize: 11
+                color: gearHover.hovered ? Config.accent : Config.fgDim
+            }
+
+            MouseArea {
+                id: gearHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.detailClicked(root.device)
+            }
         }
 
         Text {
@@ -117,7 +134,14 @@ Item {
         id: rootMouse
         anchors.fill: parent
         hoverEnabled: true
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked(root.device)
+        onClicked: function(mouse) {
+            if (mouse.button === Qt.RightButton) {
+                root.detailClicked(root.device)
+            } else {
+                root.clicked(root.device)
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Bluetooth
 import "helpers.js" as H
 
@@ -117,12 +118,21 @@ Rectangle {
         adapterConn.target = root.adapter
     }
 
+    Process {
+        id: rfkillCmd
+    }
+
     onAdapterChanged: { root.rehookAdapter(); root.scheduleRebuild() }
-    onActiveChanged: root.scheduleRebuild()
+    onActiveChanged: {
+        root.scheduleRebuild()
+        if (root.active && root.adapter && root.adapter.enabled) {
+            root.adapter.discovering = true
+        }
+    }
     Component.onCompleted: {
         root.rehookAdapter()
         root.scheduleRebuild()
-        root.initScanTimer.start()
+        initScanTimer.start()
     }
 
     readonly property int rowCount: root.adapterOn ? root.sorted.length : 0
@@ -150,13 +160,18 @@ Rectangle {
     property string view: "list" // "list" | "detail"
     property var pendingDevice: null
 
+    function openDetail(device) {
+        if (!device) return
+        root.pendingDevice = device
+        root.view = "detail"
+    }
+
     function pick(device) {
         if (!device
             || device.state === BluetoothDeviceState.Connecting
             || device.state === BluetoothDeviceState.Disconnecting) return
         if (device.connected) {
-            root.pendingDevice = device
-            root.view = "detail"
+            root.openDetail(device)
         } else if (device.paired) {
             device.connect()
         } else {
@@ -170,7 +185,16 @@ Rectangle {
     }
 
     function togglePower() {
-        if (root.adapter) root.adapter.enabled = !root.adapter.enabled
+        if (!root.adapter) {
+            rfkillCmd.exec(["rfkill", "unblock", "bluetooth"])
+            return
+        }
+        if (!root.adapter.enabled) {
+            rfkillCmd.exec(["rfkill", "unblock", "bluetooth"])
+            root.adapter.enabled = true
+        } else {
+            root.adapter.enabled = false
+        }
     }
 
     // ------------------------------------------------------------------ UI
@@ -296,6 +320,7 @@ Rectangle {
                     device: modelData
                     width: list.width
                     onClicked: root.pick(modelData)
+                    onDetailClicked: root.openDetail(modelData)
                 }
             }
 
@@ -402,15 +427,15 @@ Rectangle {
                         font.family: Config.fontName
                         font.pixelSize: Config.titleSize
                         font.bold: true
-                        color: Config.ok
+                        color: (root.pendingDevice && root.pendingDevice.connected) ? Config.ok : Config.fg
                         elide: Text.ElideRight
                     }
 
                     Text {
-                        text: Config.gCheck
+                        text: (root.pendingDevice && root.pendingDevice.connected) ? Config.gCheck : Config.gBookmark
                         font.family: Config.glyphFont
                         font.pixelSize: 13
-                        color: Config.ok
+                        color: (root.pendingDevice && root.pendingDevice.connected) ? Config.ok : Config.fgDim
                     }
                 }
 
@@ -419,12 +444,14 @@ Rectangle {
                     text: {
                         var d = root.pendingDevice
                         if (!d) return ""
-                        if (d.batteryAvailable) return "Connected  \u00b7  " + H.pct(d.battery) + "% battery"
-                        return "Connected  \u00b7  " + (d.address || "")
+                        if (d.connected && d.batteryAvailable) return "Connected  \u00b7  " + H.pct(d.battery) + "% battery"
+                        if (d.connected) return "Connected  \u00b7  " + (d.address || "")
+                        if (d.paired) return "Paired (Disconnected)  \u00b7  " + (d.address || "")
+                        return d.address || ""
                     }
                     font.family: Config.fontName
                     font.pixelSize: 10
-                    color: Config.fgSub
+                    color: (root.pendingDevice && root.pendingDevice.connected) ? Config.ok : Config.fgSub
                     elide: Text.ElideRight
                 }
 
@@ -436,11 +463,21 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
                     radius: Config.radiusSm
-                    color: discHover.hovered ? Qt.darker(Config.danger, 1.15) : Config.danger
+                    color: {
+                        var isConn = root.pendingDevice && root.pendingDevice.connected
+                        if (isConn) {
+                            return discHover.hovered ? Qt.darker(Config.danger, 1.15) : Config.danger
+                        } else {
+                            return discHover.hovered ? Config.accentActive : Config.accent
+                        }
+                    }
 
                     Text {
                         anchors.centerIn: parent
-                        text: Config.gPower + "  Disconnect"
+                        text: {
+                            var isConn = root.pendingDevice && root.pendingDevice.connected
+                            return isConn ? Config.gPower + "  Disconnect" : Config.gPlug + "  Connect"
+                        }
                         font.family: Config.glyphFont
                         font.pixelSize: 11
                         font.bold: true
@@ -454,8 +491,15 @@ Rectangle {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             var d = root.pendingDevice
-                            root.backToList()
-                            if (d) d.disconnect()
+                            if (d) {
+                                if (d.connected) {
+                                    root.backToList()
+                                    d.disconnect()
+                                } else {
+                                    d.connect()
+                                    root.backToList()
+                                }
+                            }
                         }
                     }
                 }

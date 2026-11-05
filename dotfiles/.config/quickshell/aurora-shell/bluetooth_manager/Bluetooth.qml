@@ -22,7 +22,7 @@ Scope {
     // Config binding re-evaluates without reloading the whole shell.
     FileView {
         id: colorFile
-        path: Quickshell.configPath("colors.qml")
+        path: Quickshell.shellPath("colors.qml")
         preload: true
         watchChanges: true
 
@@ -120,9 +120,17 @@ Scope {
         }
     }
 
+    Process {
+        id: rfkillCmd
+    }
+
     // ------------------------------------------------------------------------- ipc
     function openPopup() {
         root.popupOpen = true
+        if (root.adapter && root.adapter.enabled) {
+            root.adapter.discovering = true
+        }
+        card.scheduleRebuild()
     }
 
     function closePopup() {
@@ -130,7 +138,23 @@ Scope {
     }
 
     function togglePopup() {
-        root.popupOpen = !root.popupOpen
+        if (root.popupOpen) {
+            root.closePopup()
+        } else {
+            root.openPopup()
+        }
+    }
+
+    function setEnabled(on: bool): void {
+        if (on) {
+            rfkillCmd.exec(["rfkill", "unblock", "bluetooth"])
+        }
+        if (root.adapter) root.adapter.enabled = on
+    }
+
+    function togglePower(): void {
+        var target = !(root.adapter && root.adapter.enabled)
+        root.setEnabled(target)
     }
 
     IpcHandler {
@@ -145,7 +169,7 @@ Scope {
         property int cardRows: card.rowCount
 
         function toggle(): void {
-            if (root.adapter) root.adapter.enabled = !root.adapter.enabled
+            root.togglePower()
         }
 
         function togglePopup(): void {
@@ -161,7 +185,7 @@ Scope {
         }
 
         function setEnabled(on: bool): void {
-            if (root.adapter) root.adapter.enabled = on
+            root.setEnabled(on)
         }
 
         function rescan(): void {

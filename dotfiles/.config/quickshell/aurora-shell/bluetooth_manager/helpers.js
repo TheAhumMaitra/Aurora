@@ -13,13 +13,18 @@ function pct(battery) {
 function deviceGlyph(icon) {
     if (!icon) return "\uf293";
     icon = String(icon).toLowerCase();
-    if (icon.indexOf("audio") !== -1) return "\uf025";
+    if (icon.indexOf("head") !== -1 || icon.indexOf("audio") !== -1 || icon.indexOf("ear") !== -1) return "\uf025";
+    if (icon.indexOf("speaker") !== -1) return "\uf028";
     if (icon.indexOf("keyboard") !== -1) return "\uf11c";
     if (icon.indexOf("mouse") !== -1) return "\uf245";
     if (icon.indexOf("phone") !== -1) return "\uf10b";
     if (icon.indexOf("tablet") !== -1) return "\uf3fa";
     if (icon.indexOf("computer") !== -1 || icon.indexOf("laptop") !== -1) return "\uf109";
-    if (icon.indexOf("gamepad") !== -1) return "\uf11b";
+    if (icon.indexOf("gamepad") !== -1 || icon.indexOf("controller") !== -1 || icon.indexOf("joystick") !== -1) return "\uf11b";
+    if (icon.indexOf("watch") !== -1) return "\uf017";
+    if (icon.indexOf("camera") !== -1) return "\uf030";
+    if (icon.indexOf("display") !== -1 || icon.indexOf("tv") !== -1 || icon.indexOf("monitor") !== -1) return "\uf108";
+    if (icon.indexOf("printer") !== -1) return "\uf02f";
     return "\uf293";
 }
 

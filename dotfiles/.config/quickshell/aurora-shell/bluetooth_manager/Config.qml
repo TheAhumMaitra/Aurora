@@ -57,4 +57,6 @@ QtObject {
     readonly property string gArrowLeft: "\uf060"
     readonly property string gSpinner: "\uf110"
     readonly property string gBookmark: "\uf02e"
+    readonly property string gPlug: "\uf1e6"
+    readonly property string gSettings: "\uf013"
 }

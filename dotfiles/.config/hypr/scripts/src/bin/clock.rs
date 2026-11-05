@@ -62,7 +62,6 @@ fn build_ui(app: &Application) {
     let root = GtkBox::new(Orientation::Vertical, 14);
     root.add_css_class("clock-root");
     root.append(&header);
-
     let spacer = GtkBox::new(Orientation::Vertical, 0);
     spacer.set_vexpand(true);
 

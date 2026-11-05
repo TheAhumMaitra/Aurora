@@ -10,8 +10,9 @@ function pct(strength) {
 }
 
 function litBars(strength, bars) {
-    if (typeof strength !== "number" || !isFinite(strength)) return 0;
-    return Math.round(clamp(strength, 0, 1) * bars);
+    if (typeof strength !== "number" || !isFinite(strength) || strength <= 0) return 0;
+    var count = Math.round(clamp(strength, 0, 1) * bars);
+    return Math.max(1, count);
 }
 
 function securityLabel(id) {

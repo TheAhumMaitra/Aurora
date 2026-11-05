@@ -25,6 +25,9 @@ Scope {
             if (!w && d.type === DeviceType.Wifi) w = d
         }
         root.wifiDevice = w
+        if (w && Networking.wifiEnabled) {
+            w.scannerEnabled = true
+        }
     }
 
     Component.onCompleted: {
@@ -36,7 +39,7 @@ Scope {
     // Config binding re-evaluates without reloading the whole shell.
     FileView {
         id: colorFile
-        path: Quickshell.configPath("colors.qml")
+        path: Quickshell.shellPath("colors.qml")
         preload: true
         watchChanges: true
 
@@ -63,6 +66,15 @@ Scope {
         target: Networking.devices
         function onObjectInsertedPost(object, index) { root.refreshDevices() }
         function onObjectRemovedPost(object, index) { root.refreshDevices() }
+    }
+
+    Connections {
+        target: Networking
+        function onWifiEnabledChanged() {
+            if (root.wifiDevice && Networking.wifiEnabled) {
+                root.wifiDevice.scannerEnabled = true
+            }
+        }
     }
 
     property string connectedNetwork: {
@@ -141,6 +153,7 @@ Scope {
                     height: card.implicitHeight
 
                     wifiDevice: root.wifiDevice
+                    active: root.popupOpen
 
                     onRequestClose: root.closePopup()
                 }
@@ -151,6 +164,9 @@ Scope {
     // ------------------------------------------------------------------------- ipc
     function openPopup() {
         root.popupOpen = true
+        if (root.wifiDevice && Networking.wifiEnabled) {
+            root.wifiDevice.scannerEnabled = true
+        }
         card.rescan()
     }
 
@@ -159,7 +175,11 @@ Scope {
     }
 
     function togglePopup() {
-        root.popupOpen = !root.popupOpen
+        if (root.popupOpen) {
+            root.closePopup()
+        } else {
+            root.openPopup()
+        }
     }
 
     IpcHandler {
@@ -191,6 +211,7 @@ Scope {
                 root.wifiDevice.scannerEnabled = false
                 root.wifiDevice.scannerEnabled = true
             }
+            card.rescan()
         }
 
         function toggleAirplane(): void {

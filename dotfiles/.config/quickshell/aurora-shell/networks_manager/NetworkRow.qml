@@ -34,12 +34,14 @@ Item {
         anchors.rightMargin: 14
         spacing: 12
 
-        Text {
+        SignalBars {
             Layout.alignment: Qt.AlignVCenter
-            font.family: Config.glyphFont
-            font.pixelSize: 9
-            text: root.isConnected ? Config.gCircle : Config.gCircleO
-            color: root.isConnected ? Config.ok : Config.fgDim
+            strength: root.network ? root.network.signalStrength : 0
+            activeColor: root.isConnected ? Config.ok : Config.accent
+            barCount: 4
+            barWidth: 3.5
+            barGap: 2
+            barMaxHeight: 14
         }
 
         ColumnLayout {

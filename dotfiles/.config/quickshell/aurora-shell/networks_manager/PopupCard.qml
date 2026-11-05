@@ -10,6 +10,7 @@ Rectangle {
     id: root
 
     required property var wifiDevice
+    property bool active: false
 
     signal requestClose()
 
@@ -86,35 +87,139 @@ Rectangle {
     // Networks, connected first, then by signal strength.
     property var sorted: []
 
-    function rebuild() {
-        if (!root.wifiDevice) {
-            root.sorted = []
+    function netKey(n) {
+        if (!n) return ""
+        return (n.connected ? "c" : "d") + "|" + (n.name || "") + "|" + Math.round((n.signalStrength || 0) * 100) + "|" + (n.security || 0) + "|" + (n.stateChanging ? "1" : "0")
+    }
+
+    Timer {
+        id: rebuildTimer
+        interval: 90
+        onTriggered: root.flushRebuild()
+    }
+
+    function scheduleRebuild() {
+        rebuildTimer.restart()
+    }
+
+    function flushRebuild() {
+        rebuildTimer.stop()
+        if (!root.wifiDevice || !Networking.wifiEnabled) {
+            if (root.sorted.length > 0) root.sorted = []
             return
         }
         var nets = root.wifiDevice.networks.values.slice()
-        nets.sort(function (a, b) {
+        var byName = {}
+        for (var i = 0; i < nets.length; ++i) {
+            var n = nets[i]
+            if (!n) continue
+            var name = n.name || ""
+            if (name.trim() === "") continue
+
+            if (!byName[name]) {
+                byName[name] = n
+            } else {
+                var prev = byName[name]
+                if (!prev.connected && (n.connected || n.signalStrength > prev.signalStrength)) {
+                    byName[name] = n
+                }
+            }
+        }
+        var uniqueNets = []
+        for (var k in byName) {
+            uniqueNets.push(byName[k])
+        }
+
+        uniqueNets.sort(function (a, b) {
             if (a.connected !== b.connected) return a.connected ? -1 : 1
             var d = b.signalStrength - a.signalStrength
             if (d !== 0) return d
             return (a.name || "").localeCompare(b.name || "")
         })
-        root.sorted = nets
+
+        var cur = root.sorted
+        if (cur.length === uniqueNets.length) {
+            var same = true
+            for (var j = 0; j < uniqueNets.length; ++j) {
+                if (root.netKey(cur[j]) !== root.netKey(uniqueNets[j])) {
+                    same = false
+                    break
+                }
+            }
+            if (same) return
+        }
+        root.sorted = uniqueNets
     }
 
     Connections {
         id: netsConn
-        function onObjectInsertedPost() { root.rebuild() }
-        function onObjectRemovedPost() { root.rebuild() }
-        function onValuesChanged() { root.rebuild() }
+        function onObjectInsertedPost() { root.scheduleRebuild() }
+        function onObjectRemovedPost() { root.scheduleRebuild() }
+        function onValuesChanged() { root.scheduleRebuild() }
     }
 
     function rehook() {
         netsConn.target = root.wifiDevice ? root.wifiDevice.networks : null
-        root.rebuild()
+        root.scheduleRebuild()
     }
 
-    onWifiDeviceChanged: root.rehook()
-    Component.onCompleted: { root.rehook(); root.pollRadio() }
+    Process {
+        id: nmcliScan
+        command: ["nmcli", "dev", "wifi", "rescan"]
+        onExited: function(exitCode, exitStatus) {
+            root.scheduleRebuild()
+        }
+    }
+
+    // Auto-discover on start so networks are ready immediately without waiting for a manual click.
+    Timer {
+        id: initScanTimer
+        interval: 200
+        repeat: true
+        onTriggered: {
+            if (!root.wifiDevice) return
+            initScanTimer.stop()
+            if (Networking.wifiEnabled) {
+                root.wifiDevice.scannerEnabled = true
+                root.rescan()
+            }
+        }
+    }
+
+    // While popup is open, periodically refresh so new networks appear and signal updates smoothly.
+    Timer {
+        id: syncTimer
+        interval: 8000
+        running: root.active && Networking.wifiEnabled && !!root.wifiDevice
+        repeat: true
+        onTriggered: {
+            root.rescan()
+        }
+    }
+
+    onWifiDeviceChanged: {
+        root.rehook()
+        if (root.wifiDevice && Networking.wifiEnabled) {
+            root.wifiDevice.scannerEnabled = true
+        }
+    }
+
+    onActiveChanged: {
+        if (root.active) {
+            root.scheduleRebuild()
+            if (root.wifiDevice && Networking.wifiEnabled) {
+                root.wifiDevice.scannerEnabled = true
+                root.rescan()
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        root.rehook()
+        root.scheduleRebuild()
+        root.pollRadio()
+        initScanTimer.start()
+    }
 
     // ------------------------------------------------------------- radio state
     // Airplane mode is derived from NetworkManager's wifi + wwan radios.
@@ -211,6 +316,7 @@ Rectangle {
     // ------------------------------------------------------------ behavior
     property string view: "list" // "list" | "password" | "active"
     property var pendingNet: null
+    property bool showPassword: false
 
     readonly property var currentNet: root.sorted.length > 0 && root.sorted[0].connected ? root.sorted[0] : null
 
@@ -223,6 +329,7 @@ Rectangle {
             net.connect()
         } else {
             root.pendingNet = net
+            root.showPassword = false
             root.view = "password"
             pwdField.text = ""
             pwdField.forceActiveFocus()
@@ -250,6 +357,9 @@ Rectangle {
         scanTimer.restart()
         root.wifiDevice.scannerEnabled = false
         root.wifiDevice.scannerEnabled = true
+        nmcliScan.running = false
+        nmcliScan.running = true
+        root.scheduleRebuild()
     }
 
     property bool scanning: false
@@ -487,47 +597,122 @@ Rectangle {
                     id: pwdField
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
-                    echoMode: TextInput.Password
+                    echoMode: root.showPassword ? TextInput.Normal : TextInput.Password
                     placeholderText: "Enter password"
                     placeholderTextColor: Config.fgDim
                     color: Config.fg
                     selectionColor: Qt.alpha(Config.accentActive, 0.4)
                     font.family: Config.fontName
                     font.pixelSize: Config.textSize
+                    rightPadding: 36
                     background: Rectangle {
                         radius: Config.radiusSm
                         color: Config.bgElevated
                         border.color: Config.border
                         border.width: 1
+
+                        Rectangle {
+                            anchors.right: parent.right
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 26
+                            height: 26
+                            radius: 6
+                            color: eyeHover.hovered ? Config.bgHover : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.showPassword ? Config.gEyeSlash : Config.gEye
+                                font.family: Config.glyphFont
+                                font.pixelSize: 11
+                                color: root.showPassword ? Config.accent : Config.fgDim
+                            }
+
+                            MouseArea {
+                                id: eyeHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showPassword = !root.showPassword
+                            }
+                        }
                     }
                     onAccepted: root.submitPsk()
                 }
 
-                Rectangle {
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 38
-                    radius: Config.radiusSm
-                    color: connectHover.hovered ? Config.accentActive : Config.accent
+                    spacing: 8
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Connect"
-                        font.family: Config.fontName
-                        font.pixelSize: Config.textSize
-                        font.bold: true
-                        color: "#ffffff"
+                    Rectangle {
+                        Layout.preferredWidth: 80
+                        Layout.preferredHeight: 38
+                        radius: Config.radiusSm
+                        color: cancelHover.hovered ? Config.bgHover : Config.bgElevated
+                        border.color: Config.border
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Cancel"
+                            font.family: Config.fontName
+                            font.pixelSize: Config.textSize
+                            color: Config.fgSub
+                        }
+
+                        MouseArea {
+                            id: cancelHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.backToList()
+                        }
                     }
 
-                    MouseArea {
-                        id: connectHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.submitPsk()
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        radius: Config.radiusSm
+                        color: connectHover.hovered ? Config.accentActive : Config.accent
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Connect"
+                            font.family: Config.fontName
+                            font.pixelSize: Config.textSize
+                            font.bold: true
+                            color: "#ffffff"
+                        }
+
+                        MouseArea {
+                            id: connectHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.submitPsk()
+                        }
                     }
                 }
             }
         }
+    }
+
+    Process {
+        id: forgetNetCmd
+    }
+
+    function forgetNetwork(net) {
+        if (!net) return
+        var name = net.name
+        net.disconnect()
+        if (typeof net.forget === "function") {
+            try { net.forget() } catch(e) {}
+        }
+        if (name && name !== "") {
+            forgetNetCmd.exec(["nmcli", "connection", "delete", "id", name])
+        }
+        root.backToList()
+        root.scheduleRebuild()
     }
 
     // active connection dialog ---------------------------------------------
@@ -606,6 +791,35 @@ Rectangle {
                             var net = root.pendingNet
                             root.backToList()
                             if (net) net.disconnect()
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 38
+                    radius: Config.radiusSm
+                    color: forgetHover.hovered ? Config.bgHover : Config.bgElevated
+                    border.color: Config.border
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: Config.gTrash + "  Forget network"
+                        font.family: Config.glyphFont
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: Config.danger
+                    }
+
+                    MouseArea {
+                        id: forgetHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var net = root.pendingNet
+                            root.forgetNetwork(net)
                         }
                     }
                 }

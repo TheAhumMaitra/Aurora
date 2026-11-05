@@ -83,8 +83,8 @@ Scope {
             MultiEffect {
                 id: cardFx
                 z: 2
-                anchors.right: parent.right
-                anchors.rightMargin: Config.popupMargin
+                anchors.left: parent.left
+                anchors.leftMargin: Config.popupMarginLeft
                 anchors.top: parent.top
                 anchors.topMargin: Config.popupMarginTop
                 width: Config.popupWidth

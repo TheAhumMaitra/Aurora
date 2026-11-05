@@ -10,7 +10,9 @@ QtObject {
 
     // Placement ---------------------------------------------------------------
     readonly property int screenIndex: 0
-    readonly property int popupMargin: 12
+    // Gap from the left screen edge to align exactly with Waybar's battery module
+    readonly property int popupMarginLeft: 108
+    readonly property int popupMargin: popupMarginLeft
     readonly property int popupMarginTop: 64
 
     // Popup geometry ---------------------------------------------------------

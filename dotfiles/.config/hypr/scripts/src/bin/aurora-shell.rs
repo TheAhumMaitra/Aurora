@@ -161,6 +161,18 @@ fn component(name: &str) -> Option<Component> {
             name: "control_center",
             target: "cc",
         }),
+        "battery" | "battery_manager" | "battery_menu" | "bat" | "power" => Some(Component {
+            name: "battery",
+            target: "battery",
+        }),
+        "media" | "media_player" | "mpris" | "music" | "player" => Some(Component {
+            name: "media",
+            target: "media",
+        }),
+        "display" | "display_manager" | "disp" | "monitors" | "monitor" | "screen" | "brightness" => Some(Component {
+            name: "display",
+            target: "display",
+        }),
         _ => None,
     }
 }
@@ -168,7 +180,7 @@ fn component(name: &str) -> Option<Component> {
 fn require_component(name: &str) -> Result<Component, String> {
     component(name).ok_or_else(|| {
         format!(
-            "unknown component '{name}'\n  try: bluetooth_manager, networks_manager, volume_adjuster or control_center"
+            "unknown component '{name}'\n  try: bluetooth_manager, networks_manager, volume_adjuster, control_center, battery_menu, media_player, or display_manager"
         )
     })
 }
@@ -229,7 +241,7 @@ fn cmd_stop(config_dir: &str, args: &[String]) -> Result<(), String> {
     };
 
     if name == "all" {
-        for canonical in ["bluetooth", "network", "volume", "control_center"] {
+        for canonical in ["bluetooth", "network", "volume", "control_center", "battery", "media", "display"] {
             close(config_dir, &require_component(canonical)?)?;
         }
         return Ok(());
@@ -287,8 +299,8 @@ fn usage() {
   aurora-shell start                just start the Aurora instance
   aurora-shell status               list the available IPC targets
 
-Components: bluetooth_manager | networks_manager | volume_adjuster | control_center
-(shorthands: bluetooth/bt, network/net/wifi, volume/vol, control/cc/dashboard/quick)
+Components: bluetooth_manager | networks_manager | volume_adjuster | control_center | battery_menu | media_player | display_manager
+(shorthands: bluetooth/bt, network/net/wifi, volume/vol, control/cc/dashboard/quick, battery/bat/power, media/mpris/music, display/disp/monitors)
 
 Starting Aurora alone shows nothing; popups are only mapped when opened."
     );

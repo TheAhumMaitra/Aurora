@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Ahum Maitra <theahummaitra@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use aurora::{load_css, send_notification, Reminder};
+use aurora::{Reminder, load_css, send_notification};
 use gtk4::gdk::Key;
 use gtk4::glib::{ControlFlow, SourceId};
 use gtk4::prelude::*;

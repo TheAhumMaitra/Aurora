@@ -20,25 +20,21 @@
   "layer": "top",
   "position": "top",
   "spacing": 3, // Gaps between modules
-  "modules-left": ["custom/logo", "hyprland/workspaces"],
+  "modules-left": [ "clock",
+  "custom/screenrecorder",
+  "battery"],
+  "modules-center": [
+    "hyprland/workspaces"
+  ],
   "modules-right": [
-    "clock",
-    "pulseaudio",
-    "battery",
     "custom/weather",
     "custom/wifi",
     "custom/bluetooth",
-    "custom/screenrecorder",
+    "pulseaudio",
     "custom/system-resources-info",
     "custom/notification",
-    "custom/wlogout",
+    "custom/wlogout"
   ],
-  "custom/logo": {
-        "format":"    ",
-        "tooltip": false,
-        "on-click": "exec settings",
-        "on-double-click": "exec  aurora-shell toggle cc"
-  },
   "hyprland/workspaces": {
     "persistent-workspaces": {
       "*": 10,
@@ -112,7 +108,7 @@
     "format": "{capacity}% {icon}",
     "format-icons": ["", "", "", "", ""],
     "max-length": 25,
-    "on-click" :"exec kitty --class \"jolt\" jolt"
+    "on-click": "aurora-shell battery"
   },
 "custom/screenrecorder": {
     "exec": "screenrecorder status",

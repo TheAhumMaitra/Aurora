@@ -1,4 +1,5 @@
 import QtQuick
+import "."
 
 // A compact square action button used for one-shot launcher tiles. Hovering
 // lifts the background; `checked` flips it into the accent "on" state.
@@ -10,8 +11,8 @@ Item {
 
     signal clicked()
 
-    implicitWidth: 52
-    implicitHeight: 46
+    implicitWidth: 46
+    implicitHeight: 40
 
     Rectangle {
         id: tile
@@ -32,7 +33,7 @@ Item {
             anchors.centerIn: parent
             text: root.glyph
             font.family: Config.glyphFont
-            font.pixelSize: 16
+            font.pixelSize: 14
             color: root.checked ? "#ffffff" : Config.accentActive
         }
 

@@ -10,7 +10,9 @@ Item {
 
     signal userSet(real value)
     signal iconClicked()
+    signal expandClicked()
 
+    property bool expandable: false
     property string glyph: ""
     property string valueText: ""
     property real value: 0
@@ -66,12 +68,38 @@ Item {
 
         Text {
             Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: 40
+            Layout.preferredWidth: 36
             text: root.valueText
             font.family: Config.fontName
             font.pixelSize: 10
             color: Config.fgSub
             horizontalAlignment: Text.AlignRight
+        }
+
+        Rectangle {
+            id: chevron
+            visible: root.expandable
+            Layout.preferredWidth: 22
+            Layout.preferredHeight: 22
+            Layout.alignment: Qt.AlignVCenter
+            radius: 7
+            color: expandHover.hovered ? Config.accentSoft : Qt.alpha(Config.fg, 0.06)
+
+            Text {
+                anchors.centerIn: parent
+                text: Config.gChevronRight
+                font.family: Config.glyphFont
+                font.pixelSize: 9
+                color: expandHover.hovered ? Config.accentActive : Config.fgDim
+            }
+
+            MouseArea {
+                id: expandHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.expandClicked()
+            }
         }
     }
 

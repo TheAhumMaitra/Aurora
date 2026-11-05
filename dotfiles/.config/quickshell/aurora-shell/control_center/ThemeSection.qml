@@ -1,21 +1,25 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.folderlistmodel
+import Quickshell
+import "."
 
 // An expandable theme switcher: a full-width header tile that reveals a
-// scrollable two-column grid of every theme in ~/.config/themes. Clicking a
-// card emits `applyTheme(dir)`; the active theme is highlighted with an accent
-// border.
+// live-searchable two-column grid of every theme in ~/.config/themes.
+// The width is strictly constrained to the control center body and dynamically
+// divides across exactly 2 equal columns without wrapping or layout jumping.
 Item {
     id: root
 
-    property string homeDir: ""
+    property string homeDir: Quickshell.env("HOME") || ""
     property string activeThemeDir: ""
     property bool expanded: false
+    property string searchQuery: ""
 
     signal applyTheme(string dir)
 
-    implicitWidth: Config.popupWidth
+    Layout.fillWidth: true
     implicitHeight: body.implicitHeight
 
     readonly property string themesPath: root.homeDir !== "" ? root.homeDir + "/.config/themes" : ""
@@ -28,7 +32,25 @@ Item {
         showFiles: false
         showDotAndDotDot: false
         sortField: FolderListModel.Name
+        onStatusChanged: if (status === FolderListModel.Ready) root.updateFiltered()
     }
+
+    property var filteredThemes: []
+
+    function updateFiltered() {
+        var res = []
+        var q = root.searchQuery.toLowerCase().trim()
+        for (var i = 0; i < themeModel.count; i++) {
+            var fn = themeModel.get(i, "fileName")
+            var fp = themeModel.get(i, "filePath")
+            if (q === "" || fn.toLowerCase().indexOf(q) !== -1 || fn.replace(/-/g, " ").toLowerCase().indexOf(q) !== -1) {
+                res.push({ fileName: fn, filePath: fp })
+            }
+        }
+        root.filteredThemes = res
+    }
+
+    onSearchQueryChanged: updateFiltered()
 
     function prettify(name) {
         return name.length ? name.replace(/-/g, " ") : ""
@@ -36,7 +58,9 @@ Item {
 
     ColumnLayout {
         id: body
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
         spacing: 8
 
         Rectangle {
@@ -133,21 +157,95 @@ Item {
             }
         }
 
-        GridView {
-            id: grid
+        // Search Bar when expanded
+        Rectangle {
+            id: searchBar
             visible: root.expanded
             Layout.fillWidth: true
+            Layout.preferredHeight: 32
+            radius: 8
+            color: Config.bgElevated
+            border.width: 1
+            border.color: searchInput.activeFocus ? Qt.alpha(Config.accentActive, 0.7) : Config.border
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                spacing: 6
+
+                Text {
+                    text: Config.gSearch
+                    font.family: Config.glyphFont
+                    font.pixelSize: 11
+                    color: Config.fgDim
+                }
+
+                TextInput {
+                    id: searchInput
+                    Layout.fillWidth: true
+                    font.family: Config.fontName
+                    font.pixelSize: 10
+                    color: Config.fg
+                    clip: true
+                    text: root.searchQuery
+                    onTextChanged: root.searchQuery = text
+
+                    Text {
+                        anchors.fill: parent
+                        text: "Search themes..."
+                        font: searchInput.font
+                        color: Config.fgDim
+                        visible: !searchInput.text && !searchInput.activeFocus
+                    }
+                }
+
+                Text {
+                    visible: root.searchQuery.length > 0
+                    text: Config.gTimes
+                    font.family: Config.glyphFont
+                    font.pixelSize: 10
+                    color: Config.fgDim
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            searchInput.text = ""
+                            root.searchQuery = ""
+                        }
+                    }
+                }
+            }
+        }
+
+        GridView {
+            id: grid
+            visible: root.expanded && root.filteredThemes.length > 0
+            Layout.fillWidth: true
             Layout.preferredHeight: Math.min(
-                Math.ceil(themeModel.count / 2) * Config.themeCellHeight,
+                Math.ceil(root.filteredThemes.length / 2) * Config.themeCellHeight,
                 Config.maxThemeGridHeight)
-            model: themeModel
-            cellWidth: Config.themeCellWidth
+            model: root.filteredThemes
+            cellWidth: Math.floor(grid.width / 2)
             cellHeight: Config.themeCellHeight
             clip: true
             interactive: true
 
+            ScrollBar.vertical: ScrollBar {
+                id: vbar
+                policy: grid.contentHeight > grid.height ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
+                active: grid.moving || vbar.hovered
+                width: 4
+                contentItem: Rectangle {
+                    implicitWidth: 4
+                    radius: 2
+                    color: vbar.hovered ? Config.accentActive : Qt.alpha(Config.fg, 0.25)
+                }
+            }
+
             delegate: Item {
-                width: Config.themeCellWidth
+                width: grid.cellWidth
                 height: Config.themeCellHeight
 
                 Rectangle {
@@ -156,9 +254,9 @@ Item {
                     anchors.margins: 4
                     radius: 9
                     color: themeMouse.hovered ? Config.bgHover : Config.bgElevated
-                    border.width: 1
-                    border.color: model.fileName === root.activeThemeDir
-                        ? Qt.alpha(Config.accent, 0.9)
+                    border.width: modelData.fileName === root.activeThemeDir ? 2 : 1
+                    border.color: modelData.fileName === root.activeThemeDir
+                        ? Config.accentActive
                         : (themeMouse.hovered ? Qt.alpha(Config.accent, 0.7) : Config.border)
 
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -173,23 +271,45 @@ Item {
                             Layout.preferredHeight: Config.themeImgHeight
                             radius: 6
                             color: Qt.alpha(Config.fg, 0.06)
+                            clip: true
 
                             Image {
                                 anchors.fill: parent
-                                source: model.filePath + "/preview.png"
+                                source: modelData.filePath + "/preview.png"
                                 fillMode: Image.PreserveAspectCrop
                                 clip: true
                                 sourceSize: Qt.size(160, 56)
+                            }
+
+                            // Check badge for active theme
+                            Rectangle {
+                                anchors.top: parent.top
+                                anchors.right: parent.right
+                                anchors.margins: 3
+                                width: 16
+                                height: 16
+                                radius: 8
+                                color: Config.accentActive
+                                visible: modelData.fileName === root.activeThemeDir
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: Config.gCheck
+                                    font.family: Config.glyphFont
+                                    font.pixelSize: 8
+                                    color: "#ffffff"
+                                }
                             }
                         }
 
                         Text {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignLeft
-                            text: root.prettify(model.fileName)
+                            text: root.prettify(modelData.fileName)
                             font.family: Config.fontName
                             font.pixelSize: Config.themeLabelSize
-                            color: model.fileName === root.activeThemeDir ? Config.accentActive : Config.fg
+                            font.bold: modelData.fileName === root.activeThemeDir
+                            color: modelData.fileName === root.activeThemeDir ? Config.accentActive : Config.fg
                             elide: Text.ElideRight
                         }
                     }
@@ -199,9 +319,28 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.applyTheme(model.fileName)
+                        onClicked: root.applyTheme(modelData.fileName)
                     }
                 }
+            }
+        }
+
+        // Empty state when search has 0 results
+        Rectangle {
+            visible: root.expanded && root.filteredThemes.length === 0
+            Layout.fillWidth: true
+            Layout.preferredHeight: 50
+            radius: 8
+            color: Config.bgElevated
+            border.width: 1
+            border.color: Config.border
+
+            Text {
+                anchors.centerIn: parent
+                text: "No themes matching \"" + root.searchQuery + "\""
+                font.family: Config.fontName
+                font.pixelSize: 10
+                color: Config.fgDim
             }
         }
     }

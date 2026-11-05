@@ -18,13 +18,16 @@ Scope {
     property var bluetoothManager: null
     property var networksManager: null
     property var volumeManager: null
+    property var batteryManager: null
+    property var mediaManager: null
+    property var displayManager: null
 
     // ------------------------------------------------------- live color reload
     // Watch colors.qml and push changes into the Colors singleton so every
     // Config binding re-evaluates without reloading the whole shell.
     FileView {
         id: colorFile
-        path: Quickshell.configPath("colors.qml")
+        path: Quickshell.shellPath("colors.qml")
         preload: true
         watchChanges: true
 
@@ -92,6 +95,7 @@ Scope {
                 y: Config.popupMarginTop
                 width: Config.popupWidth
                 height: card.implicitHeight
+                transformOrigin: Item.TopRight
 
                 source: card
 
@@ -105,6 +109,7 @@ Scope {
 
                 Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
                 PopupCard {
                     id: card
@@ -114,6 +119,9 @@ Scope {
                     networksManager: root.networksManager
                     bluetoothManager: root.bluetoothManager
                     volumeManager: root.volumeManager
+                    batteryManager: root.batteryManager
+                    mediaManager: root.mediaManager
+                    displayManager: root.displayManager
 
                     onRequestClose: root.closePopup()
                 }
@@ -127,6 +135,9 @@ Scope {
         if (root.bluetoothManager) root.bluetoothManager.closePopup()
         if (root.networksManager) root.networksManager.closePopup()
         if (root.volumeManager) root.volumeManager.closePopup()
+        if (root.batteryManager) root.batteryManager.closePopup()
+        if (root.mediaManager) root.mediaManager.closePopup()
+        if (root.displayManager) root.displayManager.closePopup()
         root.popupOpen = true
     }
 
@@ -149,6 +160,8 @@ Scope {
         property bool wifiOn: card.wifiOn
         property bool bluetoothOn: card.btOn
         property bool airplaneMode: card.airplaneMode
+        property bool dndOn: card.dndOn
+        property bool nightLightOn: card.nightLightOn
         property bool micMuted: card.micReady ? card.micMuted : false
         property real sinkVolume: card.volume * 100
         property int brightness: card.brightnessPct
@@ -181,6 +194,14 @@ Scope {
             card.setAirplane(!card.airplaneMode)
         }
 
+        function toggleDnd(): void {
+            card.toggleDnd()
+        }
+
+        function toggleNightLight(): void {
+            card.toggleNightLight()
+        }
+
         function toggleMicMute(): void {
             card.toggleMicMute()
         }
@@ -203,6 +224,14 @@ Scope {
 
         function openVolume(): void {
             card.openDetail("volume")
+        }
+
+        function openBattery(): void {
+            card.openDetail("battery")
+        }
+
+        function openDisplay(): void {
+            card.openDetail("display")
         }
     }
 }

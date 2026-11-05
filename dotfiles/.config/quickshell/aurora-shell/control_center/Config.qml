@@ -6,21 +6,21 @@ import "."
 
 QtObject {
     readonly property string appName: "Aurora Control Center"
-    readonly property string configVersion: "0.1"
+    readonly property string configVersion: "0.2"
 
     // Placement ---------------------------------------------------------------
     // Index into Quickshell.screens of the screen the popup lives on.
     readonly property int screenIndex: 0
     // Gap between the popup card and the screen edge.
     readonly property int popupMargin: 12
-    // Extra gap from the top edge of the screen.
-    readonly property int popupMarginTop: 64
+    // Extra gap from the top edge of the screen (Waybar reserved space is 48).
+    readonly property int popupMarginTop: 54
 
     // Popup geometry ---------------------------------------------------------
     readonly property int popupWidth: 380
-    readonly property int tileHeight: 66
+    readonly property int tileHeight: 60
     readonly property int tileRadius: 10
-    readonly property int sliderHeight: 44
+    readonly property int sliderHeight: 42
     readonly property int controlRadius: 9
 
     // Volume -----------------------------------------------------------------
@@ -44,17 +44,16 @@ QtObject {
     readonly property color scrim: Qt.alpha(Colors.background, 0.22)
 
     // Theme grid --------------------------------------------------------------
-    readonly property int themeCellWidth: 174
-    readonly property int themeCellHeight: 96
-    readonly property int themeImgHeight: 56
-    readonly property int themeHeaderHeight: 52
+    readonly property int themeCellHeight: 88
+    readonly property int themeImgHeight: 50
+    readonly property int themeHeaderHeight: 48
     readonly property int themeLabelSize: 9
-    readonly property int maxThemeGridHeight: 340
+    readonly property int maxThemeGridHeight: 188
 
     // Shapes / text ----------------------------------------------------------
     readonly property int radius: 14
     readonly property int radiusSm: 9
-    readonly property int textSize: 12
+    readonly property int textSize: 11
     readonly property int titleSize: 13
     readonly property int glyphSize: 13
 
@@ -82,4 +81,26 @@ QtObject {
     readonly property string gPalette: "\uf53f"
     readonly property string gTerminal: "\uf120"
     readonly property string gVideo: "\uf03d"
+
+    // New Glyphs -------------------------------------------------------------
+    readonly property string gBatteryFull: "\uf240"
+    readonly property string gBatteryThreeQuarters: "\uf241"
+    readonly property string gBatteryHalf: "\uf242"
+    readonly property string gBatteryQuarter: "\uf243"
+    readonly property string gBatteryEmpty: "\uf244"
+    readonly property string gBolt: "\uf0e7"
+    readonly property string gBell: "\uf0f3"
+    readonly property string gBellSlash: "\uf1f6"
+    readonly property string gMoon: "\uf186"
+    readonly property string gCoffee: "\uf0f4"
+    readonly property string gCamera: "\uf030"
+    readonly property string gLock: "\uf023"
+    readonly property string gMusic: "\uf001"
+    readonly property string gPlay: "\uf04b"
+    readonly property string gPause: "\uf04c"
+    readonly property string gPrev: "\uf048"
+    readonly property string gNext: "\uf051"
+    readonly property string gCpu: "\uf2db"
+    readonly property string gMemory: "\uf538"
+    readonly property string gSearch: "\uf002"
 }

@@ -252,12 +252,18 @@ fn engine_url_for(name: &str, configured: &str) -> (String, String) {
             String::from("DuckDuckGo"),
             String::from("https://duckduckgo.com/?q="),
         ),
-        "bing" => (String::from("Bing"), String::from("https://www.bing.com/search?q=")),
+        "bing" => (
+            String::from("Bing"),
+            String::from("https://www.bing.com/search?q="),
+        ),
         "youtube" => (
             String::from("YouTube"),
             String::from("https://www.youtube.com/results?search_query="),
         ),
-        "github" => (String::from("GitHub"), String::from("https://github.com/search?q=")),
+        "github" => (
+            String::from("GitHub"),
+            String::from("https://github.com/search?q="),
+        ),
         "wikipedia" => (
             String::from("Wikipedia"),
             String::from("https://en.wikipedia.org/w/index.php?search="),
@@ -266,8 +272,14 @@ fn engine_url_for(name: &str, configured: &str) -> (String, String) {
             String::from("Startpage"),
             String::from("https://www.startpage.com/sp/search?query="),
         ),
-        "ecosia" => (String::from("Ecosia"), String::from("https://www.ecosia.org/search?q=")),
-        _ => (String::from("Google"), String::from("https://www.google.com/search?q=")),
+        "ecosia" => (
+            String::from("Ecosia"),
+            String::from("https://www.ecosia.org/search?q="),
+        ),
+        _ => (
+            String::from("Google"),
+            String::from("https://www.google.com/search?q="),
+        ),
     }
 }
 
@@ -367,11 +379,16 @@ fn read_config() -> Config {
 
     if cfg.file_roots.is_empty() {
         let home = aurora_paths().home;
-        cfg.file_roots.push(home.join("Documents").display().to_string());
-        cfg.file_roots.push(home.join("Downloads").display().to_string());
-        cfg.file_roots.push(home.join("Projects").display().to_string());
-        cfg.file_roots.push(home.join("Aurora").display().to_string());
-        cfg.file_roots.push(home.join(".config").display().to_string());
+        cfg.file_roots
+            .push(home.join("Documents").display().to_string());
+        cfg.file_roots
+            .push(home.join("Downloads").display().to_string());
+        cfg.file_roots
+            .push(home.join("Projects").display().to_string());
+        cfg.file_roots
+            .push(home.join("Aurora").display().to_string());
+        cfg.file_roots
+            .push(home.join(".config").display().to_string());
     }
 
     cfg
@@ -422,13 +439,7 @@ struct Result {
     alt: String,
 }
 
-fn result(
-    title: &str,
-    subtitle: &str,
-    glyph: &str,
-    category: &str,
-    action: &str,
-) -> Result {
+fn result(title: &str, subtitle: &str, glyph: &str, category: &str, action: &str) -> Result {
     Result {
         title: String::from(title),
         subtitle: String::from(subtitle),
@@ -800,11 +811,7 @@ fn rank_result(
     }
     for (i, (title, desc)) in history.iter().enumerate() {
         if *title == r.title && *desc == r.action {
-            total += if i < 40 {
-                180 - (i as i32)
-            } else {
-                130
-            };
+            total += if i < 40 { 180 - (i as i32) } else { 130 };
             break;
         }
     }
@@ -870,11 +877,7 @@ fn parse_level_command(q: &str) -> Option<Result> {
     if !seen {
         return None;
     }
-    let pct: u32 = if value > 100 {
-        100
-    } else {
-        value as u32
-    };
+    let pct: u32 = if value > 100 { 100 } else { value as u32 };
 
     match words[0].as_str() {
         "volume" | "vol" | "volu" | "v" => {
@@ -988,54 +991,126 @@ fn push_keywords(r: &mut Result, words: Vec<String>) {
 fn aurora_results() -> Vec<Result> {
     let mut out = Vec::new();
 
-    let mut list = result("Aurora Themes", "aurora list-themes", GLYPH_THEME, CAT_AURORA, "term:aurora list-themes");
+    let mut list = result(
+        "Aurora Themes",
+        "aurora list-themes",
+        GLYPH_THEME,
+        CAT_AURORA,
+        "term:aurora list-themes",
+    );
     set_keywords(&mut list, &["aurora", "theme", "list", "show"]);
     list.priority = 120;
     out.push(list);
 
-    let mut reload = result("Reload Aurora", "aurora reload", GLYPH_RELOAD, CAT_AURORA, "shell:aurora reload");
+    let mut reload = result(
+        "Reload Aurora",
+        "aurora reload",
+        GLYPH_RELOAD,
+        CAT_AURORA,
+        "shell:aurora reload",
+    );
     set_keywords(&mut reload, &["aurora", "reload", "refresh", "restart"]);
     reload.priority = 160;
     out.push(reload);
 
-    let mut refresh = result("Refresh System", "aurora refresh", GLYPH_SYSTEM, CAT_AURORA, "shell:aurora refresh");
+    let mut refresh = result(
+        "Refresh System",
+        "aurora refresh",
+        GLYPH_SYSTEM,
+        CAT_AURORA,
+        "shell:aurora refresh",
+    );
     set_keywords(&mut refresh, &["aurora", "refresh", "system", "waybar"]);
     refresh.priority = 150;
     out.push(refresh);
 
-    let mut info = result("Aurora Information", "aurora information", GLYPH_AURORA, CAT_AURORA, "term:aurora information");
+    let mut info = result(
+        "Aurora Information",
+        "aurora information",
+        GLYPH_AURORA,
+        CAT_AURORA,
+        "term:aurora information",
+    );
     set_keywords(&mut info, &["aurora", "info", "version", "about"]);
     out.push(info);
 
-    let mut update = result("Update Themes", "aurora update-themes", GLYPH_RELOAD, CAT_AURORA, "term:aurora update-themes");
+    let mut update = result(
+        "Update Themes",
+        "aurora update-themes",
+        GLYPH_RELOAD,
+        CAT_AURORA,
+        "term:aurora update-themes",
+    );
     set_keywords(&mut update, &["aurora", "update", "themes", "download"]);
     out.push(update);
 
-    let mut ghostty_on = result("Ghostty Theme On", "aurora ghostty theme on", GLYPH_TERMINAL, CAT_AURORA, "shell:aurora ghostty theme on");
+    let mut ghostty_on = result(
+        "Ghostty Theme On",
+        "aurora ghostty theme on",
+        GLYPH_TERMINAL,
+        CAT_AURORA,
+        "shell:aurora ghostty theme on",
+    );
     set_keywords(&mut ghostty_on, &["ghostty", "theme", "on", "terminal"]);
     out.push(ghostty_on);
 
-    let mut ghostty_off = result("Ghostty Theme Off", "aurora ghostty theme off", GLYPH_TERMINAL, CAT_AURORA, "shell:aurora ghostty theme off");
+    let mut ghostty_off = result(
+        "Ghostty Theme Off",
+        "aurora ghostty theme off",
+        GLYPH_TERMINAL,
+        CAT_AURORA,
+        "shell:aurora ghostty theme off",
+    );
     set_keywords(&mut ghostty_off, &["ghostty", "theme", "off", "terminal"]);
     out.push(ghostty_off);
 
-    let mut kitty_on = result("Kitty Theme On", "aurora kitty theme on", GLYPH_TERMINAL, CAT_AURORA, "shell:aurora kitty theme on");
+    let mut kitty_on = result(
+        "Kitty Theme On",
+        "aurora kitty theme on",
+        GLYPH_TERMINAL,
+        CAT_AURORA,
+        "shell:aurora kitty theme on",
+    );
     set_keywords(&mut kitty_on, &["kitty", "theme", "on", "terminal"]);
     out.push(kitty_on);
 
-    let mut kitty_off = result("Kitty Theme Off", "aurora kitty theme off", GLYPH_TERMINAL, CAT_AURORA, "shell:aurora kitty theme off");
+    let mut kitty_off = result(
+        "Kitty Theme Off",
+        "aurora kitty theme off",
+        GLYPH_TERMINAL,
+        CAT_AURORA,
+        "shell:aurora kitty theme off",
+    );
     set_keywords(&mut kitty_off, &["kitty", "theme", "off", "terminal"]);
     out.push(kitty_off);
 
-    let mut welcome = result("Welcome App On", "aurora settings welcome-app on", GLYPH_SETTINGS, CAT_AURORA, "shell:aurora settings welcome-app on");
+    let mut welcome = result(
+        "Welcome App On",
+        "aurora settings welcome-app on",
+        GLYPH_SETTINGS,
+        CAT_AURORA,
+        "shell:aurora settings welcome-app on",
+    );
     set_keywords(&mut welcome, &["welcome", "app", "autostart", "on"]);
     out.push(welcome);
 
-    let mut screensaver = result("Screensaver On", "aurora settings screensaver on", GLYPH_SCREENSHOT, CAT_AURORA, "shell:aurora settings screensaver on");
+    let mut screensaver = result(
+        "Screensaver On",
+        "aurora settings screensaver on",
+        GLYPH_SCREENSHOT,
+        CAT_AURORA,
+        "shell:aurora settings screensaver on",
+    );
     set_keywords(&mut screensaver, &["screensaver", "idle", "hypridle", "on"]);
     out.push(screensaver);
 
-    let mut survey = result("Play Horror Survey", "aurora game horror survey", GLYPH_SYSTEM, CAT_AURORA, "term:aurora game horror survey");
+    let mut survey = result(
+        "Play Horror Survey",
+        "aurora game horror survey",
+        GLYPH_SYSTEM,
+        CAT_AURORA,
+        "term:aurora game horror survey",
+    );
     set_keywords(&mut survey, &["game", "horror", "survey", "fun", "play"]);
     out.push(survey);
 
@@ -1087,7 +1162,9 @@ fn aurora_results() -> Vec<Result> {
 fn read_active_theme() -> String {
     let paths = aurora_paths();
     let log = paths.home.join(".local/share/Aurora/theme_name.log");
-    fs::read_to_string(&log).map(|c| c.trim().to_string()).unwrap_or_default()
+    fs::read_to_string(&log)
+        .map(|c| c.trim().to_string())
+        .unwrap_or_default()
 }
 
 fn theme_results(p: &Palette) -> Vec<Result> {
@@ -1109,15 +1186,37 @@ fn theme_results(p: &Palette) -> Vec<Result> {
             CAT_THEMES,
             &format!("theme:{}", dir),
         );
-        set_keywords(&mut apply, &[&dir, &entry.display_name.to_lowercase(), "theme", "apply", "switch", "aurora"]);
+        set_keywords(
+            &mut apply,
+            &[
+                &dir,
+                &entry.display_name.to_lowercase(),
+                "theme",
+                "apply",
+                "switch",
+                "aurora",
+            ],
+        );
         apply.active = is_active;
         apply.priority = 400;
         apply.alt = format!("open:{}", preview);
-        apply.secondaries.push((String::from("Apply Theme"), apply.action.clone()));
-        apply.secondaries.push((String::from("Preview Theme"), format!("open:{}", preview)));
-        apply.secondaries.push((String::from("Set as Default"), format!("shell:aurora apply-theme {}", dir)));
-        apply.secondaries.push((String::from("Open Theme Folder"), format!("open:{}", theme_root.display())));
-        apply.secondaries.push((String::from("Edit Theme"), format!("edit:{}", config_file)));
+        apply
+            .secondaries
+            .push((String::from("Apply Theme"), apply.action.clone()));
+        apply
+            .secondaries
+            .push((String::from("Preview Theme"), format!("open:{}", preview)));
+        apply.secondaries.push((
+            String::from("Set as Default"),
+            format!("shell:aurora apply-theme {}", dir),
+        ));
+        apply.secondaries.push((
+            String::from("Open Theme Folder"),
+            format!("open:{}", theme_root.display()),
+        ));
+        apply
+            .secondaries
+            .push((String::from("Edit Theme"), format!("edit:{}", config_file)));
         out.push(apply);
 
         let mut preview_result = result(
@@ -1255,7 +1354,8 @@ fn app_results() -> Vec<Result> {
                 }
                 r.alt = format!("term:{}", exec);
                 r.priority = 200;
-                r.secondaries.push((String::from("Run in Terminal"), r.alt.clone()));
+                r.secondaries
+                    .push((String::from("Run in Terminal"), r.alt.clone()));
 
                 let mut kws: Vec<String> = Vec::new();
                 for w in app_name.to_lowercase().split_whitespace() {
@@ -1279,7 +1379,13 @@ fn app_results() -> Vec<Result> {
         if !command_exists(bin) {
             continue;
         }
-        let mut r = result(label, &format!("Launch {}", bin), GLYPH_SETTINGS, CAT_APPS, &format!("run:{}", bin));
+        let mut r = result(
+            label,
+            &format!("Launch {}", bin),
+            GLYPH_SETTINGS,
+            CAT_APPS,
+            &format!("run:{}", bin),
+        );
         r.priority = 180;
         set_keywords(&mut r, &["aurora", label, bin]);
         out.push(r);
@@ -1292,14 +1398,46 @@ fn link_results(cfg: &Config) -> Vec<Result> {
     let mut out = Vec::new();
 
     let defaults: &[(&str, &str, &[&str])] = &[
-        ("Open GitHub", "https://github.com", &["git", "hub", "code", "repo"]),
-        ("Open YouTube", "https://youtube.com", &["yt", "video", "watch"]),
-        ("Open Gmail", "https://mail.google.com", &["mail", "email", "inbox", "google"]),
-        ("Open Google Drive", "https://drive.google.com", &["drive", "cloud", "files"]),
-        ("Open Reddit", "https://reddit.com", &["forum", "subreddit", "news"]),
-        ("Open Wikipedia", "https://wikipedia.org", &["wiki", "encyclopedia"]),
-        ("Open ChatGPT", "https://chatgpt.com", &["ai", "chat", "gpt", "assistant"]),
-        ("Open Discord", "https://discord.com", &["chat", "voice", "gaming"]),
+        (
+            "Open GitHub",
+            "https://github.com",
+            &["git", "hub", "code", "repo"],
+        ),
+        (
+            "Open YouTube",
+            "https://youtube.com",
+            &["yt", "video", "watch"],
+        ),
+        (
+            "Open Gmail",
+            "https://mail.google.com",
+            &["mail", "email", "inbox", "google"],
+        ),
+        (
+            "Open Google Drive",
+            "https://drive.google.com",
+            &["drive", "cloud", "files"],
+        ),
+        (
+            "Open Reddit",
+            "https://reddit.com",
+            &["forum", "subreddit", "news"],
+        ),
+        (
+            "Open Wikipedia",
+            "https://wikipedia.org",
+            &["wiki", "encyclopedia"],
+        ),
+        (
+            "Open ChatGPT",
+            "https://chatgpt.com",
+            &["ai", "chat", "gpt", "assistant"],
+        ),
+        (
+            "Open Discord",
+            "https://discord.com",
+            &["chat", "voice", "gaming"],
+        ),
         ("Open Google", "https://google.com", &["search", "web"]),
         ("Open X", "https://x.com", &["twitter", "social"]),
     ];
@@ -1308,7 +1446,8 @@ fn link_results(cfg: &Config) -> Vec<Result> {
         let mut r = result(title, url, GLYPH_LINK, CAT_LINKS, &format!("open:{}", url));
         r.priority = 90;
         r.alt = format!("copy:{}", url);
-        r.secondaries.push((String::from("Copy URL"), r.alt.clone()));
+        r.secondaries
+            .push((String::from("Copy URL"), r.alt.clone()));
         r.keywords = keywords.iter().map(|w| String::from(*w)).collect();
         r.keywords.push(String::from(title.to_lowercase()));
         out.push(r);
@@ -1324,7 +1463,8 @@ fn link_results(cfg: &Config) -> Vec<Result> {
         );
         r.priority = 95;
         r.alt = format!("copy:{}", entry.url);
-        r.secondaries.push((String::from("Copy URL"), r.alt.clone()));
+        r.secondaries
+            .push((String::from("Copy URL"), r.alt.clone()));
         r.keywords.push(entry.name.to_lowercase());
         if let Some(k) = &entry.keywords {
             for w in k {
@@ -1341,45 +1481,102 @@ fn system_results(p: &Palette) -> Vec<Result> {
     let mut out = Vec::new();
     let has_wpctl = command_exists("wpctl");
 
-    let mut lock = result("Lock Screen", "hyprlock", GLYPH_LOCK, CAT_SYSTEM, "run:hyprlock");
+    let mut lock = result(
+        "Lock Screen",
+        "hyprlock",
+        GLYPH_LOCK,
+        CAT_SYSTEM,
+        "run:hyprlock",
+    );
     set_keywords(&mut lock, &["lock", "screen", "suspend", "hyprlock"]);
     lock.priority = 220;
     out.push(lock);
 
-    let mut logout = result("Log Out", "hyprshutdown -vt 3", GLYPH_LOGOUT, CAT_SYSTEM, "shell:hyprshutdown -vt 3");
-    set_keywords(&mut logout, &["logout", "log out", "exit", "session", "quit"]);
+    let mut logout = result(
+        "Log Out",
+        "hyprshutdown -vt 3",
+        GLYPH_LOGOUT,
+        CAT_SYSTEM,
+        "shell:hyprshutdown -vt 3",
+    );
+    set_keywords(
+        &mut logout,
+        &["logout", "log out", "exit", "session", "quit"],
+    );
     logout.dangerous = true;
     logout.priority = 210;
     out.push(logout);
 
-    let mut suspend = result("Suspend", "systemctl suspend", GLYPH_SUSPEND, CAT_SYSTEM, "shell:systemctl suspend");
+    let mut suspend = result(
+        "Suspend",
+        "systemctl suspend",
+        GLYPH_SUSPEND,
+        CAT_SYSTEM,
+        "shell:systemctl suspend",
+    );
     set_keywords(&mut suspend, &["suspend", "sleep", "hibernate", "standby"]);
     suspend.dangerous = true;
     suspend.priority = 210;
     out.push(suspend);
 
-    let mut reboot = result("Reboot", "systemctl reboot", GLYPH_POWER, CAT_SYSTEM, "shell:systemctl reboot");
+    let mut reboot = result(
+        "Reboot",
+        "systemctl reboot",
+        GLYPH_POWER,
+        CAT_SYSTEM,
+        "shell:systemctl reboot",
+    );
     set_keywords(&mut reboot, &["reboot", "restart", "power", "computer"]);
     reboot.dangerous = true;
     reboot.priority = 210;
     out.push(reboot);
 
-    let mut poweroff = result("Power Off", "systemctl poweroff", GLYPH_POWER, CAT_SYSTEM, "shell:systemctl poweroff");
-    set_keywords(&mut poweroff, &["power", "off", "shutdown", "halt", "turn off"]);
+    let mut poweroff = result(
+        "Power Off",
+        "systemctl poweroff",
+        GLYPH_POWER,
+        CAT_SYSTEM,
+        "shell:systemctl poweroff",
+    );
+    set_keywords(
+        &mut poweroff,
+        &["power", "off", "shutdown", "halt", "turn off"],
+    );
     poweroff.dangerous = true;
     poweroff.priority = 210;
     out.push(poweroff);
 
-    let mut hypr_reload = result("Restart Hyprland", "hyprctl reload", GLYPH_RELOAD, CAT_SYSTEM, "shell:hyprctl reload");
-    set_keywords(&mut hypr_reload, &["hyprland", "restart", "reload", "compositor"]);
+    let mut hypr_reload = result(
+        "Restart Hyprland",
+        "hyprctl reload",
+        GLYPH_RELOAD,
+        CAT_SYSTEM,
+        "shell:hyprctl reload",
+    );
+    set_keywords(
+        &mut hypr_reload,
+        &["hyprland", "restart", "reload", "compositor"],
+    );
     hypr_reload.priority = 190;
     out.push(hypr_reload);
 
-    let mut waybar_restart = result("Restart Waybar", "waybar_refresh", GLYPH_SYSTEM, CAT_SYSTEM, "run:waybar_refresh");
-    set_keywords(&mut waybar_restart, &["waybar", "restart", "reload", "bar", "topbar"]);
+    let mut waybar_restart = result(
+        "Restart Waybar",
+        "waybar_refresh",
+        GLYPH_SYSTEM,
+        CAT_SYSTEM,
+        "run:waybar_refresh",
+    );
+    set_keywords(
+        &mut waybar_restart,
+        &["waybar", "restart", "reload", "bar", "topbar"],
+    );
     waybar_restart.priority = 240;
     waybar_restart.alt = String::from("self:restart-waybar");
-    waybar_restart.secondaries.push((String::from("Kill & Start Fresh"), String::from("self:restart-waybar")));
+    waybar_restart.secondaries.push((
+        String::from("Kill & Start Fresh"),
+        String::from("self:restart-waybar"),
+    ));
     out.push(waybar_restart);
 
     let mut pipewire = result(
@@ -1389,7 +1586,10 @@ fn system_results(p: &Palette) -> Vec<Result> {
         CAT_SYSTEM,
         "shell:systemctl --user restart pipewire",
     );
-    set_keywords(&mut pipewire, &["pipewire", "audio", "sound", "restart", "pulse"]);
+    set_keywords(
+        &mut pipewire,
+        &["pipewire", "audio", "sound", "restart", "pulse"],
+    );
     pipewire.priority = 150;
     out.push(pipewire);
 
@@ -1404,22 +1604,52 @@ fn system_results(p: &Palette) -> Vec<Result> {
     bluetooth.priority = 150;
     out.push(bluetooth);
 
-    let mut shot = result("Screenshot (Output)", "hyprshot -m output", GLYPH_SCREENSHOT, CAT_SYSTEM, "shell:hyprshot -m output");
-    set_keywords(&mut shot, &["screenshot", "screen", "shot", "capture", "snapshot"]);
+    let mut shot = result(
+        "Screenshot (Output)",
+        "hyprshot -m output",
+        GLYPH_SCREENSHOT,
+        CAT_SYSTEM,
+        "shell:hyprshot -m output",
+    );
+    set_keywords(
+        &mut shot,
+        &["screenshot", "screen", "shot", "capture", "snapshot"],
+    );
     shot.priority = 170;
     out.push(shot);
 
-    let mut region = result("Screenshot (Region)", "hyprshot -m region", GLYPH_SCREENSHOT, CAT_SYSTEM, "shell:hyprshot -m region");
-    set_keywords(&mut region, &["screenshot", "region", "area", "selection", "capture"]);
+    let mut region = result(
+        "Screenshot (Region)",
+        "hyprshot -m region",
+        GLYPH_SCREENSHOT,
+        CAT_SYSTEM,
+        "shell:hyprshot -m region",
+    );
+    set_keywords(
+        &mut region,
+        &["screenshot", "region", "area", "selection", "capture"],
+    );
     region.priority = 170;
     out.push(region);
 
-    let mut recorder = result("Screen Recorder", "screenrecorder", GLYPH_RECORDER, CAT_SYSTEM, "run:screenrecorder");
+    let mut recorder = result(
+        "Screen Recorder",
+        "screenrecorder",
+        GLYPH_RECORDER,
+        CAT_SYSTEM,
+        "run:screenrecorder",
+    );
     set_keywords(&mut recorder, &["record", "recorder", "screen", "video"]);
     recorder.priority = 160;
     out.push(recorder);
 
-    let mut clipboard = result("Clear Clipboard", "wl-copy -c", GLYPH_CLIPBOARD, CAT_SYSTEM, "shell:wl-copy -c");
+    let mut clipboard = result(
+        "Clear Clipboard",
+        "wl-copy -c",
+        GLYPH_CLIPBOARD,
+        CAT_SYSTEM,
+        "shell:wl-copy -c",
+    );
     set_keywords(&mut clipboard, &["clipboard", "copy", "clear", "paste"]);
     clipboard.priority = 140;
     out.push(clipboard);
@@ -1436,7 +1666,10 @@ fn system_results(p: &Palette) -> Vec<Result> {
         CAT_SYSTEM,
         &format!("shell:{} 5%+", vol_cmd),
     );
-    set_keywords(&mut vol_up, &["volume", "sound", "audio", "increase", "up", "louder"]);
+    set_keywords(
+        &mut vol_up,
+        &["volume", "sound", "audio", "increase", "up", "louder"],
+    );
     vol_up.priority = 220;
     out.push(vol_up);
 
@@ -1447,7 +1680,10 @@ fn system_results(p: &Palette) -> Vec<Result> {
         CAT_SYSTEM,
         &format!("shell:{} 5%-", vol_cmd),
     );
-    set_keywords(&mut vol_down, &["volume", "sound", "audio", "decrease", "down", "quieter"]);
+    set_keywords(
+        &mut vol_down,
+        &["volume", "sound", "audio", "decrease", "down", "quieter"],
+    );
     vol_down.priority = 220;
     out.push(vol_down);
 
@@ -1456,13 +1692,28 @@ fn system_results(p: &Palette) -> Vec<Result> {
     } else {
         "pactl set-sink-mute @DEFAULT_SINK@ toggle"
     };
-    let mut mute = result("Mute / Unmute", mute_cmd, GLYPH_VOLUME, CAT_SYSTEM, &format!("shell:{}", mute_cmd));
+    let mut mute = result(
+        "Mute / Unmute",
+        mute_cmd,
+        GLYPH_VOLUME,
+        CAT_SYSTEM,
+        &format!("shell:{}", mute_cmd),
+    );
     set_keywords(&mut mute, &["mute", "unmute", "volume", "sound", "silence"]);
     mute.priority = 220;
     out.push(mute);
 
-    let mut audio_settings = result("Open Audio Settings", "pavucontrol", GLYPH_VOLUME, CAT_SYSTEM, "run:pavucontrol");
-    set_keywords(&mut audio_settings, &["audio", "settings", "volume", "sound", "pulse", "mixer"]);
+    let mut audio_settings = result(
+        "Open Audio Settings",
+        "pavucontrol",
+        GLYPH_VOLUME,
+        CAT_SYSTEM,
+        "run:pavucontrol",
+    );
+    set_keywords(
+        &mut audio_settings,
+        &["audio", "settings", "volume", "sound", "pulse", "mixer"],
+    );
     audio_settings.priority = 130;
     out.push(audio_settings);
 
@@ -1473,7 +1724,10 @@ fn system_results(p: &Palette) -> Vec<Result> {
         CAT_SYSTEM,
         "shell:brightnessctl set +5%",
     );
-    set_keywords(&mut br_up, &["brightness", "screen", "backlight", "increase", "up"]);
+    set_keywords(
+        &mut br_up,
+        &["brightness", "screen", "backlight", "increase", "up"],
+    );
     br_up.priority = 220;
     out.push(br_up);
 
@@ -1484,7 +1738,10 @@ fn system_results(p: &Palette) -> Vec<Result> {
         CAT_SYSTEM,
         "shell:brightnessctl set 5%-",
     );
-    set_keywords(&mut br_down, &["brightness", "screen", "backlight", "decrease", "down"]);
+    set_keywords(
+        &mut br_down,
+        &["brightness", "screen", "backlight", "decrease", "down"],
+    );
     br_down.priority = 220;
     out.push(br_down);
 
@@ -1499,9 +1756,7 @@ fn system_results(p: &Palette) -> Vec<Result> {
             CAT_SYSTEM,
             &format!(
                 "shell:hyprctl keyword monitor {},disable && hyprctl keyword monitor {},{},auto,1",
-                secondary.name,
-                primary.name,
-                primary.resolution,
+                secondary.name, primary.name, primary.resolution,
             ),
         );
         set_keywords(&mut mirror, &["display", "monitor", "mirror", "screen"]);
@@ -1515,11 +1770,13 @@ fn system_results(p: &Palette) -> Vec<Result> {
             CAT_SYSTEM,
             &format!(
                 "shell:hyprctl keyword monitor {},preferred,auto,1 && hyprctl keyword monitor {},preferred,auto,1",
-                primary.name,
-                secondary.name,
+                primary.name, secondary.name,
             ),
         );
-        set_keywords(&mut extend, &["display", "monitor", "extend", "multi", "dual"]);
+        set_keywords(
+            &mut extend,
+            &["display", "monitor", "extend", "multi", "dual"],
+        );
         extend.priority = 140;
         out.push(extend);
 
@@ -1541,11 +1798,13 @@ fn system_results(p: &Palette) -> Vec<Result> {
             CAT_SYSTEM,
             &format!(
                 "shell:hyprctl keyword monitor {},disable && hyprctl keyword monitor {},preferred,0x0,1",
-                primary.name,
-                secondary.name,
+                primary.name, secondary.name,
             ),
         );
-        set_keywords(&mut external_only, &["display", "monitor", "external", "hdmi", "only"]);
+        set_keywords(
+            &mut external_only,
+            &["display", "monitor", "external", "hdmi", "only"],
+        );
         external_only.priority = 140;
         out.push(external_only);
     }
@@ -1557,7 +1816,10 @@ fn system_results(p: &Palette) -> Vec<Result> {
         CAT_SYSTEM,
         "term:hyprctl monitors",
     );
-    set_keywords(&mut display_info, &["monitor", "display", "info", "screen", "resolution"]);
+    set_keywords(
+        &mut display_info,
+        &["monitor", "display", "info", "screen", "resolution"],
+    );
     display_info.priority = 120;
     out.push(display_info);
 
@@ -1585,7 +1847,14 @@ fn detect_system_state() -> (Vec<MonitorInfo>, String) {
             });
         } else if let Some(ref mut m) = current {
             if t.contains('@') && t.contains("at ") {
-                m.resolution = String::from(t.split(' ').next().unwrap_or("").split('@').next().unwrap_or(""));
+                m.resolution = String::from(
+                    t.split(' ')
+                        .next()
+                        .unwrap_or("")
+                        .split('@')
+                        .next()
+                        .unwrap_or(""),
+                );
             } else if t.starts_with("scale:") {
                 m.scale = String::from(t[6..].trim());
             } else if t.starts_with("active workspace:") {
@@ -1633,8 +1902,14 @@ fn script_results() -> Vec<Result> {
             );
             set_keywords(&mut r, &["script", &script_name, "run"]);
             r.priority = 170;
-            r.secondaries.push((String::from("Run in Background"), format!("shell:{}", path.display())));
-            r.secondaries.push((String::from("Edit Script"), format!("edit:{}", path.display())));
+            r.secondaries.push((
+                String::from("Run in Background"),
+                format!("shell:{}", path.display()),
+            ));
+            r.secondaries.push((
+                String::from("Edit Script"),
+                format!("edit:{}", path.display()),
+            ));
             out.push(r);
         }
     }
@@ -1665,10 +1940,22 @@ fn project_results(cfg: &Config) -> Vec<Result> {
             }
         }
         open.keywords = kws;
-        open.secondaries.push((String::from("Open in File Manager"), format!("open:{}", path)));
-        open.secondaries.push((String::from("Open Terminal Here"), format!("termdir:{}", path)));
-        open.secondaries.push((String::from("Git Status"), format!("term:git -C {} status", path)));
-        open.secondaries.push((String::from("Git Log"), format!("term:git -C {} log --oneline -20", path)));
+        open.secondaries.push((
+            String::from("Open in File Manager"),
+            format!("open:{}", path),
+        ));
+        open.secondaries.push((
+            String::from("Open Terminal Here"),
+            format!("termdir:{}", path),
+        ));
+        open.secondaries.push((
+            String::from("Git Status"),
+            format!("term:git -C {} status", path),
+        ));
+        open.secondaries.push((
+            String::from("Git Log"),
+            format!("term:git -C {} log --oneline -20", path),
+        ));
         out.push(open);
         seen.push(path.clone());
 
@@ -1676,7 +1963,15 @@ fn project_results(cfg: &Config) -> Vec<Result> {
         out.push(git_status_result(&entry.name, &path));
     }
 
-    let roots = ["Projects", "Developer", "dev", "github", "git", "Code", "Aurora"];
+    let roots = [
+        "Projects",
+        "Developer",
+        "dev",
+        "github",
+        "git",
+        "Code",
+        "Aurora",
+    ];
     let home = aurora_paths().home;
     for root in roots {
         let dir = home.join(root);
@@ -1707,9 +2002,16 @@ fn project_results(cfg: &Config) -> Vec<Result> {
                     &format!("open:{}", display),
                 );
                 open.priority = 190;
-                set_keywords(&mut open, &[&name.to_lowercase(), "project", "open", "folder", "repo"]);
-                open.secondaries.push((String::from("Open in File Manager"), format!("open:{}", display)));
-                open.secondaries.push((String::from("Edit in Editor"), format!("edit:{}", display)));
+                set_keywords(
+                    &mut open,
+                    &[&name.to_lowercase(), "project", "open", "folder", "repo"],
+                );
+                open.secondaries.push((
+                    String::from("Open in File Manager"),
+                    format!("open:{}", display),
+                ));
+                open.secondaries
+                    .push((String::from("Edit in Editor"), format!("edit:{}", display)));
                 out.push(open);
                 seen.push(display.clone());
 
@@ -1758,9 +2060,18 @@ fn git_status_result(name: &str, path: &str) -> Result {
     );
     set_keywords(&mut r, &[name, "git", "status", "project", "repo"]);
     r.priority = 160;
-    r.secondaries.push((String::from("Git Pull"), format!("term:git -C {} pull", path)));
-    r.secondaries.push((String::from("Git Push"), format!("term:git -C {} push", path)));
-    r.secondaries.push((String::from("Git Log"), format!("term:git -C {} log --oneline -20", path)));
+    r.secondaries.push((
+        String::from("Git Pull"),
+        format!("term:git -C {} pull", path),
+    ));
+    r.secondaries.push((
+        String::from("Git Push"),
+        format!("term:git -C {} push", path),
+    ));
+    r.secondaries.push((
+        String::from("Git Log"),
+        format!("term:git -C {} log --oneline -20", path),
+    ));
     r
 }
 
@@ -1771,7 +2082,10 @@ fn git_remote_url(path: &str) -> String {
             let t = line.trim();
             if let Some(rest) = t.strip_prefix("url = ") {
                 let raw = rest.trim();
-                if raw.contains("github.com") || raw.contains("gitlab.com") || raw.contains("bitbucket.org") {
+                if raw.contains("github.com")
+                    || raw.contains("gitlab.com")
+                    || raw.contains("bitbucket.org")
+                {
                     let clean = raw
                         .replace("git@", "")
                         .replace("https://", "")
@@ -1816,7 +2130,10 @@ fn workspace_results(p: &Palette) -> Vec<Result> {
         CAT_WORKSPACES,
         "hypr:movetoworkspacesilent special",
     );
-    set_keywords(&mut to_special, &["scratchpad", "special", "window", "move"]);
+    set_keywords(
+        &mut to_special,
+        &["scratchpad", "special", "window", "move"],
+    );
     out.push(to_special);
 
     for n in 1..=10 {
@@ -1859,13 +2176,41 @@ fn window_results() -> Vec<Result> {
     let mut out = Vec::new();
 
     let mut actions: Vec<(String, String, String)> = Vec::new();
-    actions.push((String::from("Close Window"), String::from("hypr:killactive"), String::from("kill the focused window")));
-    actions.push((String::from("Toggle Fullscreen"), String::from("hypr:fullscreen 1"), String::from("fullscreen the focused window")));
-    actions.push((String::from("Toggle Floating"), String::from("hypr:togglefloating"), String::from("float the focused window")));
-    actions.push((String::from("Pin Window"), String::from("hypr:pin"), String::from("pin the focused window")));
-    actions.push((String::from("Center Window"), String::from("hypr:centerwindow"), String::from("center the focused window")));
-    actions.push((String::from("Focus Next Window"), String::from("hypr:cyclenext"), String::from("cycle focus forward")));
-    actions.push((String::from("Focus Previous Window"), String::from("hypr:cycleprev"), String::from("cycle focus backward")));
+    actions.push((
+        String::from("Close Window"),
+        String::from("hypr:killactive"),
+        String::from("kill the focused window"),
+    ));
+    actions.push((
+        String::from("Toggle Fullscreen"),
+        String::from("hypr:fullscreen 1"),
+        String::from("fullscreen the focused window"),
+    ));
+    actions.push((
+        String::from("Toggle Floating"),
+        String::from("hypr:togglefloating"),
+        String::from("float the focused window"),
+    ));
+    actions.push((
+        String::from("Pin Window"),
+        String::from("hypr:pin"),
+        String::from("pin the focused window"),
+    ));
+    actions.push((
+        String::from("Center Window"),
+        String::from("hypr:centerwindow"),
+        String::from("center the focused window"),
+    ));
+    actions.push((
+        String::from("Focus Next Window"),
+        String::from("hypr:cyclenext"),
+        String::from("cycle focus forward"),
+    ));
+    actions.push((
+        String::from("Focus Previous Window"),
+        String::from("hypr:cycleprev"),
+        String::from("cycle focus backward"),
+    ));
 
     for (title, action, subtitle) in actions {
         let mut r = result(&title, &subtitle, GLYPH_WINDOW, CAT_WINDOWS, &action);
@@ -1892,7 +2237,10 @@ fn window_results() -> Vec<Result> {
 fn user_command_results(cfg: &Config) -> Vec<Result> {
     let mut out = Vec::new();
     for entry in &cfg.commands {
-        let desc = entry.description.clone().unwrap_or_else(|| entry.command.clone());
+        let desc = entry
+            .description
+            .clone()
+            .unwrap_or_else(|| entry.command.clone());
         let mut r = result(&entry.name, &desc, GLYPH_SCRIPT, CAT_FEATURED, "");
         r.action = format!("shell:{}", entry.command);
         r.priority = 210;
@@ -1959,10 +2307,22 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
     }
 
     out.push(header_row("Suggested"));
-    let mut settings = result("Open Aurora Settings", "settings", GLYPH_SETTINGS, CAT_SETTINGS, "run:settings");
+    let mut settings = result(
+        "Open Aurora Settings",
+        "settings",
+        GLYPH_SETTINGS,
+        CAT_SETTINGS,
+        "run:settings",
+    );
     settings.priority = 420;
     out.push(settings);
-    let mut theme = result("Browse Themes", "theme_switcher", GLYPH_THEME, CAT_THEMES, "run:theme_switcher");
+    let mut theme = result(
+        "Browse Themes",
+        "theme_switcher",
+        GLYPH_THEME,
+        CAT_THEMES,
+        "run:theme_switcher",
+    );
     theme.priority = 400;
     out.push(theme);
     let mut cfg_entry = result(
@@ -1975,7 +2335,13 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
     cfg_entry.priority = 390;
     out.push(cfg_entry);
     if p.config.history && !p.history.is_empty() {
-        let mut clear = result("Clear History", "Erase the action history", GLYPH_CLIPBOARD, CAT_FEATURED, "self:clear-history");
+        let mut clear = result(
+            "Clear History",
+            "Erase the action history",
+            GLYPH_CLIPBOARD,
+            CAT_FEATURED,
+            "self:clear-history",
+        );
         clear.priority = 390;
         out.push(clear);
     }
@@ -1986,8 +2352,20 @@ fn empty_query_results(p: &mut Palette) -> Vec<Result> {
 fn control_menu_results() -> Vec<Result> {
     let mut out = Vec::new();
     out.push(header_row("Palette Menu"));
-    out.push(result("Clear History", "Erase the action history", GLYPH_CLIPBOARD, CAT_FEATURED, "self:clear-history"));
-    out.push(result("Clear Favorites", "Erase all favorites", GLYPH_STAR, CAT_FEATURED, "self:clear-favorites"));
+    out.push(result(
+        "Clear History",
+        "Erase the action history",
+        GLYPH_CLIPBOARD,
+        CAT_FEATURED,
+        "self:clear-history",
+    ));
+    out.push(result(
+        "Clear Favorites",
+        "Erase all favorites",
+        GLYPH_STAR,
+        CAT_FEATURED,
+        "self:clear-favorites",
+    ));
     out.push(result(
         "Open Palette Config",
         "Edit palette.toml",
@@ -2025,7 +2403,13 @@ fn compute_results(p: &mut Palette, query: &str) -> Vec<Result> {
                     out.push(r);
                 }
             } else {
-                out.push(result("No recent actions yet", "Type something and press Enter", GLYPH_RECENT, CAT_FEATURED, "nop:"));
+                out.push(result(
+                    "No recent actions yet",
+                    "Type something and press Enter",
+                    GLYPH_RECENT,
+                    CAT_FEATURED,
+                    "nop:",
+                ));
             }
             out
         }
@@ -2043,7 +2427,13 @@ fn compute_results(p: &mut Palette, query: &str) -> Vec<Result> {
                     out.push(r);
                 }
             } else {
-                out.push(result("No favorites yet", "Press Tab on any result to favorite it", GLYPH_STAR, CAT_FEATURED, "nop:"));
+                out.push(result(
+                    "No favorites yet",
+                    "Press Tab on any result to favorite it",
+                    GLYPH_STAR,
+                    CAT_FEATURED,
+                    "nop:",
+                ));
             }
             out
         }
@@ -2098,14 +2488,27 @@ fn file_search_results(p: &Palette, query: &str) -> Vec<Result> {
             } else {
                 GLYPH_FILE
             };
-            let mut r = result(&file.name, &file.parent, glyph, CAT_FILES, &format!("open:{}", file.path));
+            let mut r = result(
+                &file.name,
+                &file.parent,
+                glyph,
+                CAT_FILES,
+                &format!("open:{}", file.path),
+            );
             r.priority = best / 20;
             if file.is_dir {
-                r.secondaries.push((String::from("Open in Terminal"), format!("termdir:{}", file.path)));
+                r.secondaries.push((
+                    String::from("Open in Terminal"),
+                    format!("termdir:{}", file.path),
+                ));
             } else {
-                r.secondaries.push((String::from("Open Containing Folder"), format!("open:{}", file.parent)));
+                r.secondaries.push((
+                    String::from("Open Containing Folder"),
+                    format!("open:{}", file.parent),
+                ));
             }
-            r.secondaries.push((String::from("Copy Path"), format!("copy:{}", file.path)));
+            r.secondaries
+                .push((String::from("Copy Path"), format!("copy:{}", file.path)));
             scored.push((best + r.priority, r));
         }
     }
@@ -2207,10 +2610,7 @@ fn normal_search_results(p: &mut Palette, query: &str) -> Vec<Result> {
     }
 
     // aliases: a single-word query may expand, e.g. wb → waybar restart
-    let mut words: Vec<String> = lower
-        .split_whitespace()
-        .map(|w| String::from(w))
-        .collect();
+    let mut words: Vec<String> = lower.split_whitespace().map(|w| String::from(w)).collect();
     if words.len() == 1 {
         for alias in &p.config.aliases {
             if alias.name.to_lowercase() == words[0] {
@@ -2341,9 +2741,10 @@ fn hypr_dispatch_lua(desc: &str) -> Option<String> {
 
     let parts: Vec<&str> = desc.split_whitespace().collect();
     match parts.as_slice() {
-        ["workspace", target] => {
-            Some(format!("hl.dsp.focus({{ workspace = {} }})", lua_value(target)))
-        }
+        ["workspace", target] => Some(format!(
+            "hl.dsp.focus({{ workspace = {} }})",
+            lua_value(target)
+        )),
         ["movetoworkspace", target] => Some(format!(
             "hl.dsp.window.move({{ workspace = {} }})",
             lua_value(target)
@@ -2353,9 +2754,7 @@ fn hypr_dispatch_lua(desc: &str) -> Option<String> {
             lua_value(target)
         )),
         ["killactive"] => Some(String::from("hl.dsp.window.close()")),
-        ["fullscreen", mode] => {
-            Some(format!("hl.dsp.window.fullscreen({{ mode = {mode} }})"))
-        }
+        ["fullscreen", mode] => Some(format!("hl.dsp.window.fullscreen({{ mode = {mode} }})")),
         ["togglefloating"] => Some(String::from("hl.dsp.window.float({ action = \"toggle\" })")),
         ["pin"] => Some(String::from("hl.dsp.window.pin({})")),
         ["centerwindow"] => Some(String::from("hl.dsp.window.center()")),
@@ -2481,7 +2880,11 @@ fn run_shell_capture(cmd: &str) -> String {
 }
 
 fn record_history(p: &mut Palette, title: &str, desc: &str) {
-    if !p.config.history || desc.starts_with("nop:") || desc.starts_with("fav:") || desc.starts_with("unfav:") {
+    if !p.config.history
+        || desc.starts_with("nop:")
+        || desc.starts_with("fav:")
+        || desc.starts_with("unfav:")
+    {
         return;
     }
     if let Some(i) = p.history.iter().position(|(t, a)| t == title && a == desc) {
@@ -2565,7 +2968,10 @@ fn rebuild_list(p: &mut Palette) {
         if r.header {
             row.set_selectable(false);
             row.set_activatable(false);
-            let label = Label::builder().label(&r.title).halign(Align::Start).build();
+            let label = Label::builder()
+                .label(&r.title)
+                .halign(Align::Start)
+                .build();
             label.add_css_class("palette-section");
             row.set_child(Some(&label));
         } else {
@@ -2594,7 +3000,10 @@ fn rebuild_list(p: &mut Palette) {
             title.add_css_class("palette-row-title");
             title.set_ellipsize(gtk4::pango::EllipsizeMode::End);
 
-            let subtitle = Label::builder().label(&r.subtitle).halign(Align::Start).build();
+            let subtitle = Label::builder()
+                .label(&r.subtitle)
+                .halign(Align::Start)
+                .build();
             subtitle.add_css_class("palette-row-subtitle");
             subtitle.set_ellipsize(gtk4::pango::EllipsizeMode::End);
 
@@ -2658,11 +3067,19 @@ fn update_hints(p: &mut Palette) {
     p.footer_label.set_visible(!compact_search);
     p.root.set_size_request(
         p.config.width as i32,
-        if compact_search { 72 } else { p.config.height as i32 },
+        if compact_search {
+            72
+        } else {
+            p.config.height as i32
+        },
     );
     p.window.set_default_size(
         p.config.width as i32,
-        if compact_search { 72 } else { p.config.height as i32 },
+        if compact_search {
+            72
+        } else {
+            p.config.height as i32
+        },
     );
 
     if compact_search {
@@ -2671,7 +3088,8 @@ fn update_hints(p: &mut Palette) {
 
     if p.confirm_pending.is_some() {
         p.footer_label.set_label("↵ Confirm      ⎋ Cancel");
-        p.detail_label.set_label("This action needs your confirmation.");
+        p.detail_label
+            .set_label("This action needs your confirmation.");
         p.status_label.set_label("");
         return;
     }
@@ -2685,13 +3103,16 @@ fn update_hints(p: &mut Palette) {
 
     if p.mode == PaletteMode::Command {
         p.footer_label.set_label("↵ Run in shell      ⎋ Close");
-        p.detail_label.set_label("Run a short command; the output is shown below.");
+        p.detail_label
+            .set_label("Run a short command; the output is shown below.");
         return;
     }
 
     if p.results.is_empty() {
-        p.footer_label.set_label("↑↓ Navigate      ↵ Open      ⇥ Actions      ⎋ Close");
-        p.detail_label.set_label("No results — press Enter to search the web.");
+        p.footer_label
+            .set_label("↑↓ Navigate      ↵ Open      ⇥ Actions      ⎋ Close");
+        p.detail_label
+            .set_label("No results — press Enter to search the web.");
         p.status_label.set_label("");
         return;
     }
@@ -2720,7 +3141,8 @@ fn update_hints(p: &mut Palette) {
     }
     p.detail_label.set_label(&detail);
 
-    p.status_label.set_label(&format!("{} results", p.results.len()));
+    p.status_label
+        .set_label(&format!("{} results", p.results.len()));
 }
 
 fn refresh(p: &mut Palette) {
@@ -2743,7 +3165,13 @@ fn enter_secondary(p: &mut Palette) {
     list.push(header_row(&format!("{} — Actions", selected.title)));
     list.push(selected.clone());
     for (label, action) in &selected.secondaries {
-        let mut r = result(label, &selected.subtitle, GLYPH_SETTINGS, CAT_FEATURED, action);
+        let mut r = result(
+            label,
+            &selected.subtitle,
+            GLYPH_SETTINGS,
+            CAT_FEATURED,
+            action,
+        );
         r.priority = 300;
         list.push(r);
     }
@@ -2757,17 +3185,16 @@ fn enter_secondary(p: &mut Palette) {
         } else {
             "Add to Favorites"
         };
-        let prefix = if is_fav {
-            "unfav"
-        } else {
-            "fav"
-        };
+        let prefix = if is_fav { "unfav" } else { "fav" };
         let mut r = result(
             label,
             "Pin this action to the top of the palette",
             GLYPH_STAR,
             CAT_FEATURED,
-            &format!("{}:{}\t{}\t{}", prefix, selected.title, selected.title, selected.action),
+            &format!(
+                "{}:{}\t{}\t{}",
+                prefix, selected.title, selected.title, selected.action
+            ),
         );
         r.priority = 390;
         list.push(r);
@@ -2784,7 +3211,8 @@ fn show_confirm(p: &mut Palette, title: &str, message: &str, descriptor: &str) {
         message: String::from(message),
         descriptor: String::from(descriptor),
     });
-    p.confirm_title.set_label(&format!("Are you sure?\n\n{}", title));
+    p.confirm_title
+        .set_label(&format!("Are you sure?\n\n{}", title));
     p.confirm_msg.set_label(message);
     p.main_box.set_visible(false);
     p.output_box.set_visible(false);
@@ -3107,9 +3535,17 @@ fn build_ui(app: &Application) {
     main_box.append(&footer_label);
 
     // ── confirmation overlay ────────────────────────────────────────────────
-    let confirm_title = Label::builder().label("").halign(Align::Center).wrap(true).build();
+    let confirm_title = Label::builder()
+        .label("")
+        .halign(Align::Center)
+        .wrap(true)
+        .build();
     confirm_title.add_css_class("palette-confirm-title");
-    let confirm_msg = Label::builder().label("").halign(Align::Center).wrap(true).build();
+    let confirm_msg = Label::builder()
+        .label("")
+        .halign(Align::Center)
+        .wrap(true)
+        .build();
     confirm_msg.add_css_class("palette-confirm-msg");
 
     let cancel = Button::with_label("Cancel");
@@ -3135,7 +3571,11 @@ fn build_ui(app: &Application) {
     confirm_box.set_visible(false);
 
     // ── command output panel ────────────────────────────────────────────────
-    let output_label = Label::builder().label("").halign(Align::Start).wrap(true).build();
+    let output_label = Label::builder()
+        .label("")
+        .halign(Align::Start)
+        .wrap(true)
+        .build();
     output_label.add_css_class("palette-output");
     output_label.set_xalign(0.0);
 
@@ -3166,7 +3606,11 @@ fn build_ui(app: &Application) {
         query: String::new(),
         confirm_pending: None,
         show_output: false,
-        history: if cfg.history { load_pairs(&history_path()) } else { Vec::new() },
+        history: if cfg.history {
+            load_pairs(&history_path())
+        } else {
+            Vec::new()
+        },
         favorites: load_pairs(&favorites_path()),
         config: cfg,
         index: Vec::new(),

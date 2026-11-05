@@ -108,7 +108,7 @@
     "format": "{capacity}% {icon}",
     "format-icons": ["", "", "", "", ""],
     "max-length": 25,
-    "on-click" :"exec kitty --class \"jolt\" jolt"
+    "on-click": "aurora-shell battery"
   },
 "custom/screenrecorder": {
     "exec": "screenrecorder status",

@@ -17,7 +17,7 @@
 //      along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::env;
-use std::process::{exit, Command, Output, Stdio};
+use std::process::{Command, Output, Stdio, exit};
 use std::thread;
 use std::time::Duration;
 
@@ -87,12 +87,7 @@ fn launch_error(output: &Output) -> Option<String> {
     let errors: Vec<String> = log
         .lines()
         .filter(|line| line.contains("ERROR"))
-        .map(|line| {
-            line.trim()
-                .trim_start_matches("ERROR:")
-                .trim()
-                .to_string()
-        })
+        .map(|line| line.trim().trim_start_matches("ERROR:").trim().to_string())
         .collect();
 
     if !errors.is_empty() {
